@@ -1,0 +1,175 @@
+#' Make a logistic prior with specified scale
+#' 
+#' @param scale Numeric vector
+#' @param ...   Currently not used
+#' @return A `prior` object with a log density and a log gradient
+#' @export
+make_logistic_prior = function(scale, ...){
+  structure(
+    list(
+      log_d = function(x){dlogis(x, scale = scale, log = TRUE)},
+      log_grad = function(x){
+        -tanh(x/scale/2) / scale
+      }
+    ),
+    class = "prior"
+  )
+}
+
+#' Make a flat prior for maximum likelihood estimation
+#' 
+#' @param ...   Currently not used
+#' @return A `prior` object with a constant log density and a log gradient equal to zero
+#' @export
+make_flat_log_prior = function(...){
+  structure(
+    list(
+      log_d = function(x){0},
+      log_grad = function(x){0}
+    ),
+    class = "prior"
+  )
+}
+
+logSumExp = function(x){
+  biggest = max(x)
+  log(sum(exp(x - biggest))) + biggest
+}
+
+
+generate_possibilities = function(n_spp){
+  possibilities = expand.grid(replicate(n_spp, c(0L, 1L), simplify = FALSE))
+  as.matrix(possibilities[ , n_spp:1])
+}
+
+find_rows = function(x){
+  # string-to-integer
+  # +1 because R indexes from 1 not 0
+  strtoi(apply(x, 1, paste0, collapse = ""), 2) + 1
+}
+
+
+#' @importFrom assertthat assert_that
+nll = function(par, rows, possible_cooc, ...){    
+  assert_that(!missing(rows))
+  
+  # Find energy for all possible co-occurrence patterns
+  E = -c(par %*% possible_cooc)
+  
+  # Log of the partition function
+  logZ = logSumExp(-E)
+  
+  # positive log-likelihood is sum(-energy - logZ)
+  # This just distributes the minus sign
+  sum(E[rows] + logZ)
+}
+
+nlp = function(par, rows, possible_cooc, prior, ...){    
+  nll(par, rows, possible_cooc, ...) - sum(prior$log_d(par))
+}
+
+nll_grad = function(par, possible_cooc, observed_cooc, n_sites, ...){
+  
+  # Find energy for all possible co-occurrence patterns
+  E = -c(par %*% possible_cooc)
+  
+  # Log of the partition function
+  logZ = logSumExp(-E)
+  
+  p = exp(-(E + logZ))
+  
+  expected_cooc = c(possible_cooc %*% p)
+  
+  n_sites * (expected_cooc - observed_cooc)
+}
+
+nlp_grad = function(
+  par, 
+  possible_cooc, 
+  observed_cooc, 
+  
+  n_sites, 
+  prior, 
+  ...
+){
+  nll_grad(par, possible_cooc, observed_cooc, n_sites, ...) - prior$log_grad(par)
+}
+
+find_observed_cooc = function(x){
+  cp = crossprod(x) / nrow(x)
+  
+  c(cp[upper.tri(cp)], diag(cp))
+}
+
+#' Fit a Markov network to binary data
+#' 
+#' @param x        A binary matrix.
+#' @param prior    An object of class \code{prior}. By default, the prior is flat for maximum likelihood estimation
+#' @param maxit,trace,hessian,...    Arguments passed to \code{\link{optim}}
+#' @param parlist  user-specified starting values (optional).
+#' @export
+rosalia = function(
+  x, 
+  prior = make_flat_log_prior(), 
+  maxit = 100, 
+  trace = 1, 
+  hessian = FALSE,
+  parlist,
+  ...
+){
+  n_spp = ncol(x)
+  n_sites = nrow(x)
+  
+  if(n_spp > 25){
+    message(
+      "Note: exact computation with more than 25 species is time-consuming and memory-intensive"
+    )
+  }
+  
+  possibilities = generate_possibilities(n_spp = n_spp)
+  
+  possible_cooc = sapply(
+    1:2^n_spp,
+    function(i){
+      tcp = tcrossprod(possibilities[i, ])
+      c(tcp[upper.tri(tcp)], diag(tcp))
+    }
+  )
+  
+  rm(possibilities) # no longer needed and possibly large drag on memory
+  
+  if(missing(parlist)){
+    parlist = as.relistable(list(
+      upper = rep(0, choose(n_spp, 2)),
+      diagonal = qlogis((colSums(x) + 1) / (nrow(x) + 2))
+    ))
+  }
+  
+  o = optim(
+    unlist(parlist), 
+    fn = nlp, 
+    gr = nlp_grad, 
+    method = "BFGS", 
+    hessian = hessian,
+    possible_cooc = possible_cooc,
+    rows = find_rows(x),
+    observed_cooc = find_observed_cooc(x),
+    control = list(trace = trace, maxit = maxit, REPORT = 1, ...),
+    n_sites = n_sites,
+    prior = prior
+  )
+}
+
+reform = function(par){
+  parlist = relist(par)
+  
+  dims = length(parlist$diagonal)
+  
+  out = matrix(0, nrow = dims, ncol = dims)
+  
+  out[upper.tri(out)] = parlist$upper
+  out = out + t(out)
+  diag(out) = parlist$diagonal
+  
+  out
+}

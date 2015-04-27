@@ -1,0 +1,9 @@
+Package: rosalia
+Title: Exact inference for small binary Markov networks
+Version: 0.0.1
+Authors@R: person(given = c("David", "J."), family = "Harris", email = "harry491@gmail.com", role = c("aut", "cre"))
+Description: X
+Depends: R (>= 3.1.2)
+Imports: assertthat
+License: MIT + file LICENSE
+LazyData: true
