@@ -16,6 +16,7 @@ make_logistic_prior = function(scale, ...){
   )
 }
 
+
 #' Make a flat prior for maximum likelihood estimation
 #' 
 #' @param ...   Currently not used
@@ -31,17 +32,20 @@ make_flat_log_prior = function(...){
   )
 }
 
+# Add up the likelihoods without losing precision during exponentiation of log-likelihoods
 logSumExp = function(x){
   biggest = max(x)
   log(sum(exp(x - biggest))) + biggest
 }
 
 
+# Generate all possible binary vectors of length n_spp
 generate_possibilities = function(n_spp){
   possibilities = expand.grid(replicate(n_spp, c(0L, 1L), simplify = FALSE))
   as.matrix(possibilities[ , n_spp:1])
 }
 
+# Where do the observed vectors occur in the possibilities matrix?
 find_rows = function(x){
   # string-to-integer
   # +1 because R indexes from 1 not 0
@@ -49,6 +53,7 @@ find_rows = function(x){
 }
 
 
+# Negative log-likelihood
 #' @importFrom assertthat assert_that
 nll = function(par, rows, possible_cooc, ...){    
   assert_that(!missing(rows))
@@ -64,10 +69,12 @@ nll = function(par, rows, possible_cooc, ...){
   sum(E[rows] + logZ)
 }
 
+# Negative log posterior
 nlp = function(par, rows, possible_cooc, prior, ...){    
   nll(par, rows, possible_cooc, ...) - sum(prior$log_d(par))
 }
 
+# Gradient of the negative log-likelihood
 nll_grad = function(par, possible_cooc, observed_cooc, n_sites, ...){
   
   # Find energy for all possible co-occurrence patterns
@@ -83,11 +90,11 @@ nll_grad = function(par, possible_cooc, observed_cooc, n_sites, ...){
   n_sites * (expected_cooc - observed_cooc)
 }
 
+# Negative log posterior gradient
 nlp_grad = function(
   par, 
   possible_cooc, 
   observed_cooc, 
-  
   n_sites, 
   prior, 
   ...
@@ -95,6 +102,7 @@ nlp_grad = function(
   nll_grad(par, possible_cooc, observed_cooc, n_sites, ...) - prior$log_grad(par)
 }
 
+# Find the number of observed co-occurrences (and occurrences)
 find_observed_cooc = function(x){
   cp = crossprod(x) / nrow(x)
   
@@ -120,7 +128,7 @@ rosalia = function(
   n_spp = ncol(x)
   n_sites = nrow(x)
   
-  if(n_spp > 25){
+  if (n_spp > 25) {
     message(
       "Note: exact computation with more than 25 species is time-consuming and memory-intensive"
     )
@@ -138,14 +146,14 @@ rosalia = function(
   
   rm(possibilities) # no longer needed and possibly large drag on memory
   
-  if(missing(parlist)){
+  if (missing(parlist)) {
     parlist = as.relistable(list(
       upper = rep(0, choose(n_spp, 2)),
       diagonal = qlogis((colSums(x) + 1) / (nrow(x) + 2))
     ))
   }
   
-  o = optim(
+  optim(
     unlist(parlist), 
     fn = nlp, 
     gr = nlp_grad, 
