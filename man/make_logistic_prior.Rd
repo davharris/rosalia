@@ -4,10 +4,12 @@
 \alias{make_logistic_prior}
 \title{Make a logistic prior with specified scale}
 \usage{
-make_logistic_prior(scale, ...)
+make_logistic_prior(location = 0, scale, ...)
 }
 \arguments{
-\item{scale}{Numeric vector}
+\item{location}{Numeric vector; see \code{\link{Logistic}}}
+
+\item{scale}{Numeric vector; see \code{\link{Logistic}}}
 
 \item{...}{Currently not used}
 }

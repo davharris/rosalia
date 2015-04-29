@@ -1,15 +1,16 @@
 #' Make a logistic prior with specified scale
 #' 
-#' @param scale Numeric vector
+#' @param location Numeric vector; see \code{\link{Logistic}}
+#' @param scale Numeric vector; see \code{\link{Logistic}}
 #' @param ...   Currently not used
 #' @return A `prior` object with a log density and a log gradient
 #' @export
-make_logistic_prior = function(scale, ...){
+make_logistic_prior = function(location = 0, scale, ...){
   structure(
     list(
-      log_d = function(x){dlogis(x, scale = scale, log = TRUE)},
+      log_d = function(x){dlogis(x, location = location, scale = scale, log = TRUE)},
       log_grad = function(x){
-        -tanh(x/scale/2) / scale
+        -tanh((x - location)/scale/2) / scale
       }
     ),
     class = "prior"
