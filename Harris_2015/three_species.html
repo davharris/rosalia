@@ -164,19 +164,22 @@ possible_cooc = sapply(
     )
   })</code></pre>
 <p>After running the “Pairs” software on transposed versions of the files simulated above, we can import its results to see how the method performed.</p>
-<p>Not</p>
 <pre class="r"><code>Pairs.txt = readLines(&quot;fakedata/three/Pairs.txt&quot;)
+
+# Find the column that contains the Z-score
 z_score_column = grep(&quot;Z-Score&quot;, Pairs.txt, value = TRUE)[2] %&gt;% 
   strsplit(&quot; +&quot;) %&gt;% 
   extract2(1) %&gt;% 
   grep(&quot;Z-Score&quot;, .)
 
-# A success for Pairs.exe implies Z&gt;0 because C-scores are about absences, not presences
-
+# Find the right rows of the text file, split them on whitespace, pull out
+# the column identified above, and find its sign
 pairs_evaluation = Pairs.txt[grep(&quot;(Var2.*Var1)|(Var1.*Var2)&quot;, Pairs.txt)] %&gt;% 
     strsplit(&quot; +&quot;) %&gt;%
     sapply(. %&gt;% extract(z_score_column) %&gt;% as.numeric) %&gt;%
-    is_greater_than(0)</code></pre>
+    is_greater_than(0) # Z&gt;0 implies negative interactions because the Z-score
+                       # relates to the distribution of C-scores, which describe
+                       # the frequency with which species *do not* co-occur</code></pre>
 <p>Percentage of correct sign estimates:</p>
 <pre class="r"><code>mean(pairs_evaluation) * 100
 

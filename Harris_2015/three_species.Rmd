@@ -84,21 +84,23 @@ evaluation = sapply(
 After running the "Pairs" software on transposed versions of the files simulated above, 
 we can import its results to see how the method performed.
 
-Not
-
 ```{r}
 Pairs.txt = readLines("fakedata/three/Pairs.txt")
+
+# Find the column that contains the Z-score
 z_score_column = grep("Z-Score", Pairs.txt, value = TRUE)[2] %>% 
   strsplit(" +") %>% 
   extract2(1) %>% 
   grep("Z-Score", .)
 
-# A success for Pairs.exe implies Z>0 because C-scores are about absences, not presences
-
+# Find the right rows of the text file, split them on whitespace, pull out
+# the column identified above, and find its sign
 pairs_evaluation = Pairs.txt[grep("(Var2.*Var1)|(Var1.*Var2)", Pairs.txt)] %>% 
     strsplit(" +") %>%
     sapply(. %>% extract(z_score_column) %>% as.numeric) %>%
-    is_greater_than(0)
+    is_greater_than(0) # Z>0 implies negative interactions because the Z-score
+                       # relates to the distribution of C-scores, which describe
+                       # the frequency with which species *do not* co-occur
 ```
 
 Percentage of correct sign estimates:
