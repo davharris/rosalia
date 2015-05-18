@@ -10,3 +10,8 @@ vignettes/*.html
 vignettes/*.pdf
 .Rproj.user
 rosalia.Rproj
+# Files from 2015 paper on species interactions
+Harris_2015/fakedata/
+!Harris_2015/fakedata.zip
+Harris_2015/models_cache/
+Harris_2015/models_files/

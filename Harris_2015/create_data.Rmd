@@ -1,0 +1,177 @@
+# Setup
+
+```{r, cache = TRUE}
+devtools::load_all()
+species_range = c(5, 10, 20)        # Numbers of species to evaluate
+site_range = c(20, 100, 500, 2500)  # Numbers of sites to evaluate
+reps = 24                           # Number of times to repeat combination of sites and species
+min_gibbs = 1000                    # Always perform at least this many Gibbs samples
+
+n_env = 2                           # Number of environmental variables in the model
+```
+
+# Functions
+
+A function for simulating known $\alpha$ and $\beta$ coefficients.
+
+```{r}
+make_coefficients = function(n_spp){
+  
+  # Most of the n-choose-2 interactions are assumed to be weak; a few
+  # are much stronger.
+  true_beta_magnitudes = rexp(choose(n_spp, 2))
+  
+  # On average, three-quarters of the simulated interactions are
+  # negative.
+  b = true_beta_magnitudes * sample(
+    c(-1, 1), 
+    size = length(true_beta_magnitudes), 
+    prob = c(.75, .25),
+    replace = TRUE
+  )
+  
+  # Alpha coefficients are normally distributed
+  a = rnorm(n_spp, -1)
+  
+  # rosalia stores betas in the upper triangle of a matrix and alphas
+  # along the diagonal.
+  c(upper = b, diag = a)
+}
+```
+
+# Simulate and save the simulated data
+
+```{r, cache = TRUE}
+for(n_spp in species_range){
+  cat("\n", n_spp, "\n")
+
+  for(n_sites in site_range){
+    cat("\n")
+    for(rep in 1:reps){
+      cat(".")
+      
+      # Make coefficients using the function above
+      par = make_coefficients(n_spp)
+      
+      # Save the "true" betas
+      truth = par[1:choose(n_spp, 2)]
+      
+      # The "true" alphas will only be used during simulation
+      alpha = par[-(1:choose(n_spp, 2))]
+      
+      # Start beta empty, fill in upper triangle, then fill in lower tri with its transpose
+      # to make a symmetric matrix of beta coefficients
+      beta = matrix(0, n_spp, n_spp)
+      beta[upper.tri(beta)] = truth
+      beta = beta + t(beta)
+      
+      # Environmental states, simulated from a Gaussian for each site and variable
+      env = matrix(rnorm(n_sites * n_env), ncol = n_env)
+
+      # Species only respond to the environment in the second half of the simulations
+      sd = 2 * (rep > reps/2)
+      alpha_env = matrix(rnorm(n_spp * n_env, sd = sd), nrow = n_env)
+      
+      # Simulate the landscape from known process
+      i = 0 # Gibbs iteration counter starts at zero
+      give_up = FALSE # don't give up simulating unless needed
+      incomplete = TRUE # Sampling isn't complete yet
+      
+      # Landscape starts as if betas were all zero
+      x = matrix(
+        plogis(rep(1, n_sites) %*% t(alpha) + env %*% alpha_env), 
+        nrow = n_sites, 
+        ncol = n_spp
+      )
+      
+      # Gibbs sampling until enough iterations have passed *and* no species are totally absent
+      while(incomplete & !give_up){
+        i = i + 1
+        for(j in 1:n_spp){
+          x[,j] = rbinom(
+            nrow(x),
+            size = 1,
+            prob = plogis(x %*% beta[ , j] + alpha[j] + env %*% alpha_env[,j])
+          )
+        }
+        
+        # Simulation is "incomplete"" if insufficient Monte Carlo samples have been collected
+        # or if one or more species are missing from the landscape.
+        incomplete = i < min_gibbs | min(colSums(x)) == 0
+        
+        # If, after 100*minimum iterations, no valid landscapes have been produced, give
+        # up on this set of coefficients.
+        give_up = i > min_gibbs * 100 
+      }
+      
+      if(give_up){
+        print("giving up")
+        next
+      }else{
+        file_stem = paste(n_spp, n_sites, rep, sep = "-")
+        
+        # Save the simulated landscape in the fakedata folder
+        write.csv(
+          x, 
+          file = paste0("fakedata/matrices/", file_stem, ".csv")
+        )
+        
+        # Ulrich's "Pairs" software rejects empty ("degenerate") sites
+        x_subset = x[rowSums(x) != 0, colSums(x) != 0]
+        
+        # "Pairs" expects the data to be transposed relative to the other three
+        # methods' inputs.
+        write.table(
+          t(x_subset), 
+          file = paste0("fakedata/matrices/", file_stem, "-transposed.txt"), 
+          quote = FALSE
+        )
+        
+        # save the "true" beta values
+        write(
+          truth, 
+          file = paste0("fakedata/truths/", file_stem, ".txt"), 
+          ncolumns = length(truth)
+        )
+      }
+    }
+  }
+}
+```
+
+# Housekeeping
+
+In order to run the Pairs analyses more quickly, I moved the simulated data matrices
+into 8 folders to run simultaneously on 8 processor cores.
+
+```{r}
+transposed_files = dir("fakedata/matrices", pattern = "transposed", full.names = FALSE)
+
+rep_num = as.integer(gsub(".*-.*-(.*)-transposed.txt", "\\1", transposed_files))
+
+core_num = (rep_num %%8) + 1
+for(i in 1:8){
+  dir.create(paste0("fakedata/matrices/", i), showWarnings = FALSE)
+}
+
+file.rename(
+  paste0("fakedata/matrices/", transposed_files), 
+  paste0("fakedata/matrices/", core_num, "/", transposed_files)
+)
+
+for(i in 1:8){
+  write(
+    paste0(
+      c("comment", sample(dir(paste0("fakedata/matrices/", i), pattern = "transposed"))), 
+      collapse = "\r\n"
+    ), 
+    file = paste0("fakedata/matrices/", i, "/", "list.txt")
+  )
+}
+
+# Include the .exe file in each folder so it can run on the corresponding files
+for(i in 1:8){
+  file.copy("fakedata/matrices/pairs.exe", paste0("fakedata/matrices/", i, "/", "pairs.exe"))
+}
+```
+

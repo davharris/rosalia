@@ -1,0 +1,475 @@
+---
+output: html_document
+---
+# Simulating landscapes from known coefficients
+
+The following function draws random coefficients for a Markov network of a pre-specified size.
+The probability distribution was chosen so that most species pairs interact weakly, a few
+act strongly, and that most of the interactions were negative rather than positive.
+
+```{r, cache=TRUE}
+make_coefficients = function(n_spp){
+  # Exponential distribution has lots of mass near 0 but has
+  # a long tail.
+  true_beta_magnitudes = rexp(choose(n_spp, 2))
+  
+  # Species interactions are negative 3/4 of the time in 
+  # these simulations.
+  b = true_beta_magnitudes * sample(
+    c(-1, 1), 
+    size = length(true_beta_magnitudes), 
+    prob = c(.75, .25),
+    replace = TRUE
+  )
+  
+  # Species' intercepts are normally distributed
+  a = rnorm(n_spp, -1)
+  
+  
+  # Return the simulated values.
+  # The rosalia function stores pairwise parameters in the upper
+  # triangle of an n-by-n matrix and stores the species intercepts
+  # along the diagonal, so these values are named accordingly.
+  c(upper = b, diag = a)
+}
+```
+
+
+I used the following function to generate "true" parameters with the method above, 
+simulate a presence-absence landscape based on those parameters using Markov chain Monte Carlo,
+and save the results to a "fakedata" folder.
+
+```{r, cache = TRUE}
+library(rosalia)
+
+simulate_data = function(n_spp, n_sites, n_rep, min_gibbs = 1000, reps = 24, n_env = 2){
+  
+  # Determine the "true" parameters for the simulated assemblage
+  par = make_coefficients(n_spp)
+  
+  # "True" interaction strengths, to save for later
+  truth = par[1:choose(n_spp, 2)]
+  
+  # "True" intercepts, possibly adjusted below by environment
+  alpha = par[-(1:choose(n_spp, 2))]
+  
+  # Turn the interaction values into an n-by-n matrix
+  # Start with empty matrix; fill in upper triangle; 
+  # then fill in lower triangle with its transpose
+  beta = matrix(0, n_spp, n_spp)
+  beta[upper.tri(beta)] = truth
+  beta = beta + t(beta)
+  
+  # Environmental states are normally distributed
+  env = matrix(rnorm(n_sites * n_env), ncol = n_env)
+  
+  
+  # Species only respond to the environment in the second half of the simulations
+  # (i.e. their responses are sampled from a Gaussian with a mean and standard deviation 
+  # of zero in the first half)
+  sd = 2 * (rep > reps/2)
+  alpha_env = matrix(rnorm(n_spp * n_env, sd = sd), nrow = n_env)
+  
+  # Simulate the landscape from known process with Gibbs sampling
+  i = 0 # Gibbs iteration counter starts at zero
+  give_up = FALSE # don't give up simulating unless things run for too long
+  incomplete = TRUE # Sampling isn't complete yet
+  
+  # Landscape starts as if betas were all zero
+  x = matrix(
+    plogis(rep(1, n_sites) %*% t(alpha) + env %*% alpha_env), 
+    nrow = n_sites, 
+    ncol = n_spp
+  )
+  
+  # Gibbs sampling until enough iterations have passed *and* no species are totally absent
+  while(incomplete & !give_up){
+    i = i + 1
+    for(j in 1:n_spp){
+      x[,j] = rbinom(
+        nrow(x),
+        size = 1,
+        prob = plogis(x %*% beta[ , j] + alpha[j] + env %*% alpha_env[,j])
+      )
+    }
+    
+    # If fewer than min_gibbs iterations have passed, or if a species is completely absent,
+    # then keep sampling
+    incomplete = i < min_gibbs | min(colSums(x)) == 0
+    
+    # But give up sampling if the sampling goes on 100x longer than the minimum
+    give_up = i > min_gibbs * 100
+  }
+  
+  if(give_up){
+    print("giving up")
+    next
+  }else{
+    # Save the results in a "fake data" folder
+    
+    file_stem = paste(n_spp, n_sites, rep, sep = "-")
+    
+    # Save the matrix of presence/absence observations
+    write.csv(
+      x, 
+      file = paste0("fakedata/matrices/", file_stem, ".csv")
+    )
+    
+    # Gotelli and Ulrich's Pairs software rejects empty sites, so I remove them here
+    x_subset = x[rowSums(x) != 0, colSums(x) != 0]
+    
+    # Gotelli and Ulrich's Pairs method expects the data matrices to be transposed,
+    # So I save them separately
+    write.table(
+      t(x_subset), 
+      file = paste0("fakedata/matrices/", file_stem, "-transposed.txt"), 
+      quote = FALSE
+    )
+    
+    # Save the "true" species interactions
+    write(
+      truth, 
+      file = paste0("fakedata/truths/", file_stem, ".txt"), 
+      ncolumns = length(truth)
+    )
+  }
+}
+```
+
+# Model fitting
+
+## R-compatible methods
+
+Three of the four methods are described in this subsection.  The "Pairs" software
+needs to be analyzed outise of R and is described below.
+
+### Rosalia
+
+The `rosalia` function finds (penalized) maximum likelihood estimates for the
+$\alpha$ and $\beta$ parameters in a Markov network using the `BFGS` method of
+the `optim` function for convex optimization.  For these analyses,
+I penalized the likelihood with logistic priors on both sets of parameters to stabilize
+the model's estimates. In order to ensure convergence, I increased the number of
+`BFGS` iterations from 100 (the default) to 1000.
+
+The following function returns a vector of $\beta$ coefficients.
+
+```{r, cache=TRUE, eval = FALSE}
+library("rosalia")
+
+fit_rosalia = function(x){
+  fit = rosalia(
+    x = x, 
+    prior = make_logistic_prior(scale = 1), 
+    maxit = 1E3
+  )
+  
+  # Return the upper triangle of the interaction matrix,
+  # which has all the beta values.
+  relist(fit$par)$upper
+}
+
+```
+
+### Partial covariance
+
+The partial covariance is normally computed as the matrix inverse of
+the covariance times `-1`.  The `ridgeS` function adds a regularization parameter,
+`lambda`, that stabilizes the estimates and makes it possible to 
+calculate a partial covariance matrix even when two species are perfectly 
+correlated in the observed data.
+
+```{r, cache=TRUE}
+fit_partial = function(x){
+  library("rags2ridges") # rags2ridges can be installed from CRAN with 
+                         # install.packages("rags2ridges")
+
+  # The effective size of the penalty should shrink as more data becomes available
+  # and overwhelms it
+  fit = -ridgeS(cov(x), lambda = 1 / (5 * nrow(x)))
+  
+  # all pairwise estimtes can be found in the upper triangle of the 
+  # partial covariance matrix.
+  fit[upper.tri(fit)]
+}
+
+```
+
+### Sample covariance
+
+The sample covariance provides a simpler estimate of species' interaction strengths.
+
+```{r, cache=TRUE}
+fit_cov = function(x){
+  fit = cov(x)
+  fit[upper.tri(fit)]
+}
+```
+
+
+## Analyzing simulated landscapes with the first three models
+
+This function takes a quoted model name (`"cov"`, `"rosalia"`, or `"partial"`) and applies the
+corresponding function above to all the matrices in the `fakedata` folder.
+
+It returns a data frame with information about each species pair's simulated landscape,
+the "true" interaction strength between the pair, and a "predicted" value from the 
+fitted model.
+
+```{r, cache = TRUE}
+fit_model = function(method_name, csv_names){
+  fit = get(paste("fit", method_name, sep = "_"))
+  out_list = lapply(
+    csv_names, 
+    function(x){
+      file_info = as.integer(strsplit(x, "-|\\.csv")[[1]])
+      
+      full_path = paste0("fakedata/matrices/", x)
+      
+      truth = read.table(
+        paste0(
+          "fakedata/truths/",
+          paste(file_info, collapse = "-"),
+          ".txt"
+        )
+      )
+      
+      data.frame(
+        n_spp = file_info[1], 
+        n_loc = file_info[2],
+        n_rep = file_info[3],
+        truth = unlist(truth),
+        predicted = fit(read.csv(full_path, row.names = 1)),
+        method = method_name,
+        stringsAsFactors = FALSE
+      )
+    }
+  )
+  do.call(rbind, out_list)
+}
+```
+
+
+```{r, cache= TRUE}
+cov_results = fit_model("cov", dir("fakedata/matrices"))
+```
+
+```{r, cache = TRUE}
+partial_results = fit_model("partial", dir("fakedata/matrices"))
+```
+
+
+
+## Settings for fitting a Pairs model
+
+The Pairs program, written by Dr. Werner Ulrich, can be downloaded from 
+[his web site](http://www.keib.umk.pl/pairs/?lang=en) as a Windows executable, but no source
+code or scripts are available to include here.
+
+I ran the software with the following options:
+
+* Batch mode
+* Sequential swap ("s")
+* Printing all pairs ("y")
+* C-score co-occurrence measure ("c")
+* Default confidence limits (0.05)
+* Default iterations (100)
+* Maximum of 20 species
+
+## Code for parsing the results from Pairs
+
+The Pairs software produces a text file with two tables of results for each data matrix.
+
+For the analyses in this paper, I needed to match the (negative) Z-scores associated with each
+species pair with the "true" interaction parameters used to simulate the corresponding
+data matrix.  I used the following code to do so.
+
+The Z-scores, (which are based on pairwise C-scores), have the opposite sign of the other metrics
+assessed here, so I multiplied them by negative one after importing them.
+
+```{r, cache=TRUE}
+
+raw = readLines("Pairs-results.txt")
+
+# Pull out the file ID (a sequence of digits separated by dashes) 
+# from the lines that begin with ">"
+ids = gsub("^.[^0-9]*([0-9]*-[0-9]*-[0-9]*).*$", "\\1", grep("^>", raw, value = TRUE))
+
+splitted_ids = strsplit(ids, "-")
+
+# All the tables in `raw` have "MeanScore" in their headers, but I don't
+# want the tables that have "ObsNumber" in them.
+header_rows = grep("MeanScore", raw)
+wrong_header_rows = grep("ObsNumber", raw)
+
+# Find the start and ending lines for the data tables of interest
+starts = header_rows + 1
+ends = c(
+  # The table of interest ends 3 lines before the next table starts
+  wrong_header_rows[-1] - 3,
+  length(raw)
+)
+
+
+# Loop through the tables and pull out negative Z-scores for each
+# species pair, then line them up with the "truth" values.
+# Finally, concatenate the results into a giant data.frame
+pairs_results = do.call(
+  rbind,
+  lapply(
+    1:length(ids), 
+    function(i){
+      
+      # Split the table by whitespace
+      split_table = strsplit(raw[starts[[i]]:ends[[i]]], "\\s+")
+      
+      # Z-scores are the 14th element of each splitted row
+      z_score = sapply(split_table, function(x) as.numeric(x[[14]]))
+      
+      # The first species' ID is in the third element of each splitted row
+      species_1 = sapply(split_table, function(x) as.numeric(x[[3]]))
+      
+      # The second species' ID is in the fourth element of each splitted row
+      species_2 = sapply(split_table, function(x) as.numeric(x[[4]]))
+      
+      truth = as.numeric(
+        strsplit(
+          readLines(
+            paste0(c("fakedata/truths/", ids[i], ".txt"), collapse = "")
+          ),
+          " "
+        )[[1]]
+      )
+      
+      # The number of species is the first element of each id
+      n_spp = as.numeric(splitted_ids[[i]][1])
+      n_loc = splitted_ids[[i]][2] # Number of locations is second
+      n_rep = splitted_ids[[i]][3] # Replicate number locations is second
+      
+      truthmat = matrix(0, n_spp, n_spp)
+      truthmat[upper.tri(truthmat)] = truth
+      truthmat = truthmat + t(truthmat)
+      
+      
+      # Output a data.frame with the "true" parameters, the negative Z-scores
+      # and information about the simulated landscape
+      data.frame(
+        n_spp = as.integer(n_spp), 
+        n_loc = as.integer(n_loc),
+        n_rep = as.integer(n_rep),
+        truth = truthmat[cbind(species_1, species_2)],
+        predicted = -z_score,
+        method = "Null",
+        stringsAsFactors = FALSE
+      )
+    }
+  )
+)
+
+```
+
+As noted in the manuscript, I manually altered one Z-score produced by the Pairs software because
+it was such a strong outlier that it completely dominated the regression model described below.
+
+```{r, cache = TRUE}
+# The largest predicted Z-score was over 1000; the next largest was about 32
+head(sort(pairs_results$predicted, decreasing = TRUE))
+pairs_results$predicted[which.max(pairs_results$predicted)] = 32.47
+```
+
+
+# Model evaluation
+
+For each method, I fit a linear regression model through the origin in order to put the different
+models' estimates on a common scale.  
+In these regressions, the weights associated with each species pair in the regression model are 
+inversely proportional to the number of species in a given landscape.  In this way, I ensured that 
+each landscape (as opposed to each species pair) contributed equally to the regression.
+
+For each species pair, I recorded the residuals between this regression estimate and the "true"
+interaction strength used to simulate the original data.
+
+
+```{r, cache = TRUE}
+
+results = do.call(
+  rbind,
+  lapply(
+    list(cov_results, partial_results, pairs_results),
+    function(x){
+      residuals = residuals(
+        lm(
+          truth ~ predicted + 0, 
+          data = x, 
+          weights = 1/choose(n_spp, 2),
+          y = TRUE
+        )
+      )
+      cbind(x, residuals = residuals)
+    }
+  )
+)
+
+# The second half of the simulated landscapes had an environmental component
+results$env = results$n_rep > (max(results$n_rep) / 2)
+
+```
+
+I then calculated $R^2$ for each method on each type of landscape (i.e. landscapes with each level
+of richness, each number of sites, and presence/absence of environmental variables)
+
+method as one minus the sum of squared residuals divided by
+the squared deviations from zero (e.g. `1 - sum(pairs_fit$residuals^2) / sum(pairs_fit$truth^2)` for
+the `pairs_results`).
+
+```{r, cache = TRUE}
+library(dplyr)
+
+summarized_results = results %>% group_by_("n_spp", "n_loc", "method", "env") %>% 
+  do_(
+    ~data.frame(r2 = 1 - sum(.$residuals^2) / sum(.$truth^2))
+  )
+
+head(summarized_results) # Show the first 6 rows
+```
+
+
+```{r, cache = FALSE}
+library(ggplot2)
+
+basic_plot = ggplot(aes(n_loc, r2, color = method, shape = method), data = summarized_results) + 
+  geom_line(size = .5) + 
+  geom_point(size = 2, fill = "white") + 
+  facet_grid(env~n_spp) + 
+  geom_hline(yintercept = 0, size = 1/2) +
+  geom_vline(xintercept = 0, size = 1)
+
+
+scaled_plot = basic_plot +
+  scale_shape_manual(values = c(21, 25, 15, 18)) + 
+  coord_cartesian(ylim = c(-0.1, 1.01)) + 
+  ylab(expression(R^2)) + 
+  xlab("Number of sites (log scale)") + 
+  scale_x_log10(breaks = c(20, 100, 500, 2500), limits = c(20, 2.5E3)) +
+  scale_color_manual(values = c("red3", "purple2", "sienna1", "mediumblue"))
+
+
+scaled_plot + theme_bw(base_size = 11) + 
+  theme(panel.margin = grid::unit(1.25, "lines")) + 
+  theme(panel.border = element_blank(), axis.line = element_blank()) + 
+  theme(
+    panel.grid.minor = element_blank(), 
+    panel.grid.major.y = element_line(color = "lightgray", size = 1/4), 
+    panel.grid.major.x = element_blank()
+  ) + 
+  theme(strip.background = element_blank(), legend.key = element_blank()) + 
+  theme(plot.margin = grid::unit(c(.01, .01, .75, .1), "lines")) + 
+  #theme(legend.text = element_text(size = 11)) + 
+  theme(
+    axis.title.x = element_text(vjust = -0.2, size = 14), 
+    axis.title.y = element_text(angle = 0, hjust = -.1, size = 14)
+  )
+
+```
+
+
