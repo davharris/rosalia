@@ -138,6 +138,9 @@ simulate_data = function(n_spp, n_sites, n_rep, min_gibbs = 1000, reps = 24, n_e
 
 # Model fitting
 
+You can use the code below on the same simulated landscapes that I used by unzipping
+the `fakedata.zip` file included with this file.
+
 ## R-compatible methods
 
 Three of the four methods are described in this subsection.  The "Pairs" software

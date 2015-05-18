@@ -1,0 +1,116 @@
+# Evaluation of the three species in Figure 1
+
+Load dependencies
+
+```{r}
+library(dplyr)
+library(magrittr)
+library(rosalia)
+library(knitr)
+library(rosalia)
+```
+
+```{r}
+set.seed(1)
+```
+
+Generate the species interaction matrix from Figure 1.
+
+```{r}
+alpha = c(3, 2, 1)
+beta = matrix(
+  c(0, -3, -3, -3, 0, -1, -3, -1, 0), 
+  nrow = 3, 
+  dimnames = replicate(2, c("tree", "shrub1", "shrub2"), simplify = FALSE)
+)
+
+kable(beta)
+```
+
+```{r}
+# Simulated community has three species at some of 100 locations
+n_spp = 3
+n_sites = 100
+
+# Re-organize the coefficients for rosalia
+truth = c(beta[upper.tri(beta)], alpha)
+
+# Enumerate the 8 possible species assemblages
+# using an internal rosalia function
+possibilities = rosalia:::generate_possibilities(n_spp)
+
+# In each of these 8 possible assemblages, which of the 6 possible
+# species pairs *both* occur?
+possible_cooc = sapply(
+  1:2^n_spp,
+  function(i){
+    tcp = tcrossprod(possibilities[i, ])
+    c(tcp[upper.tri(tcp)], diag(tcp))
+  }
+)
+```
+
+Simulate 1000 assemblages of 3 species across 100 sites.
+
+Once a landscape has been simulated, test whether `rosalia`, the sample covariance, and the partial 
+covariance got the sign of the shrub-shrub interaction correct.
+```{r}
+evaluation = sapply(
+  1:1000,
+  function(i){
+    x = rosalia:::simulate_data(
+      par = truth, 
+      possibilities = possibilities, 
+      possible_cooc = possible_cooc, 
+      n_sites = n_sites
+    )
+    if(paste0("fakedata/three/", i, ".txt") %in% dir("fakedata/three", full.names = TRUE)){
+      # Do nothing: simulated data was already written to disk
+    }else{
+      write.table(t(x[rowSums(x) > 0, ]), file = paste0("fakedata/three/", i, ".txt"))
+    }
+    
+    
+    c(
+      cov = cov(x)[2, 3] < 0,
+      partial = -solve(cov(x))[2, 3] < 0,
+      rosalia = rosalia(x, trace = 0, hessian = FALSE)$par[[3]] < 0
+    )
+  })
+
+```
+
+
+After running the "Pairs" software on transposed versions of the files simulated above, 
+we can import its results to see how the method performed.
+
+Not
+
+```{r}
+Pairs.txt = readLines("fakedata/three/Pairs.txt")
+z_score_column = grep("Z-Score", Pairs.txt, value = TRUE)[2] %>% 
+  strsplit(" +") %>% 
+  extract2(1) %>% 
+  grep("Z-Score", .)
+
+# A success for Pairs.exe implies Z>0 because C-scores are about absences, not presences
+
+pairs_evaluation = Pairs.txt[grep("(Var2.*Var1)|(Var1.*Var2)", Pairs.txt)] %>% 
+    strsplit(" +") %>%
+    sapply(. %>% extract(z_score_column) %>% as.numeric) %>%
+    is_greater_than(0)
+```
+
+Percentage of correct sign estimates:
+```{r, eval=FALSE}
+mean(pairs_evaluation) * 100
+
+rowMeans(evaluation) * 100
+```
+
+```{r, echo = FALSE}
+out = c(pairs = mean(pairs_evaluation) * 100, rowMeans(evaluation) * 100)
+
+kable(data_frame(model = names(out), percent_correct = paste(out, "%")))
+```
+
