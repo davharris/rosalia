@@ -130,8 +130,18 @@ find_observed_cooc = function(x){
 
 #' Fit a Markov network to binary data
 #' 
-#' @param x        A binary matrix.
-#' @param prior    An object of class \code{prior}. By default, the prior is flat for maximum likelihood estimation
+#' @description 
+#' The optimization is performed using the \code{BFGS} method in the \code{\link[stats]{optim}}
+#' function.
+#' 
+#' @param x A binary matrix.  Each row corresponds to an observed sample and each
+#' column corresponds to one node in the observed network.
+#' @param prior    An object of class \code{prior}. The default prior, produced by
+#' \code{\link{make_logistic_prior}}, regularizes the parameter estimates. This is
+#' important in Markov networks because the number of parameters will often be large
+#' compared to the number of independent observations. The flat prior produced by 
+#' \code{\link{make_logistic_prior}} is unbiased, but can result in unbounded estimates
+#' if two nodes always share the same state in the data set.
 #' @param maxit,trace,hessian,...    Arguments passed to \code{\link{optim}}
 #' @param parlist  user-specified starting values (optional).
 #' @return a \code{list} with the following elements:
@@ -154,7 +164,7 @@ find_observed_cooc = function(x){
 #' @importFrom assertthat assert_that
 rosalia = function(
   x, 
-  prior = make_flat_prior(), 
+  prior = make_logistic_prior(location = 0, scale = 1), 
   maxit = 100, 
   trace = 1, 
   hessian = FALSE,

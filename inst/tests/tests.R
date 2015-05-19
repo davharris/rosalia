@@ -193,7 +193,7 @@ test_that("optimization works on small data", {
   rows = sample.int(nrow(possibilities), prob = p, size = n_samples, replace = TRUE)
   x = possibilities[rows, ]
   
-  out = rosalia(x, maxit = 1E4)
+  out = rosalia(x, maxit = 1E4, trace = 0)
 
   estimated_theta = out$beta
   diag(estimated_theta) = out$alpha

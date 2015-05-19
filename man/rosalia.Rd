@@ -4,13 +4,19 @@
 \alias{rosalia}
 \title{Fit a Markov network to binary data}
 \usage{
-rosalia(x, prior = make_flat_prior(), maxit = 100, trace = 1,
-  hessian = FALSE, parlist, ...)
+rosalia(x, prior = make_logistic_prior(location = 0, scale = 1),
+  maxit = 100, trace = 1, hessian = FALSE, parlist, ...)
 }
 \arguments{
-\item{x}{A binary matrix.}
+\item{x}{A binary matrix.  Each row corresponds to an observed sample and each
+column corresponds to one node in the observed network.}
 
-\item{prior}{An object of class \code{prior}. By default, the prior is flat for maximum likelihood estimation}
+\item{prior}{An object of class \code{prior}. The default prior, produced by
+\code{\link{make_logistic_prior}}, regularizes the parameter estimates. This is
+important in Markov networks because the number of parameters will often be large
+compared to the number of independent observations. The flat prior produced by
+\code{\link{make_logistic_prior}} is unbiased, but can result in unbounded estimates
+if two nodes always share the same state in the data set.}
 
 \item{maxit,trace,hessian,...}{Arguments passed to \code{\link{optim}}}
 
@@ -26,7 +32,8 @@ support higher probabilities for the corresponding pair of nodes.}
 \item{opt}{The list returned by \code{\link[stats]{optim}}.}
 }
 \description{
-Fit a Markov network to binary data
+The optimization is performed using the \code{BFGS} method in the \code{\link[stats]{optim}}
+function.
 }
 \examples{
 # Simulate a random binary matrix with 1000 observations of five binary variables
