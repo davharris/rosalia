@@ -2,3 +2,5 @@
 ^\.Rproj\.user$
 ^cran-comments\.md$
 ^Harris_2015
+^README\.Rmd$
+^README-*\.png$
