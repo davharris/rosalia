@@ -4,7 +4,7 @@
 \alias{rosalia}
 \title{Fit a Markov network to binary data}
 \usage{
-rosalia(x, prior = make_flat_log_prior(), maxit = 100, trace = 1,
+rosalia(x, prior = make_flat_prior(), maxit = 100, trace = 1,
   hessian = FALSE, parlist, ...)
 }
 \arguments{

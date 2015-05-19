@@ -3,7 +3,15 @@
 #' @param location Numeric vector; see \code{\link{Logistic}}
 #' @param scale Numeric vector; see \code{\link{Logistic}}
 #' @param ...   Currently not used
-#' @return A `prior` object with a log density and a log gradient
+#' @return A `prior` object, which is a list of two functions:
+#' \item{log_d}{A function for calculating the log of the prior density for 
+#' each element of a vector. Calculated with \code{\link{dlogis}} with \code{log = TRUE}}
+#' \item{log_grad}{A function for calculating the gradient of the log-density for each element 
+#' of a vector.}
+#' @examples 
+#' p = make_logistic_prior(location = 0, scale = 2)
+#' curve(p$log_d(x), from = -5, to = 5)
+#' curve(p$log_grad(x), from = -5, to = 5)
 #' @export
 make_logistic_prior = function(location = 0, scale, ...){
   structure(
@@ -21,13 +29,21 @@ make_logistic_prior = function(location = 0, scale, ...){
 #' Make a flat prior for maximum likelihood estimation
 #' 
 #' @param ...   Currently not used
-#' @return A `prior` object with a constant log density and a log gradient equal to zero
+#' @return A `prior` object, which is a list of two functions:
+#' \item{log_d}{A function for calculating the log of the prior density for each element of a vector. 
+#' With a uniform prior, the log-density is always zero.}
+#' \item{log_grad}{A function for calculating the gradient of the log-density for each element of 
+#' a vector. For the uniform prior, this is always 0. With a uniform prior, this gradient is always zero.}
+#' @examples 
+#' p = make_flat_prior()
+#' curve(p$log_d(x), from = -5, to = 5)
+#' curve(p$log_grad(x), from = -5, to = 5)
 #' @export
-make_flat_log_prior = function(...){
+make_flat_prior = function(...){
   structure(
     list(
-      log_d = function(x){0},
-      log_grad = function(x){0}
+      log_d = function(x){rep(0, length(x))},
+      log_grad = function(x){rep(0, length(x))}
     ),
     class = "prior"
   )
@@ -119,7 +135,7 @@ find_observed_cooc = function(x){
 #' @export
 rosalia = function(
   x, 
-  prior = make_flat_log_prior(), 
+  prior = make_flat_prior(), 
   maxit = 100, 
   trace = 1, 
   hessian = FALSE,
