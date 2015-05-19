@@ -1,13 +1,14 @@
 #' Make a logistic prior with specified scale
 #' 
-#' @param location Numeric vector; see \code{\link{Logistic}}
-#' @param scale Numeric vector; see \code{\link{Logistic}}
+#' @param location Numeric vector; see \code{\link[stats]{Logistic}}
+#' @param scale Numeric vector; see \code{\link[stats]{Logistic}}
 #' @param ...   Currently not used
-#' @return A `prior` object, which is a list of two functions:
+#' @return A \code{prior} object, which is a list of two functions:
 #' \item{log_d}{A function for calculating the log of the prior density for 
-#' each element of a vector. Calculated with \code{\link{dlogis}} with \code{log = TRUE}}
+#' each element of a vector. Calculated with \code{\link[stats]{dlogis}} using \code{log = TRUE}}
 #' \item{log_grad}{A function for calculating the gradient of the log-density for each element 
 #' of a vector.}
+#' @seealso \code{\link{make_flat_prior}}
 #' @examples 
 #' p = make_logistic_prior(location = 0, scale = 2)
 #' curve(p$log_d(x), from = -5, to = 5)
@@ -29,11 +30,12 @@ make_logistic_prior = function(location = 0, scale, ...){
 #' Make a flat prior for maximum likelihood estimation
 #' 
 #' @param ...   Currently not used
-#' @return A `prior` object, which is a list of two functions:
+#' @return A \code{prior} object, which is a list of two functions:
 #' \item{log_d}{A function for calculating the log of the prior density for each element of a vector. 
 #' With a uniform prior, the log-density is always zero.}
 #' \item{log_grad}{A function for calculating the gradient of the log-density for each element of 
 #' a vector. For the uniform prior, this is always 0. With a uniform prior, this gradient is always zero.}
+#' @seealso \code{\link{make_logistic_prior}}
 #' @examples 
 #' p = make_flat_prior()
 #' curve(p$log_d(x), from = -5, to = 5)
@@ -56,10 +58,10 @@ logSumExp = function(x){
 }
 
 
-# Generate all possible binary vectors of length n_spp
-generate_possibilities = function(n_spp){
-  possibilities = expand.grid(replicate(n_spp, c(0L, 1L), simplify = FALSE))
-  as.matrix(possibilities[ , n_spp:1])
+# Generate all possible binary vectors of length n_nodes
+generate_possibilities = function(n_nodes){
+  possibilities = expand.grid(replicate(n_nodes, c(0L, 1L), simplify = FALSE))
+  as.matrix(possibilities[ , n_nodes:1])
 }
 
 # Where do the observed vectors occur in the possibilities matrix?
@@ -92,7 +94,7 @@ nlp = function(par, rows, possible_cooc, prior, ...){
 }
 
 # Gradient of the negative log-likelihood
-nll_grad = function(par, possible_cooc, observed_cooc, n_sites, ...){
+nll_grad = function(par, possible_cooc, observed_cooc, n_samples, ...){
   
   # Find energy for all possible co-occurrence patterns
   E = -c(par %*% possible_cooc)
@@ -104,7 +106,7 @@ nll_grad = function(par, possible_cooc, observed_cooc, n_sites, ...){
   
   expected_cooc = c(possible_cooc %*% p)
   
-  n_sites * (expected_cooc - observed_cooc)
+  n_samples * (expected_cooc - observed_cooc)
 }
 
 # Negative log posterior gradient
@@ -112,18 +114,18 @@ nlp_grad = function(
   par, 
   possible_cooc, 
   observed_cooc, 
-  n_sites, 
+  n_samples, 
   prior, 
   ...
 ){
-  nll_grad(par, possible_cooc, observed_cooc, n_sites, ...) - prior$log_grad(par)
+  nll_grad(par, possible_cooc, observed_cooc, n_samples, ...) - prior$log_grad(par)
 }
 
 # Find the number of observed co-occurrences (and occurrences)
 find_observed_cooc = function(x){
   cp = crossprod(x) / nrow(x)
   
-  c(cp[upper.tri(cp)], diag(cp))
+  c(diag(cp), cp[upper.tri(cp)])
 }
 
 #' Fit a Markov network to binary data
@@ -132,7 +134,24 @@ find_observed_cooc = function(x){
 #' @param prior    An object of class \code{prior}. By default, the prior is flat for maximum likelihood estimation
 #' @param maxit,trace,hessian,...    Arguments passed to \code{\link{optim}}
 #' @param parlist  user-specified starting values (optional).
+#' @return a \code{list} with the following elements:
+#' \item{alpha}{A vector of estimated univariate potentials ("intercepts"). Larger values
+#' support higher probabilities for the corresponding node.}
+#' \item{beta}{A symmetric matrix of bivariate potentials ("interaction strengths"). Larger values
+#' support higher probabilities for the corresponding pair of nodes.}
+#' \item{prior}{The prior object that was used during model fitting.}
+#' \item{opt}{The list returned by \code{\link[stats]{optim}}.}
+#' @examples 
+#' # Simulate a random binary matrix with 1000 observations of five binary variables
+#' m = matrix(rbinom(5000, size = 1, prob = .5), nrow = 1000, ncol = 5)
+#' 
+#' fit = rosalia(m)
+#' 
+#' fit$alpha
+#' fit$beta
+#' 
 #' @export
+#' @importFrom assertthat assert_that
 rosalia = function(
   x, 
   prior = make_flat_prior(), 
@@ -142,22 +161,24 @@ rosalia = function(
   parlist,
   ...
 ){
-  n_spp = ncol(x)
-  n_sites = nrow(x)
+  n_nodes = ncol(x)
+  n_samples = nrow(x)
   
-  if (n_spp > 25) {
+  assert_that(all(x == 1 | x == 0))
+  
+  if (n_nodes > 25) {
     message(
-      "Note: exact computation with more than 25 species is time-consuming and memory-intensive"
+      "Note: exact computation with more than 25 nodes is time-consuming and memory-intensive"
     )
   }
   
-  possibilities = generate_possibilities(n_spp = n_spp)
+  possibilities = generate_possibilities(n_nodes = n_nodes)
   
   possible_cooc = sapply(
-    1:2^n_spp,
+    1:2^n_nodes,
     function(i){
       tcp = tcrossprod(possibilities[i, ])
-      c(tcp[upper.tri(tcp)], diag(tcp))
+      c(diag(tcp), tcp[upper.tri(tcp)])
     }
   )
   
@@ -165,12 +186,12 @@ rosalia = function(
   
   if (missing(parlist)) {
     parlist = as.relistable(list(
-      upper = rep(0, choose(n_spp, 2)),
-      diagonal = qlogis((colSums(x) + 1) / (nrow(x) + 2))
+      alpha = qlogis((colSums(x) + 1) / (nrow(x) + 2)),
+      beta = rep(0, choose(n_nodes, 2))
     ))
   }
   
-  optim(
+  opt = optim(
     unlist(parlist), 
     fn = nlp, 
     gr = nlp_grad, 
@@ -180,21 +201,21 @@ rosalia = function(
     rows = find_rows(x),
     observed_cooc = find_observed_cooc(x),
     control = list(trace = trace, maxit = maxit, REPORT = 1, ...),
-    n_sites = n_sites,
+    n_samples = n_samples,
     prior = prior
+  )
+  
+  betas = relist(opt$par)$beta
+  
+  beta_matrix = matrix(0, n_nodes, n_nodes)
+  beta_matrix[upper.tri(beta_matrix)] = betas
+  beta_matrix = beta_matrix + t(beta_matrix)
+  
+  list(
+    alpha = relist(opt$par)$alpha,
+    beta = beta_matrix,
+    prior = prior,
+    opt = opt
   )
 }
 
-reform = function(par){
-  parlist = relist(par)
-  
-  dims = length(parlist$diagonal)
-  
-  out = matrix(0, nrow = dims, ncol = dims)
-  
-  out[upper.tri(out)] = parlist$upper
-  out = out + t(out)
-  diag(out) = parlist$diagonal
-  
-  out
-}

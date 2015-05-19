@@ -16,7 +16,25 @@ rosalia(x, prior = make_flat_prior(), maxit = 100, trace = 1,
 
 \item{parlist}{user-specified starting values (optional).}
 }
+\value{
+a \code{list} with the following elements:
+\item{alpha}{A vector of estimated univariate potentials ("intercepts"). Larger values
+support higher probabilities for the corresponding node.}
+\item{beta}{A symmetric matrix of bivariate potentials ("interaction strengths"). Larger values
+support higher probabilities for the corresponding pair of nodes.}
+\item{prior}{The prior object that was used during model fitting.}
+\item{opt}{The list returned by \code{\link[stats]{optim}}.}
+}
 \description{
 Fit a Markov network to binary data
+}
+\examples{
+# Simulate a random binary matrix with 1000 observations of five binary variables
+m = matrix(rbinom(5000, size = 1, prob = .5), nrow = 1000, ncol = 5)
+
+fit = rosalia(m)
+
+fit$alpha
+fit$beta
 }
 

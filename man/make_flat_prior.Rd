@@ -10,7 +10,7 @@ make_flat_prior(...)
 \item{...}{Currently not used}
 }
 \value{
-A `prior` object, which is a list of two functions:
+A \code{prior} object, which is a list of two functions:
 \item{log_d}{A function for calculating the log of the prior density for each element of a vector.
 With a uniform prior, the log-density is always zero.}
 \item{log_grad}{A function for calculating the gradient of the log-density for each element of
@@ -23,5 +23,8 @@ Make a flat prior for maximum likelihood estimation
 p = make_flat_prior()
 curve(p$log_d(x), from = -5, to = 5)
 curve(p$log_grad(x), from = -5, to = 5)
+}
+\seealso{
+\code{\link{make_logistic_prior}}
 }
 

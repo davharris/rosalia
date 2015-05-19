@@ -1,17 +1,17 @@
 test_that("possibilities are correct", {
-  n_spp = 12
+  n_nodes = 12
   expect_equal(
-    strtoi(apply(generate_possibilities(n_spp), 1, paste0, collapse = ""), 2),
-    seq(0, 2^n_spp - 1)
+  strtoi(apply(generate_possibilities(n_nodes), 1, paste0, collapse = ""), 2),
+    seq(0, 2^n_nodes - 1)
   )
 })
 
 test_that("extracting rows from possibilities works",{
-  n_spp = 12
-  n_sites = 55
-  x = matrix(rbinom(n_spp * n_sites, size = 1, prob = 0.5), ncol = n_spp)
+  n_nodes = 12
+  n_samples = 55
+  x = matrix(rbinom(n_nodes * n_samples, size = 1, prob = 0.5), ncol = n_nodes)
   
-  possibilities = generate_possibilities(n_spp)
+  possibilities = generate_possibilities(n_nodes)
   
   rows = find_rows(x)
   
@@ -19,20 +19,20 @@ test_that("extracting rows from possibilities works",{
 })
 
 test_that("loss works with empty theta",{
-  n_spp = 12
-  n_sites = 55
+  n_nodes = 12
+  n_samples = 55
   
-  x = matrix(rbinom(n_spp * n_sites, size = 1, prob = 0.5), ncol = n_spp)
+  x = matrix(rbinom(n_nodes * n_samples, size = 1, prob = 0.5), ncol = n_nodes)
   
   parlist = as.relistable(list(
-    upper = rep(0, choose(n_spp, 2)),
-    diagonal = rep(0, n_spp)
+    upper = rep(0, choose(n_nodes, 2)),
+    diagonal = rep(0, n_nodes)
   ))
   
-  possibilities = generate_possibilities(n_spp)
+  possibilities = generate_possibilities(n_nodes)
   
   possible_cooc = sapply(
-    1:2^n_spp,
+    1:2^n_nodes,
     function(i){
       tcp = tcrossprod(possibilities[i, ])
       c(tcp[upper.tri(tcp)], diag(tcp))
@@ -43,13 +43,13 @@ test_that("loss works with empty theta",{
   
   expect_equal(
     nll(rows, possible_cooc = possible_cooc, par = unlist(parlist), skeleton = parlist),
-    -log(1/2^n_spp) * length(rows)
+    -log(1/2^n_nodes) * length(rows)
   )
 })
 
 test_that("loss works on a toy example", {
-  n_spp = 2
-  n_sites = 55
+  n_nodes = 2
+  n_samples = 55
   
   theta = matrix(c(1, -1, -1, 2), nrow = 2)
   par = c(upper = -1, diagonal = c(1, 2))
@@ -61,9 +61,9 @@ test_that("loss works on a toy example", {
   
   
   # Simulate 4 possibilities
-  possibilities = generate_possibilities(n_spp)
+  possibilities = generate_possibilities(n_nodes)
   possible_cooc = sapply(
-    1:2^n_spp,
+    1:2^n_nodes,
     function(i){
       tcp = tcrossprod(possibilities[i, ])
       c(tcp[upper.tri(tcp)], diag(tcp))
@@ -71,7 +71,7 @@ test_that("loss works on a toy example", {
   )
   
   # Simulate small landscape
-  x = possibilities[sample.int(nrow(possibilities), n_sites, replace = TRUE, prob = exp(-correct_E)), ]
+  x = possibilities[sample.int(nrow(possibilities), n_samples, replace = TRUE, prob = exp(-correct_E)), ]
   
   correct_p = exp(-correct_E[find_rows(x)]) / exp(correct_logZ)
   correct_nll = -sum(log(correct_p))
@@ -82,23 +82,23 @@ test_that("loss works on a toy example", {
 })
 
 test_that("pair likelihood gradient is correct", {
-  n_spp = 3
-  n_sites = 1E3
+  n_nodes = 3
+  n_samples = 1E3
   
   pre_theta = matrix(rnorm(9), ncol = 3)
   theta = pre_theta + t(pre_theta)
   
-  x = matrix(rbinom(n_sites * n_spp, size = 1, prob = .5), ncol = n_spp)
+  x = matrix(rbinom(n_samples * n_nodes, size = 1, prob = .5), ncol = n_nodes)
   
   eps = 1E-5
   
-  possibilities = generate_possibilities(n_spp = n_spp)
+  possibilities = generate_possibilities(n_nodes = n_nodes)
   
   possible_cooc = sapply(
-    1:2^n_spp,
+    1:2^n_nodes,
     function(i){
       tcp = tcrossprod(possibilities[i, ])
-      c(tcp[upper.tri(tcp)], diag(tcp))
+      c(diag(tcp), tcp[upper.tri(tcp)])
     }
   )
   
@@ -117,7 +117,7 @@ test_that("pair likelihood gradient is correct", {
                   rows = find_rows(x),
                   possible_cooc = possible_cooc,
                   observed_cooc = observed_cooc,
-                  n_sites = n_sites
+                  n_samples = n_samples
   )
   
   
@@ -129,23 +129,23 @@ test_that("pair likelihood gradient is correct", {
 })
 
 test_that("diagonal likelihood gradient is correct", {
-  n_spp = 3
-  n_sites = 1E3
+  n_nodes = 3
+  n_samples = 1E3
   
   pre_theta = matrix(rnorm(9), ncol = 3)
   theta = pre_theta + t(pre_theta)
   
-  x = matrix(rbinom(n_sites * n_spp, size = 1, prob = .5), ncol = n_spp)
+  x = matrix(rbinom(n_samples * n_nodes, size = 1, prob = .5), ncol = n_nodes)
   
   eps = 1E-5
   
-  possibilities = generate_possibilities(n_spp = n_spp)
+  possibilities = generate_possibilities(n_nodes = n_nodes)
   
   possible_cooc = sapply(
-    1:2^n_spp,
+    1:2^n_nodes,
     function(i){
       tcp = tcrossprod(possibilities[i, ])
-      c(tcp[upper.tri(tcp)], diag(tcp))
+      c(diag(tcp), tcp[upper.tri(tcp)])
     }
   )
   
@@ -164,7 +164,7 @@ test_that("diagonal likelihood gradient is correct", {
                   rows = find_rows(x),
                   possible_cooc = possible_cooc,
                   observed_cooc = observed_cooc,
-                  n_sites = n_sites
+                  n_samples = n_samples
   )
   
   expect_equal(
@@ -175,8 +175,8 @@ test_that("diagonal likelihood gradient is correct", {
 })
 
 test_that("optimization works on small data", {
-  n_spp = 2
-  n_sites = 1E6
+  n_nodes = 2
+  n_samples = 1E6
   
   theta = matrix(c(1, -1, -1, 2), nrow = 2)
   
@@ -188,16 +188,19 @@ test_that("optimization works on small data", {
   
   
   # Simulate 4 possibilities
-  possibilities = generate_possibilities(n_spp)
+  possibilities = generate_possibilities(n_nodes)
   
-  rows = sample.int(nrow(possibilities), prob = p, size = n_sites, replace = TRUE)
+  rows = sample.int(nrow(possibilities), prob = p, size = n_samples, replace = TRUE)
   x = possibilities[rows, ]
   
   out = rosalia(x, maxit = 1E4)
 
+  estimated_theta = out$beta
+  diag(estimated_theta) = out$alpha
+  
   expect_equal(
     theta,
-    reform(out$par),
+    estimated_theta,
     tolerance = 0.01
   )
 })

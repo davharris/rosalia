@@ -7,16 +7,16 @@
 make_logistic_prior(location = 0, scale, ...)
 }
 \arguments{
-\item{location}{Numeric vector; see \code{\link{Logistic}}}
+\item{location}{Numeric vector; see \code{\link[stats]{Logistic}}}
 
-\item{scale}{Numeric vector; see \code{\link{Logistic}}}
+\item{scale}{Numeric vector; see \code{\link[stats]{Logistic}}}
 
 \item{...}{Currently not used}
 }
 \value{
-A `prior` object, which is a list of two functions:
+A \code{prior} object, which is a list of two functions:
 \item{log_d}{A function for calculating the log of the prior density for
-each element of a vector. Calculated with \code{\link{dlogis}} with \code{log = TRUE}}
+each element of a vector. Calculated with \code{\link[stats]{dlogis}} using \code{log = TRUE}}
 \item{log_grad}{A function for calculating the gradient of the log-density for each element
 of a vector.}
 }
@@ -27,5 +27,8 @@ Make a logistic prior with specified scale
 p = make_logistic_prior(location = 0, scale = 2)
 curve(p$log_d(x), from = -5, to = 5)
 curve(p$log_grad(x), from = -5, to = 5)
+}
+\seealso{
+\code{\link{make_flat_prior}}
 }
 
