@@ -433,6 +433,8 @@ summarized_results = results %>% group_by_("n_spp", "n_loc", "method", "env") %>
     ~data.frame(r2 = 1 - sum(.$residuals^2) / sum(.$truth^2))
   )
 
+write.csv(summarized_results, "summarized_results.csv")
+
 head(summarized_results) # Show the first 6 rows
 ```
 
