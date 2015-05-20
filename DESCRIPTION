@@ -1,7 +1,7 @@
 Package: rosalia
 Title: Exact inference for small binary Markov networks
-Version: 0.0.1
-Date: 2015-05-19
+Version: 0.1.0
+Date: 2015-05-20
 Authors@R: person(given = c("David", "J."), family = "Harris", email = "harry491@gmail.com", role = c("aut", "cre"))
 Description: Maximum likelihood and MAP inference of potentials in binary Markov random fields.
 Depends: R (>= 3.1.2)

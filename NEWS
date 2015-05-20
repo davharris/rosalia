@@ -1,0 +1,10 @@
+rosalia v0.1.0 (Release date: 2015-05-20)
+
+==============
+
+Changes:
+
+* More reproducible scripts for the first rosalia-related publication 
+in the "Harris_2015" folder (not installed by default)
+
+* Better user interface and documentation

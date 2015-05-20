@@ -364,7 +364,7 @@ networks---has been extremely well-studied in statistical physics for nearly a
 century, and the models' properties, capabilities, and limits are well-
 understood in a huge range of applications, from spatial modeling
 [@gelfand_modelling_2005] to neuroscience [@schneidman_weak_2006] to models of
-human behavior [@lee_statistical_2013; salakhutdinov_restricted_2007].
+human behavior [@lee_statistical_2013; @salakhutdinov_restricted_2007].
 Modeling species interactions using the same framework would thus allow
 ecologists to tap into an enormous set of existing discoveries and techniques
 for dealing with indirect effects, stability, and alternative stable states.

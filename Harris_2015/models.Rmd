@@ -551,4 +551,3 @@ What percentage of absolute $Z$ scores produce p-values below `.Machine$double.e
 p_values = pnorm(1 - abs(pairs_results$predicted))
 mean(p_values < .Machine$double.eps)
 ```
-
