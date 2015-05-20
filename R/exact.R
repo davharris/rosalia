@@ -95,7 +95,7 @@ nlp = function(par, rows, possible_cooc, prior, ...){
 
 # Gradient of the negative log-likelihood
 nll_grad = function(par, possible_cooc, observed_cooc, n_samples, ...){
-  
+
   # Find energy for all possible co-occurrence patterns
   E = -c(par %*% possible_cooc)
   
@@ -132,7 +132,8 @@ find_observed_cooc = function(x){
 #' 
 #' @description 
 #' The optimization is performed using the \code{BFGS} method in the \code{\link[stats]{optim}}
-#' function.
+#' function. Note that the likelihood function includes \code{2^N} terms for \code{N} nodes,
+#' so parameter estimation can be very slow with more than about 20-25 nodes.
 #' 
 #' @param x A binary matrix.  Each row corresponds to an observed sample and each
 #' column corresponds to one node in the observed network.
@@ -175,6 +176,10 @@ rosalia = function(
   n_samples = nrow(x)
   
   assert_that(all(x == 1 | x == 0))
+  if(!is.matrix(x)){
+    message("coercing x to matrix")
+    x = as.matrix(x)
+  }
   
   if (n_nodes > 25) {
     message(
