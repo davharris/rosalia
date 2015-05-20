@@ -33,7 +33,8 @@ support higher probabilities for the corresponding pair of nodes.}
 }
 \description{
 The optimization is performed using the \code{BFGS} method in the \code{\link[stats]{optim}}
-function.
+function. Note that the likelihood function includes \code{2^N} terms for \code{N} nodes,
+so parameter estimation can be very slow with more than about 20-25 nodes.
 }
 \examples{
 # Simulate a random binary matrix with 1000 observations of five binary variables

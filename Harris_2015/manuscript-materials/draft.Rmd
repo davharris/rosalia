@@ -44,7 +44,7 @@ of work and several major controversies, however [@lewin_santa_1983;
 competition's effects on community structure are unreliable
 [@gotelli_empirical_2009]. More generally, it can be difficult to reason about
 the complex web of direct and indirect interactions that contribute to the
-structure of real assemblages, especially when these interactions  occur
+structure of real assemblages, especially when these interactions occur
 against a background of other ecological processes such as dispersal and
 environmental filtering [@connor_checkered_2013]. For this reason, it isn't
 always clear what kinds of patterns would even constitute evidence of
@@ -60,27 +60,20 @@ overall association between two species could be driven by an outside force,
 as shown in Figure 1. Even though the two shrub species in this example compete 
 with one another for resources at a mechanistic level, they end up clustering
 together on the landscape because they both grow best in areas that are not overshadowed
-by trees. Due to fundamental constraints on the structure of valid
-covariance matrices [@brown_constraints_2010], this kind of positive correlation
-is almost inevitable, even when all the interactions are negative. For this
-reason, knowing that the two shrubs co-occur more than expected by chance
-under some null model (e.g. that their correlation in the data set is positive)
-can not---by itself---tell us much about their direct effects on one another.
+by trees. Thus, even significant deviations from independence cannot---by 
+themselves---tell us much about species' direct effects on one another.
 
 While the competition between the two shrubs in the previous example does not
 leave the commonly-expected pattern in community structure (negative
 association at the landscape level), it nevertheless does leave a signal in
 the data (Figure 1C). Specifically, *among shaded sites*, there will be a
 deficit of co-occurrences, and *among unshaded sites*, there will also be such
-a deficit. These *conditional* ("all-else-equal") relationships can be estimated with partial
-correlations [@albrecht_spatial_2001], although this approach is best-suited
-for Gaussian variables.  For non-Gaussian data, a more general approach is
-needed.
+a deficit.
 
 In this paper, I introduce Markov networks [undirected graphical models
 also known as Markov random fields; @murphy_machine_2012] as a framework for
 understanding the landscape-level consequences of pairwise species
-interactions, and for detecting them from observational data. Markov networks,
+interactions, and for detecting them with observational data. Markov networks,
 which generalize partial correlations to non-Gaussian data, have been used in
 many scientific fields to model associations between various kinds of
 "particles". For example, a well-studied network called the Ising model has played
@@ -96,8 +89,8 @@ species as the interacting particles in this modeling framework. Doing so
 would allow ecologists to simulate and study the landscape-level consequences
 of arbitrary species interaction matrices, even when our observations are not
 Gaussian. While ecologists explored some related approaches in the 1980's
-[@whittam_species_1981], computational limitations had previously forced
-researchers to rely on severe approximations that produced unintelligible
+[@whittam_species_1981], computational limitations had previously imposed
+severe approximations that produced unintelligible
 results [e.g. "probabilities" greater than one; @gilpin_factors_1982]. 
 Now that it is computationally feasible to fit these models
 exactly, the approach has become worth a second look.
@@ -118,19 +111,14 @@ species, controlling for the indirect influence of other species. In
 statistical terms, this implies that ecologists want to estimate *conditional*
 ("all-else-equal") relationships, rather than *marginal* ("overall") relationships. 
 The most familiar conditional relationship
-is the partial correlation, which indicates the portion of the correlation
+is the partial correlation, which indicates the portion of the sample correlation
 between two species that remains after controlling for other variables in the
-data set [@albrecht_spatial_2001], as opposed to the simple correlation, which
-does not control for other variables. The example with the shrubs and trees in
+data set [@albrecht_spatial_2001]. The example with the shrubs and trees in
 Figure 1 shows how the two correlation measures can have opposite signs, 
 and suggests that the partial correlation is more relevant
-for drawing inferences about species interactions (e.g. competition). To the
-extent that our observations are not multivariate Gaussian (e.g. 
-presence-absence data), partial covariances do not describe variables' conditional
-relationships exactly, and a more general approach is needed. Markov networks
-allow researchers to generalize conditional relationships to non-Gaussian
-networks, much as generalized linear models allow researchers to extend
-regression to non-Gaussian response variables [@lee_learning_2012].
+for drawing inferences about species interactions (e.g. competition). 
+Markov networks extend this approach to non-Gaussian data, much as
+generalized linear models do for linear regression [@lee_learning_2012].
 
 Markov networks give a probability value for every possible combination of
 presences and absences in communities. For example, given a network with
@@ -152,7 +140,7 @@ negatively-associated species co-occur, the model tends to produce assemblages
 that have many pairs of positively-associated species and relatively few pairs
 of negatively-associated species (exactly as an ecologist might expect).
 
-A major feature of Markov networks is the fact that the conditional
+A major benefit of Markov networks is the fact that the conditional
 relationships between species can be read directly off the matrix of $\beta$
 coefficients [@murphy_machine_2012]. For example, if the coefficient linking
 two mutualist species is $+2$, then---all else equal---the odds of observing
@@ -169,14 +157,14 @@ absolute probability estimates. Turning the relative probability given by
 Equation 1 into an absolute probability entails scaling by a *partition
 function*, $Z(\alpha, \beta)$, which ensures that the probabilities of all
 possible assemblages that could be produced by the model sum to one (bottom of
-Figure 2B). While the analyses in this paper involve exact computations, this
-approach quickly becomes infeasible as the number of species increases: with
+Figure 2B). Calculating $Z(\alpha, \beta)$ exactly, as is done in this paper,
+quickly becomes infeasible as the number of species increases: with
 $2^N$ possible assemblages of $N$ species the number of bookkeeping operations
 required for exact inference quickly spirals exponentially into the billions.
 Numerous techniques are available for working with Markov networks that keep
 the computations tractable, either through analytic approximations
 [@lee_learning_2012] or Monte Carlo sampling [@salakhutdinov_learning_2008],
-but these techniques are beyond the scope of this paper.
+but they are beyond the scope of this paper.
 
 ***Simulations.***
 In order to compare different methods for drawing inferences from
@@ -186,27 +174,26 @@ parameters.
 The first set of simulated landscapes included the three competing
 species shown in Figure 1. For each of 1000 replicates, I generated a
 landscape with 100 sites by sampling exactly from a probability distribution
-defined by the interaction coefficients in that figure. Each of the methods
+defined by the interaction coefficients in that figure (Appendix A). Each of the methods
 described below (a Markov network, two correlation-based methods and a null modeling 
-approach) was then evaluated on its ability to correctly infer that all
-three species interactions were negative, despite the frequent co-occurrences
-of the two shrub species.
+approach) was then evaluated on its ability to correctly infer that 
+the two shrub species competed with one another, despite their frequent co-occurrence.
 
 I also simulated a second set of landscapes with five, ten, or twenty
 potentially-interacting species on landscapes composed of 20, 100, 500, or
-2500 observed communities (24 replicate simulations for each combination).
+2500 observed communities (24 replicate simulations for each combination; Appendix B).
 These simulated data sets span the range from small, single-observer data
 sets to large collaborative efforts such as the North American Breeding Bird
-Survey. As described in Appendix 1, I randomly drew the "true" coefficient
+Survey. As described in Appendix B, I randomly drew the "true" coefficient
 values for each replicate so that most species pairs interacted negligibly, a
 few pairs interacted very strongly, and competition was three times more
 common than facilitation. I then used Gibbs sampling to randomly generate
 landscapes with varying numbers of species and sites via Markov chain Monte
-Carlo (Appendix 1). For half of the simulated landscapes, I treated each
+Carlo (Appendix C). For half of the simulated landscapes, I treated each
 species' $\alpha$ coefficient as a constant, as described above. For the other
 half, I treated the $\alpha$ coefficients as linear functions of two abiotic
 environmental factors that varied from location to location across the
-landscape (Appendix 1). The latter set of simulated landscapes provide an
+landscape (Appendix B). The latter set of simulated landscapes provide an
 important test of the methods' ability to distinguish co-occurrence patterns
 that were generated from pairwise interactions among the observed species from
 those that were generated by external forces like abiotic environmental
@@ -218,17 +205,16 @@ spatial variables that helped shape the landscape [cf @connor_checkered_2013;
 
 
 ***Inferring $\alpha$ and $\beta$ coefficients from presence-absence data.***
-The previous sections involved known values of $\alpha$ and $\beta$. In most
-real cases, however, the true values of these parameters are not known, and
-ecologists  will need to estimate them from data. When the number of species
-is reasonably small, one can compute exact maximum likelihood estimates for
-all of the $\alpha$ and $\beta$ coefficients by optimizing Equation 1
-(Appendix 2).  Doing so allows us to find the unique set of $\alpha$ and
+The previous sections involved known values of $\alpha$ and $\beta$. In practice,
+ecologists will often need to estimate these parameters from data instead. 
+When the number of species is reasonably small, one can compute exact maximum 
+likelihood estimates for all of the $\alpha$ and $\beta$ coefficients by optimizing 
+Equation 1 (Appendix C).  Doing so allows us to find the unique set of $\alpha$ and
 $\beta$ coefficients that would be expected to produce exactly the observed
-occurrence frequencies and co-occurrence frequencies. Fully-observed Markov
+co-occurrence frequencies. Fully-observed Markov
 networks like the ones considered here have unimodal likelihood surfaces
 [@murphy_machine_2012], ensuring that this procedure will always converge on
-the global maximum.  
+the global maximum. 
 
 For the analyses in this paper, I made a small modification to this maximum
 likelihood procedure. Given the large number of parameters associated with
