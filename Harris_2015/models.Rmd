@@ -30,7 +30,7 @@ make_coefficients = function(n_spp){
   # The rosalia function stores pairwise parameters in the upper
   # triangle of an n-by-n matrix and stores the species intercepts
   # along the diagonal, so these values are named accordingly.
-  c(upper = b, diag = a)
+  c(alpha  = a, beta = b)
 }
 ```
 
@@ -48,10 +48,10 @@ simulate_data = function(n_spp, n_sites, n_rep, min_gibbs = 1000, reps = 24, n_e
   par = make_coefficients(n_spp)
   
   # "True" interaction strengths, to save for later
-  truth = par[1:choose(n_spp, 2)]
+  truth = par[1:n_spp]
   
   # "True" intercepts, possibly adjusted below by environment
-  alpha = par[-(1:choose(n_spp, 2))]
+  alpha = par[-(1:n_spp)]
   
   # Turn the interaction values into an n-by-n matrix
   # Start with empty matrix; fill in upper triangle; 
@@ -75,7 +75,8 @@ simulate_data = function(n_spp, n_sites, n_rep, min_gibbs = 1000, reps = 24, n_e
   give_up = FALSE # don't give up simulating unless things run for too long
   incomplete = TRUE # Sampling isn't complete yet
   
-  # Landscape starts as if betas were all zero
+  # Landscape starts as if betas were all zero. Each species' occurrence probability
+  # depends on its alpha value and on the environment (assuming alpha_env is not zero).
   x = matrix(
     plogis(rep(1, n_sites) %*% t(alpha) + env %*% alpha_env), 
     nrow = n_sites, 
@@ -85,6 +86,10 @@ simulate_data = function(n_spp, n_sites, n_rep, min_gibbs = 1000, reps = 24, n_e
   # Gibbs sampling until enough iterations have passed *and* no species are totally absent
   while(incomplete & !give_up){
     i = i + 1
+    
+    # Each round of Gibbs sampling updates one species (column) across all sites
+    # according to its conditional probability (i.e. conditional on environment
+    # and the other species that are present).
     for(j in 1:n_spp){
       x[,j] = rbinom(
         nrow(x),
@@ -157,7 +162,7 @@ the model's estimates. In order to ensure convergence, I increased the number of
 
 The following function returns a vector of $\beta$ coefficients.
 
-```{r, cache=TRUE, eval = FALSE}
+```{r, cache=TRUE}
 library("rosalia")
 
 fit_rosalia = function(x){
@@ -169,7 +174,7 @@ fit_rosalia = function(x){
   
   # Return the upper triangle of the interaction matrix,
   # which has all the beta values.
-  relist(fit$par)$upper
+  fit$beta[upper.tri(fit$beta)]
 }
 
 ```
@@ -220,9 +225,10 @@ the "true" interaction strength between the pair, and a "predicted" value from t
 fitted model.
 
 ```{r, cache = TRUE}
+library(parallel)
 fit_model = function(method_name, csv_names){
   fit = get(paste("fit", method_name, sep = "_"))
-  out_list = lapply(
+  out_list = mclapply(
     csv_names, 
     function(x){
       file_info = as.integer(strsplit(x, "-|\\.csv")[[1]])
@@ -242,7 +248,7 @@ fit_model = function(method_name, csv_names){
         n_loc = file_info[2],
         n_rep = file_info[3],
         truth = unlist(truth),
-        predicted = fit(read.csv(full_path, row.names = 1)),
+        predicted = fit(as.matrix(read.csv(full_path, row.names = 1))),
         method = method_name,
         stringsAsFactors = FALSE
       )
@@ -260,6 +266,11 @@ cov_results = fit_model("cov", dir("fakedata/matrices"))
 ```{r, cache = TRUE}
 partial_results = fit_model("partial", dir("fakedata/matrices"))
 ```
+
+```{r, cache = TRUE}
+rosalia_results = fit_model("rosalia", grep("^[^2]", dir("fakedata/matrices"), value = TRUE))
+```
+
 
 
 
@@ -392,13 +403,23 @@ each landscape (as opposed to each species pair) contributed equally to the regr
 For each species pair, I recorded the residuals between this regression estimate and the "true"
 interaction strength used to simulate the original data.
 
+```{r}
+str(rosalia_results)
+```
+
+
 
 ```{r, cache = TRUE}
 
 results = do.call(
   rbind,
   lapply(
-    list(cov_results, partial_results, pairs_results),
+    list(
+      rosalia_results, 
+      cov_results, 
+      partial_results, 
+      pairs_results
+    ),
     function(x){
       residuals = residuals(
         lm(
@@ -477,4 +498,24 @@ scaled_plot + theme_bw(base_size = 11) +
 
 ```
 
+
+
+How often does each method get the sign of the interaction correct?
+```{r, cache = TRUE}
+sapply(
+  list(partial = partial_results, pairs = pairs_results, rosalia = rosalia_results, cov = cov_results), 
+  function(x){
+    signif(100 * mean(sign(x$predicted) == sign(x$truth)), 3)
+  }
+)
+```
+
+Compare with the percent correct one would obtain "by chance" if one knew that 75%
+of the true interactions were negative
+```{r, cache = TRUE}
+signif(
+   100 *mean(rbinom(10000, size = 1, prob = .75) == rbinom(10000, size = 1, prob = .75)),
+  3
+)
+```
 
