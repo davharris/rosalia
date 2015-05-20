@@ -268,7 +268,7 @@ partial_results = fit_model("partial", dir("fakedata/matrices"))
 ```
 
 ```{r, cache = TRUE}
-rosalia_results = fit_model("rosalia", grep("^[^2]", dir("fakedata/matrices"), value = TRUE))
+rosalia_results = fit_model("rosalia", dir("fakedata/matrices"))
 ```
 
 
@@ -421,14 +421,16 @@ results = do.call(
       pairs_results
     ),
     function(x){
-      residuals = residuals(
-        lm(
-          truth ~ predicted + 0, 
-          data = x, 
-          weights = 1/choose(n_spp, 2),
-          y = TRUE
-        )
+      linear_model = lm(
+        truth ~ predicted + 0, 
+        data = x, 
+        weights = 1/choose(n_spp, 2),
+        y = TRUE
       )
+      cat(x$method[[1]])
+      print(summary(linear_model))
+      cat("\n", "\n", "\n")
+      residuals = residuals(linear_model)
       cbind(x, residuals = residuals)
     }
   )
@@ -532,5 +534,21 @@ signif(
    100 *mean(rbinom(10000, size = 1, prob = .75) == rbinom(10000, size = 1, prob = .75)),
   3
 )
+```
+
+
+What percentage of absolute $Z$ scores exceed 5?
+
+```{r}
+mean(abs(pairs_results$predicted) > 5)
+```
+
+What percentage of absolute $Z$ scores produce p-values below `.Machine$double.eps`?
+
+```{r}
+.Machine$double.eps
+
+p_values = pnorm(1 - abs(pairs_results$predicted))
+mean(p_values < .Machine$double.eps)
 ```
 

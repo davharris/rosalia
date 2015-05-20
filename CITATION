@@ -1,0 +1,13 @@
+year <- sub("-.*", "", meta$Date)
+note <- sprintf("R package version %s", meta$Version)
+
+bibentry(
+  bibtype = "Manual",
+  title = "rosalia: Exact inference for small binary Markov networks",
+  author = person(c("David", "J"), "Harris"),
+  year = year,
+  note = note,
+  url={"http://dx.doi.org/10.5281/zenodo.17579"}, 
+  DOI={"10.5281/zenodo.17579"}, 
+  publisher={"Zenodo"}
+)

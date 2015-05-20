@@ -74,7 +74,7 @@ evaluation = sapply(
     c(
       cov = cov(x)[2, 3] < 0,
       partial = -solve(cov(x))[2, 3] < 0,
-      rosalia = rosalia(x, trace = 0, hessian = FALSE)$par[[3]] < 0
+      rosalia = rosalia(x, trace = 0, prior = make_flat_prior())$beta[2,3] < 0
     )
   })
 
