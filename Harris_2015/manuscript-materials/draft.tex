@@ -259,7 +259,7 @@ randomly drew the ``true'' coefficient values for each replicate so that
 most species pairs interacted negligibly, a few pairs interacted very
 strongly, and competition was three times more common than facilitation.
 I then used Gibbs sampling to randomly generate landscapes with varying
-numbers of species and sites via Markov chain Monte Carlo (Appendix C).
+numbers of species and sites via Markov chain Monte Carlo (Appendix B).
 For half of the simulated landscapes, I treated each species' \(\alpha\)
 coefficient as a constant, as described above. For the other half, I
 treated the \(\alpha\) coefficients as linear functions of two abiotic
@@ -280,14 +280,17 @@ presence-absence data.}} The previous sections involved known values of
 estimate these parameters from data instead. When the number of species
 is reasonably small, one can compute exact maximum likelihood estimates
 for all of the \(\alpha\) and \(\beta\) coefficients by optimizing
-Equation 1 (Appendix C). Doing so allows us to find the unique set of
-\(\alpha\) and \(\beta\) coefficients that would be expected to produce
-exactly the observed co-occurrence frequencies. Fully-observed Markov
-networks like the ones considered here have unimodal likelihood surfaces
-(Murphy 2012), ensuring that this procedure will always converge on the
-global maximum. The optimization procedures described here and in
-Appendix C are implemented in the \emph{rosalia} package
-({\textbf{???}}) for the R programming language (R Core Team 2015).
+\(p(\vec{y}; \alpha, \beta)\). Fully-observed Markov networks like the
+ones considered here have unimodal likelihood surfaces (Murphy 2012),
+ensuring that this procedure will always converge on the global maximum.
+This maximum is the unique combination of \(\alpha\) and \(\beta\)
+coefficients that would be expected to produce exactly the observed
+co-occurrence frequencies. For the analyses in this paper, I used the
+\emph{rosalia} package (Harris 2015a) for the R programming language (R
+Core Team 2015) to define the objective function and gradient as R code.
+The rosalia package then uses the \texttt{BFGS} method in R's
+\texttt{optim} function to find the best values for \(\alpha\) and
+\(\beta\).
 
 For analyses with 5 or more species, I made a small modification to the
 maximum likelihood procedure described above. Given the large number of
@@ -389,7 +392,7 @@ approach; Loh and Wainwright (2013)). On the other hand, ecologists may
 often have prior information about the nature of real species'
 interaction patterns from natural history or ecological experiments,
 which could substantially reduce the probability and magnitude of error.
-The rosalia package ({\textbf{???}}) has built-in mechanisms for
+The rosalia package (Harris 2015a) has built-in mechanisms for
 incorporating this kind of information, if it can be expressed as a
 prior probability distribution or a penalty on the likelihood.
 
@@ -408,7 +411,7 @@ to indicate that the method can be very robust. Additionally, the fact
 that Markov networks provide a likelihood function to optimize makes
 them highly extensible, even when it is inconvenient to compute the
 likelihood exactly. For example, the mistnet software package for joint
-species distribution modeling (Harris 2015) can fit \emph{approximate}
+species distribution modeling (Harris 2015b) can fit \emph{approximate}
 Markov networks to large species assemblages (\textgreater{}300 species)
 while simultaneously modeling each species' response to the abiotic
 environment with complex, nonlinear functions. This sort of approach,
@@ -444,11 +447,10 @@ networks---has been extremely well-studied in statistical physics for
 nearly a century, and the models' properties, capabilities, and limits
 are well- understood in a huge range of applications, from spatial
 modeling (Gelfand et al. 2005) to neuroscience (Schneidman et al. 2006)
-to models of human behavior {[}Lee et al. (2013);
-salakhutdinov\_restricted\_2007{]}. Modeling species interactions using
-the same framework would thus allow ecologists to tap into an enormous
-set of existing discoveries and techniques for dealing with indirect
-effects, stability, and alternative stable states.
+to models of human behavior (Lee et al. 2013). Modeling species
+interactions using the same framework would thus allow ecologists to tap
+into an enormous set of existing discoveries and techniques for dealing
+with indirect effects, stability, and alternative stable states.
 
 These results also have important implications for the continued use of
 fixed-fixed null models in ecology. The small simulated landscapes
@@ -489,49 +491,6 @@ and N. J. Gotelli provided useful feedback on an earlier draft of this
 work.
 
 \textbf{\emph{References:}}
-
-\textbf{\emph{Figure captions}}
-
-\textbf{\emph{Figure 1.}} \textbf{A.} A small network of three competing
-species. The tree (top) tends not to co-occur with either of the two
-shrub species, as indicated by the strongly negative coefficient linking
-them. The two shrub species also compete with one another, as indicated
-by their negative coefficient (circled), but this effect is
-substantially weaker. \textbf{B.} In spite of the competitive
-interactions between the two shrub species, their shared tendency to
-occur in locations without trees makes their occurrence vectors
-positively correlated (circled). \textbf{C.} Controlling for the tree
-species' presence with a conditional method such as a partial covariance
-or a Markov network allows us to correctly identify the negative
-interaction between these two species (circled).
-
-\textbf{\emph{Figure 2.}} \textbf{A.} A small Markov network with two
-species. The depicted abiotic environment favors the occurrence of both
-species (\(\alpha >0\)), particularly species 2
-(\(\alpha_2 > \alpha_1\)). The negative \(\beta\) coefficient linking
-these two species implies that they co-occur less than expected under
-independence. \textbf{B.} Relative probabilities of all four possible
-presence-absence combinations for Species 1 and Species 2. The exponent
-includes \(\alpha_1\) whenever Species 1 is present (\(y_1 = 1\)), but
-not when it is absent (\(y_1 = 0\)). Similarly, the exponent includes
-\(\alpha_2\) only when species \(2\) is present (\(y_2 = 1\)), and
-\(\beta\) only when both are present (\(y_1y_2 = 1\)). The normalizing
-constant \(Z\), ensures that the four relative probabilities sum to 1.
-In this case, \(Z\) is about 18.5. \textbf{C.} Using the probabilities,
-we can find the expected frequencies of all possible co-occurrence
-patterns between the two species of interest. \textbf{D.} If \(\beta\)
-equaled zero (e.g.~if the species no longer competed for the same
-resources), then the reduction in competition would allow each species
-to increase its occurrence rate and the deficit of co-occurrences would
-be eliminated.
-
-\textbf{\emph{Figure 3.}} Proportion of variance in interaction
-coefficients explained by each method with 5, 10, or 20 species arrayed
-across varying numbers of sampled locations when environmental filtering
-was absent (top row) or present (bottom row). A negative \(R^2\) values
-implies that the squared error associated with the corresponding subset
-of the predictions was larger than the error one would get from assuming
-that all coefficients equalled zero.
 
 Albrecht, M., and N. J. Gotelli. 2001. Spatial and temporal niche
 partitioning in grassland ants. Oecologia 126:134--141.
@@ -583,7 +542,11 @@ Gotelli, N. J., and W. Ulrich. 2009. The empirical Bayes approach as a
 tool to identify non-random species associations. Oecologia
 162:463--477.
 
-Harris, D. J. 2015. Generating realistic assemblages with a Joint
+Harris, D. J. 2015a. Rosalia: Exact inference for small binary Markov
+networks. R package version 0.1.0. Zenodo.
+http://dx.doi.org/10.5281/zenodo.17808.
+
+Harris, D. J. 2015b. Generating realistic assemblages with a Joint
 Species Distribution Model. Methods in Ecology and Evolution.
 
 Harris, D. J., K. G. Smith, and P. J. Hanly. 2011. Occupancy is
@@ -601,10 +564,7 @@ q-bio{]}.
 Lee, J. D., and T. J. Hastie. 2012, May. Learning Mixed Graphical
 Models.
 
-Lewin, R. 1983. Santa Rosalia Was a Goat Ecologists have for two decades
-made assumptions about the importance of competition in community
-organization; that idea is now under vigorous attack. Science
-221:636--639.
+Lewin, R. 1983. Santa Rosalia Was a Goat. Science 221:636--639.
 
 Loh, P.-L., and M. J. Wainwright. 2013. Structure estimation for
 discrete graphical models: Generalized covariance matrices and their
@@ -647,6 +607,51 @@ arXiv:1403.0904.
 
 Xiao, X., D. J. McGlinn, and E. P. White. 2015. A strong test of the
 Maximum Entropy Theory of Ecology. The American Naturalist 185:E70--E80.
+
+
+\textbf{\emph{Figure captions}}
+
+\textbf{\emph{Figure 1.}} \textbf{A.} A small network of three competing
+species. The tree (top) tends not to co-occur with either of the two
+shrub species, as indicated by the strongly negative coefficient linking
+them. The two shrub species also compete with one another, as indicated
+by their negative coefficient (circled), but this effect is
+substantially weaker. \textbf{B.} In spite of the competitive
+interactions between the two shrub species, their shared tendency to
+occur in locations without trees makes their occurrence vectors
+positively correlated (circled). \textbf{C.} Controlling for the tree
+species' presence with a conditional method such as a partial covariance
+or a Markov network allows us to correctly identify the negative
+interaction between these two species (circled).
+
+\textbf{\emph{Figure 2.}} \textbf{A.} A small Markov network with two
+species. The depicted abiotic environment favors the occurrence of both
+species (\(\alpha >0\)), particularly species 2
+(\(\alpha_2 > \alpha_1\)). The negative \(\beta\) coefficient linking
+these two species implies that they co-occur less than expected under
+independence. \textbf{B.} Relative probabilities of all four possible
+presence-absence combinations for Species 1 and Species 2. The exponent
+includes \(\alpha_1\) whenever Species 1 is present (\(y_1 = 1\)), but
+not when it is absent (\(y_1 = 0\)). Similarly, the exponent includes
+\(\alpha_2\) only when species \(2\) is present (\(y_2 = 1\)), and
+\(\beta\) only when both are present (\(y_1y_2 = 1\)). The normalizing
+constant \(Z\), ensures that the four relative probabilities sum to 1.
+In this case, \(Z\) is about 18.5. \textbf{C.} Using the probabilities,
+we can find the expected frequencies of all possible co-occurrence
+patterns between the two species of interest. \textbf{D.} If \(\beta\)
+equaled zero (e.g.~if the species no longer competed for the same
+resources), then the reduction in competition would allow each species
+to increase its occurrence rate and the deficit of co-occurrences would
+be eliminated.
+
+\textbf{\emph{Figure 3.}} Proportion of variance in interaction
+coefficients explained by each method with 5, 10, or 20 species arrayed
+across varying numbers of sampled locations when environmental filtering
+was absent (top row) or present (bottom row). A negative \(R^2\) values
+implies that the squared error associated with the corresponding subset
+of the predictions was larger than the error one would get from assuming
+that all coefficients equalled zero.
+
 \end{flushleft}
 \end{spacing}
 

@@ -7,7 +7,7 @@ bibentry(
   author = person(c("David", "J"), "Harris"),
   year = year,
   note = note,
-  url={"http://dx.doi.org/10.5281/zenodo.17579"}, 
+  url={"http://dx.doi.org/10.5281/zenodo.17808"}, 
   DOI={"10.5281/zenodo.17579"}, 
   publisher={"Zenodo"}
 )

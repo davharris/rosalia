@@ -1,7 +1,9 @@
 ---
 output: html_document
 ---
-# Simulating landscapes from known coefficients
+# Analyses for Figure 3
+
+## Simulating landscapes from known coefficients
 
 The following function draws random coefficients for a Markov network of a pre-specified size.
 The probability distribution was chosen so that most species pairs interact weakly, a few
@@ -36,8 +38,16 @@ make_coefficients = function(n_spp){
 
 
 I used the following function to generate "true" parameters with the method above, 
-simulate a presence-absence landscape based on those parameters using Markov chain Monte Carlo,
-and save the results to a "fakedata" folder.
+simulate a presence-absence landscape based on those parameters using Markov chain Monte Carlo, and save the results to a "fakedata" folder.
+
+I used Gibbs sampling as my Markov chain Monte Carlo transition operator.
+In each round of Gibbs sampling, I cycled through all the species, randomly
+updating each one's presence/absence vector in response to its conditional
+occurrence probability:
+
+$$p(y_i) = \mathrm{logistic}(\alpha_i + \sum_j\beta_{ij}y_j),$$
+
+where the logistic function is $\frac{1}{1+e^{-x}}$.
 
 ```{r, cache = TRUE}
 library(rosalia)
@@ -141,17 +151,17 @@ simulate_data = function(n_spp, n_sites, n_rep, min_gibbs = 1000, reps = 24, n_e
 }
 ```
 
-# Model fitting
+## Model fitting
 
 You can use the code below on the same simulated landscapes that I used by unzipping
 the `fakedata.zip` file included with this file.
 
-## R-compatible methods
+### R-compatible methods
 
 Three of the four methods are described in this subsection.  The "Pairs" software
 needs to be analyzed outise of R and is described below.
 
-### Rosalia
+***Rosalia***
 
 The `rosalia` function finds (penalized) maximum likelihood estimates for the
 $\alpha$ and $\beta$ parameters in a Markov network using the `BFGS` method of
@@ -179,7 +189,7 @@ fit_rosalia = function(x){
 
 ```
 
-### Partial covariance
+***Partial covariance***
 
 The partial covariance is normally computed as the matrix inverse of
 the covariance times `-1`.  The `ridgeS` function adds a regularization parameter,
@@ -203,7 +213,7 @@ fit_partial = function(x){
 
 ```
 
-### Sample covariance
+***Sample covariance***
 
 The sample covariance provides a simpler estimate of species' interaction strengths.
 
@@ -215,7 +225,7 @@ fit_cov = function(x){
 ```
 
 
-## Analyzing simulated landscapes with the first three models
+### Analyzing simulated landscapes with the first three models
 
 This function takes a quoted model name (`"cov"`, `"rosalia"`, or `"partial"`) and applies the
 corresponding function above to all the matrices in the `fakedata` folder.
