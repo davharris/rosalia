@@ -411,6 +411,7 @@ summary(
 )$r.squared
 ```
 
+
 For the analyses below, I adjusted the outlier to take on a somewhat more reasonable value.
 
 ```{r, cache = TRUE}
