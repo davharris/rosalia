@@ -123,7 +123,7 @@ $if(strikeout)$
 \pdfstringdefDisableCommands{\renewcommand{\sout}{}}
 $endif$
 \setlength{\parindent}{0pt}
-\setlength{\parskip}{3pt}
+\setlength{\parskip}{5pt}
 \setlength{\emergencystretch}{3em}  % prevent overfull lines
 $if(numbersections)$
 \setcounter{secnumdepth}{5}

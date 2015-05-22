@@ -392,13 +392,29 @@ pairs_results = do.call(
 
 ```
 
-As noted in the manuscript, I manually altered one Z-score produced by the Pairs software because
-it was such a strong outlier that it completely dominated the regression model described below.
+As noted in the manuscript, the `pairs_results` include one outlier ($Z>1000$) that dominates the 
+subsequent analyses.
+```{r}
+head(sort(pairs_results$predicted, decreasing = TRUE))
+```
+
+With the outlier left as-is, the R-squared value is:
+
+```{r}
+summary(
+  lm(
+    truth ~ predicted + 0, 
+    data = pairs_results, 
+    weights = 1/choose(n_spp, 2),
+    y = TRUE
+)
+)$r.squared
+```
+
+For the analyses below, I adjusted the outlier to take on a somewhat more reasonable value.
 
 ```{r, cache = TRUE}
-# The largest predicted Z-score was over 1000; the next largest was about 32
-head(sort(pairs_results$predicted, decreasing = TRUE))
-pairs_results$predicted[which.max(pairs_results$predicted)] = 32.47
+pairs_results$predicted[which.max(pairs_results$predicted)] = 32.47 # Second largest result
 ```
 
 
@@ -419,7 +435,7 @@ str(rosalia_results)
 
 
 
-```{r, cache = TRUE}
+```{r, cache = FALSE}
 
 results = do.call(
   rbind,
@@ -437,9 +453,6 @@ results = do.call(
         weights = 1/choose(n_spp, 2),
         y = TRUE
       )
-      cat(x$method[[1]])
-      print(summary(linear_model))
-      cat("\n", "\n", "\n")
       residuals = residuals(linear_model)
       cbind(x, residuals = residuals)
     }
@@ -458,9 +471,12 @@ method as one minus the sum of squared residuals divided by
 the squared deviations from zero (e.g. `1 - sum(pairs_fit$residuals^2) / sum(pairs_fit$truth^2)` for
 the `pairs_results`).
 
-```{r, cache = TRUE}
+```{r, message=FALSE}
 library(dplyr)
+```
 
+
+```{r, cache = FALSE}
 summarized_results = results %>% group_by_("n_spp", "n_loc", "method", "env") %>% 
   do_(
     ~data.frame(r2 = 1 - sum(.$residuals^2) / sum(.$truth^2))
@@ -525,39 +541,8 @@ scaled_plot + theme_bw(base_size = 11) +
 ```
 
 
-## Additional assessment
-
-How often does each method get the sign of the interaction correct?
-```{r, cache = TRUE}
-sapply(
-  list(partial = partial_results, pairs = pairs_results, rosalia = rosalia_results, cov = cov_results), 
-  function(x){
-    signif(100 * mean(sign(x$predicted) == sign(x$truth)), 3)
-  }
-)
-```
-
-Compare with the percent correct one would obtain "by chance" if one knew that 75%
-of the true interactions were negative
-```{r, cache = TRUE}
-signif(
-   100 *mean(rbinom(10000, size = 1, prob = .75) == rbinom(10000, size = 1, prob = .75)),
-  3
-)
-```
-
-
-What percentage of absolute $Z$ scores exceed 5?
-
 ```{r}
-mean(abs(pairs_results$predicted) > 5)
+summarized_results %>% group_by_("method") %>% 
+  summarize_(~round(mean(r2) * 100))
 ```
 
-What percentage of absolute $Z$ scores produce p-values below `.Machine$double.eps`?
-
-```{r}
-.Machine$double.eps
-
-p_values = pnorm(1 - abs(pairs_results$predicted))
-mean(p_values < .Machine$double.eps)
-```
