@@ -1,0 +1,199 @@
+```{r}
+library(rosalia)
+library(mistnet)
+library(progress)
+library(beepr)
+
+beeping = TRUE
+```
+
+
+```{r}
+`%plus%` = mistnet:::`%plus%`
+logistic = binomial()$linkinv
+rbern = function(p){rbinom(length(p), size = 1, prob = p)}
+```
+
+
+```{r}
+set.seed(1)
+n_spp = 250
+n_loc = 2500
+n_env = 3
+n_gibbs = 1000
+
+true_beta_vec = rnorm(
+  choose(n_spp, 2), 
+  sd = abs(rnorm(choose(n_spp, 2))) / 5
+)
+
+
+true_beta = matrix(0, nrow = n_spp, ncol = n_spp)
+true_beta[upper.tri(true_beta)] = true_beta_vec
+true_beta = true_beta + t(true_beta)
+
+
+true_intercepts = rnorm(n_spp)
+
+true_env = matrix(rnorm(n_loc * n_env, 0), nrow = n_loc)
+
+true_alpha_env = matrix(rnorm(n_spp * n_env, 0, 0.5), nrow = n_env)
+
+true_alpha = true_env %*% true_alpha_env
+```
+
+```{r, cache = TRUE}
+y = matrix(0.5, nrow = n_loc, ncol = n_spp)
+
+pb <- progress_bar$new(
+  format = "  simulating landscape [:bar] :percent eta: :eta",
+  total = n_gibbs,
+  clear = FALSE
+)
+
+
+for(i in 1:n_gibbs){
+  pb$tick()
+  for(j in sample.int(n_spp)){
+    y[,j] = rbern(logistic(true_alpha[ , j] + y %*% true_beta[ , j]))
+  }
+}
+
+if(beeping){beep()}
+```
+
+```{r}
+# Calculate sufficient statistics of the data
+y_stats = crossprod(y)
+y_env_stats = t(true_env) %*% y
+```
+
+
+```{r}
+y_sim = matrix(0.5, nrow = nrow(y), ncol = ncol(y))
+env = true_env
+
+alpha_env = delta_alpha_env = matrix(0, nrow = n_env, ncol = n_spp)
+alpha_species = delta_alpha_species = qlogis(colMeans(y))
+beta = delta_beta = matrix(0, nrow = n_spp, ncol = n_spp)
+alpha = matrix(0, nrow = n_spp, ncol = n_spp) # no delta alpha to initialize
+                                              # b/c alpha not optimized directly
+```
+
+```{r}
+initial_learning_rate = 0.1
+momentum = 0.9
+
+pb <- progress_bar$new(
+  format = "  Fitting [:bar] :percent eta: :eta",
+  total = n_gibbs,
+  clear = FALSE
+)
+
+
+for(i in 1:n_gibbs){
+  pb$tick()
+  
+  ##############################
+  # Gibbs sampling for predicted species composition
+  ##############################
+  
+  # Update alpha
+  alpha = env %*% alpha_env %plus% alpha_species
+  
+  # Sample entries in y_sim from their conditional distribution (Gibbs sampling)
+  for(j in sample.int(n_spp)){
+    y_sim[,j] = rbern(logistic(alpha[ , j] + y_sim %*% beta[ , j]))
+  }
+  
+  ##############################
+  # Stochastic approximation for updating alpha and beta
+  ##############################
+  
+  # Update learning rate
+  learning_rate = initial_learning_rate * 1000 / (999 + i)
+  
+  # Calculate sufficient statistics
+  y_sim_stats = crossprod(y_sim)
+  y_sim_env_stats = t(env) %*% y_sim
+
+  # Calculate the gradient with respect to alpha and beta
+  delta_stats = y_stats - y_sim_stats
+  beta_grad = (delta_stats - 10 * beta) / 10 / n_loc # Subtract beta as weight decay
+
+  alpha_species_grad = diag(beta_grad) / n_loc
+  diag(beta_grad) = 0
+  alpha_env_grad = (y_env_stats - y_sim_env_stats - alpha_env)  / n_loc
+  
+  
+  # Calculate parameter updates
+  delta_beta = beta_grad * learning_rate + momentum * delta_beta
+  delta_alpha_species = alpha_species_grad * learning_rate # no momentum
+  delta_alpha_env = alpha_env_grad * learning_rate + momentum  * delta_alpha_env
+  
+  
+  beta = beta + delta_beta
+  alpha_species = alpha_species + delta_alpha_species
+  alpha_env = alpha_env + delta_alpha_env
+  
+  if(i %% 10 == 0){
+    plot(beta[upper.tri(beta)], true_beta[upper.tri(beta)],
+         pch = 16, cex = .5, col = "#00000050",
+         xlab = "Estimated interaction strength",
+         ylab = "\"True\" interaction strength",
+         main = paste(
+           "R^2 =", 
+           signif(cor(beta[upper.tri(beta)], true_beta[upper.tri(beta)])^2, 2)
+          )
+    )
+    abline(v = 0, h = 0)
+  }
+}
+```
+
+
+
+```{r}
+pdf("poster-beta.pdf", width = 4, height = 4)
+plot(beta[upper.tri(beta)], true_beta[upper.tri(beta)],
+     pch = 16, cex = .4, col = "#00000020",
+     xlab = "Estimated interaction strength",
+     ylab = "\"True\" interaction strength",
+     main = "Recoverd pairwise interactions",
+     las = 1,
+     cex.axis = 0.75
+    )
+text(
+  -0.7, 
+  1,
+  paste(
+    "R^2 =", 
+    signif(cor(beta[upper.tri(beta)], true_beta[upper.tri(beta)])^2, 2)
+  )
+)
+
+dev.off()
+```
+
+```{r}
+pdf("poster-alpha.pdf", width = 4, height = 4)
+plot(alpha_env, true_alpha_env,
+     pch = 16, cex = .4, col = "#00000090",
+     xlab = "Estimated environmental coefficient",
+     ylab = "\"True\" environmental coefficient",
+     main = "Recovered environmental coefficients",
+     las = 1,
+     cex.axis = 0.75
+)
+text(
+  -1, 
+  1,
+  paste(
+    "R^2 =", 
+    signif(cor(c(alpha_env), c(true_alpha_env))^2, 2)
+  )
+)
+dev.off()
+
+```
+
