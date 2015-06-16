@@ -1,3 +1,5 @@
+# Estimating pairwise interactions by stochastic maximum likelihood
+
 ```{r}
 library(rosalia)
 library(mistnet)
@@ -154,12 +156,12 @@ for(i in 1:n_gibbs){
 
 
 ```{r}
-pdf("poster-beta.pdf", width = 4, height = 4)
+pdf("poster-beta.pdf", width = 4, height = 5)
 plot(beta[upper.tri(beta)], true_beta[upper.tri(beta)],
      pch = 16, cex = .4, col = "#00000020",
      xlab = "Estimated interaction strength",
      ylab = "\"True\" interaction strength",
-     main = "Recoverd pairwise interactions",
+     main = paste0("Recoverd pairwise interactions", "\nN = ", choose(n_spp, 2)),
      las = 1,
      cex.axis = 0.75
     )
@@ -176,12 +178,12 @@ dev.off()
 ```
 
 ```{r}
-pdf("poster-alpha.pdf", width = 4, height = 4)
+pdf("poster-alpha.pdf", width = 4, height = 5)
 plot(alpha_env, true_alpha_env,
      pch = 16, cex = .4, col = "#00000090",
      xlab = "Estimated environmental coefficient",
      ylab = "\"True\" environmental coefficient",
-     main = "Recovered environmental coefficients",
+     main = paste0("Recoverd environmental coefficients", "\nN = ", length(alpha_env)),
      las = 1,
      cex.axis = 0.75
 )
