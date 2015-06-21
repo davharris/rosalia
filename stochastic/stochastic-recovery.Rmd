@@ -19,8 +19,8 @@ rbern = function(p){rbinom(length(p), size = 1, prob = p)}
 
 ```{r}
 set.seed(1)
-n_spp = 250
-n_loc = 2500
+n_spp = 100
+n_loc = 1000
 n_env = 3
 n_gibbs = 1000
 
@@ -121,7 +121,7 @@ for(i in 1:n_gibbs){
 
   # Calculate the gradient with respect to alpha and beta
   delta_stats = y_stats - y_sim_stats
-  beta_grad = (delta_stats - 10 * beta) / 10 / n_loc # Subtract beta as weight decay
+  beta_grad = (delta_stats - beta) / 10 / n_loc # Subtract beta as weight decay
 
   alpha_species_grad = diag(beta_grad) / n_loc
   diag(beta_grad) = 0
@@ -196,6 +196,5 @@ text(
   )
 )
 dev.off()
-
 ```
 
