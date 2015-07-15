@@ -31,7 +31,9 @@ incorrect inferences, however.
 Markov network; Markov random field; Ising model; Biogeography;
 Presence–absence matrix; Null model
 
+\setlength{\parindent}{1cm}
 
+\noindent  
 ***Introduction***
 
 If nontrophic species interactions, such as competition, are important drivers
@@ -40,53 +42,44 @@ our data sets [@macarthur_population_1958; @diamond_island_1975]. Despite
 decades of work and several major controversies, however [@lewin_santa_1983;
 @strong_ecological_1984; @gotelli_swap_2003; @connor_checkered_2013], existing
 methods for detecting competition's effects on community structure are
-unreliable [@gotelli_empirical_2009], and thus important ecological processes
-remain poorly understood. More generally, it can be difficult to reason about
-the complex web of direct and indirect species interactions in real
-assemblages, especially when these interactions occur against a background of
-other ecological processes such as dispersal limitation and environmental filtering
-[@connor_checkered_2013]. For this reason, it isn't always clear what kinds of
-patterns would even constitute evidence of competition, as opposed to some
-other biological process or random sampling error
-[@roughgarden_competition_1983; @lewin_santa_1983].
+unreliable [@gotelli_empirical_2009]. In particular, species' effects on one
+another can become lost in the complex web of direct and indirect interactions
+in real assemblages. For example, the competitive interaction between the
+two shrub species in Figure 1A can become obscured by their shared tendency
+to occur in unshaded areas (Figure 1B). If this sort of effect is common, then
+the vast majority of ecologists' methods, which rely on test statistics describing
+the total number of co-occurrences or overall correlation between putatively
+interacting species [@diamond_island_1975; @strong_ecological_1984;
+@gotelli_empirical_2009; @veech_probabilistic_2013; @pollock_understanding_2014]
+will not generally provide much evidence regarding species' direct effects on
+one another.
 
-Most existing methods in this field compare the frequency with which two
-putative competitors are observed to co-occur, versus the frequency that would
-be expected if *all* species on the landscape were independent
-[@strong_ecological_1984; @gotelli_empirical_2009]. Examining a species pair
-against such a "null" background, however, rules out the possibility that the
-overall association between two species could be driven by an outside force.
-For example, even though the two shrub species in Figure 1 compete with one
-another for resources at a mechanistic level, they end up clustering together
-on the landscape because they both grow best in areas that are not
-overshadowed by trees. If this sort of effect is common, then significant
-deviations from independence will not generally provide convincing
-evidence of species' direct effects on one another.
+While competition doesn't reliably leave the expected pattern in community
+structure (a low co-occurrence rate at the landscape level), it nevertheless does
+leave a signal in the data (Figure 1C). Specifically, *among shaded sites*,
+there will be a deficit of co-occurrences between the competing shrub species,
+and *among unshaded sites*, there will also be such a deficit. More generally,
+we can obtain much better estimates of the association between two species from
+their conditional relationships (i.e. by controlling for other species in the
+network) than we could get from their overall co-occurrence rates.
 
-While competition between the two shrubs in the previous example does not
-leave the commonly-expected pattern in community structure (negative
-association at the landscape level), it nevertheless does leave a signal in
-the data (Figure 1C). Specifically, *among shaded sites*, there will be a
-deficit of co-occurrences, and *among unshaded sites*, there will also be such
-a deficit.
-
-In this paper, I introduce Markov networks [undirected graphical models also
-known as Markov random fields; @murphy_machine_2012] as a framework for
-understanding the landscape-level consequences of pairwise species
-interactions, and for detecting them with observational data. Markov networks,
-which generalize partial correlations to non-Gaussian data
-[@lee_learning_2012; @loh_structure_2013], have been used in many scientific
-fields for decades to model associations between various kinds of "particles".
-For example, a well-studied network named the Ising model has played an
+In this paper, following recent work by @azaele_inferring_2010 and
+@fort_statistical_2013, I show that Markov networks [undirected graphical models
+also known as Markov random fields; @murphy_machine_2012] can provide a framework
+for understanding the landscape-level consequences of pairwise species
+interactions, and for detecting them from observational data. Markov networks
+have been used in many scientific fields for decades to model associations
+between various kinds of "particles". For example, a well-studied network named the Ising model has played an
 important role in our understanding of physics [where nearby particles tend to
 align magnetically with one another; @cipra_introduction_1987]. In spatial
 contexts, these models have been used to describe interactions between
 adjacent grid cells [@harris_contact_1974; @gelfand_modelling_2005]. In
 neurobiology, they have helped researchers determine which neurons are
 connected to one another by modeling the structure in their firing patterns
-[@schneidman_weak_2006]. Following recent work by @azaele_inferring_2010 and
-@fort_statistical_2013, I suggest that ecologists could similarly treat
-species as the interacting particles in the same modeling framework. Doing so
+[@schneidman_weak_2006].
+
+
+Doing so
 would allow ecologists to simulate and study the landscape-level consequences
 of arbitrary species interaction matrices, even when our observations are not
 Gaussian. While ecologists explored some related approaches in the 1980's
@@ -104,8 +97,9 @@ compare this approach with several existing methods for detecting species
 interactions. Finally, I discuss opportunities for extending the approach
 presented here to larger problems in community ecology.
 
-***Methods***
+\noindent  ***Methods***
 
+\noindent  
 ***Conditional relationships and Markov networks.***
 Ecologists are often interested in learning about direct interactions between
 species, controlling for the indirect influence of other species. In
@@ -168,6 +162,7 @@ the computations tractable, e.g. via analytic approximations
 [@lee_learning_2012] or Monte Carlo sampling [@salakhutdinov_learning_2008],
 but they are beyond the scope of this paper.
 
+\noindent  
 ***Simulations.***
 In order to compare different methods, I simulated two sets of landscapes using known
 parameters.
@@ -204,7 +199,7 @@ procedure did not have access to any information about the environmental or
 spatial variables that helped shape the landscape [cf @connor_checkered_2013;
 @blois_framework_2014].
 
-
+\noindent  
 ***Inferring $\alpha$ and $\beta$ coefficients from presence-absence data.***
 In the previous two sections, the values of $\alpha$ and $\beta$ were known. In practice,
 however, ecologists will often need to estimate these parameters from co-occurrence data.
@@ -227,6 +222,7 @@ associated with some of the networks to be estimated, I regularized the
 likelihood using a logistic prior distribution [@gelman_weakly_2008] with
 a scale of 1 on the $\alpha$ and $\beta$ terms.
 
+\noindent  
 ***Comparison with existing techniques.***
 After fitting Markov networks to the simulated landscapes described above, I
 used several other techniques for determining the sign and strength of marginal
@@ -251,6 +247,7 @@ multiplying this statistic by $-1$ so that positive values corresponded to
 facilitation and negative values corresponded to competition, I used it as
 another estimate of species interactions.
 
+\noindent  
 ***Method evaluation.***
 For the simulated landscapes based on Figure 1, method evaluation was fairly
 qualitative: any method whose test statistic for the two shrubs indicated a
@@ -269,8 +266,10 @@ filtering). Within each partition, the mean squared error was used to
 calculate the proportion of variance explained (compared with a baseline model
 that assumed all interaction strengths to be zero).
 
+\noindent  
 ***Results***
 
+\noindent  
 ***Three species.***
 As shown in Figure 1, the marginal relationship between the two shrub species
 was positive---despite their competition for space at a mechanistic level---due
@@ -282,6 +281,7 @@ relationships (Markov networks and partial covariances), however, successfully
 controlled for the indirect pathway via the tree species and each correctly
 identified the direct negative interaction between the shrubs 94% of the time.
 
+\noindent  
 ***Larger landscapes.***
 The accuracy of the four evaluated methods varied substantially, depending on
 the parameters that produced the simulated communities (Figure 3). In general,
@@ -293,8 +293,10 @@ especially strong outlier ($Z=1004$, implying $p<10^{-1000000}$), this
 increased to 17% (Appendix B).  Figure 3 reflects the adjusted version of the
 results.
 
+\noindent  
 ***Discussion***
 
+\noindent  
 The results presented above show that Markov networks can reliably recover
 species' pairwise interactions from observational data, even for cases where
 a common null modeling technique reliably fails. Specifically, Markov networks
@@ -377,6 +379,7 @@ double their explanatory power by switching from null models to linear
 regression and partial covariances, or triple it by switching to a Markov
 network.
 
+\noindent  
 ***Acknowledgements:***
 This research was funded by a Graduate Research Fellowship from the US
 National Science Foundation and benefited greatly from discussions with A.
@@ -384,6 +387,8 @@ Sih, M. L. Baskett, R. McElreath, R. J. Hijmans, A. C. Perry, and C. S. Tysor.
 Additionally, A. K. Barner, E. Baldridge, E. P. White, D. Li, D. L. Miller, N.
 Golding, and N. J. Gotelli provided useful feedback on an earlier draft of
 this work.
+
+\setlength{\parindent}{0cm}
 
 ***References:***
 
