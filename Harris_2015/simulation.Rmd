@@ -1,0 +1,164 @@
+```{r}
+library(progress)
+set.seed(1)
+```
+
+```{r}
+
+simulate_communities = function(n_spp = 20,
+         K = n_spp / 3,
+         maxit = 5E6,
+         thin = 1E4,
+         seed_rain = rep(.1, n_spp),
+         growth = rep(1, n_spp),
+         interaction_strength = 1/2,
+         prob_negative = 0.75,
+         mutualism_maximum = 0.5
+){
+  
+  # Intraspecific competition can be mitigated by mutualists, up to some
+  # maximal amount.  This function rescales the mutualism effect so that
+  # it doesn't turn off intraspecific competition entirely.
+  mutualism_scaler = function(x, mutualism_maximum){
+    (1 + exp(-4 * x / K / n_spp)) * (1 - mutualism_maximum)
+  }
+  
+  # Randomly generate a vector of interaction strengths (one for each 
+  # pair of species)
+  interaction_vector = rexp(choose(n_spp, 2), interaction_strength)
+  
+  # Randomly mark interactions as positive or negative
+  interaction_signs = ifelse(
+    rbinom(choose(n_spp, 2), size = 1, prob = prob_negative),
+    -1, 
+    1
+  )
+  
+  # Negative interactions are competition; positive ones are mutualisms
+  competition_vector = interaction_vector * (interaction_signs == -1)
+  mutualism_vector = interaction_vector * (interaction_signs == +1)
+  
+  # Fill in the competition and mutualism matrices:
+  # Start with a matrix of zeros
+  competition = matrix(0, nrow = n_spp, ncol = n_spp)
+  # Fill in the upper triangle with the appropriate interaction vector
+  competition[upper.tri(competition)] = competition_vector
+  # Symmetrize the matrix by adding it to its transpose
+  competition = competition + t(competition)
+  
+  # Note that intraspecific competition (which would go along the diagonal)
+  # is handled separately, and the diagonal is left with zeros.
+  
+  mutualism = matrix(0, nrow = n_spp, ncol = n_spp)
+  mutualism[upper.tri(mutualism)] = mutualism_vector
+  mutualism = mutualism + t(mutualism)
+  
+  # Create an empty matrix for storing population sizes
+  pops = matrix(nrow = n_spp, ncol = maxit / thin)
+  
+  
+  # Initialize the population with a fixed number of individuals per species,
+  # depending on the number of species, carrying capacity, and strength of
+  # interspecific competition.
+  population = rep(ceiling(K / n_spp / mean(competition)), n_spp)
+  
+  
+  for(i in 1:maxit){
+    
+    # The local growth rate is proportional to population size
+    local_growth = growth * population
+    
+    # Mutualists act by mitigating intraspecific competition
+    mutualist_mitigation = mutualism_scaler(
+      population %*% mutualism, 
+      mutualism_maximum
+    )
+    
+    # Add up the two types of interactions affecting death rates
+    interactions = population * mutualist_mitigation + population %*% competition
+    
+    # Germinating seeds can come from local growth or from outside the system
+    birthrates = seed_rain + local_growth
+    
+    # Death rates depend on population size, interactions, and carrying capacity
+    deathrates = local_growth * interactions / K
+    
+    # Generate a vector of vital rates
+    rates = c(birthrates, deathrates)
+    
+    # Randomly select a birth/death event to occur. Probability
+    # of occurring is proportional to the corresponding rate
+    event = sample.int(length(rates), 1, prob = rates)
+    
+    
+    if(event <= length(birthrates)){
+      # Event from first batch, i.e. birth.  Increase the population by one
+      index = event
+      population[index] = population[index] + 1
+    }else{
+      # Event from the second batch, i.e. death. If population is nonzero,
+      # decrease it by one for the corresponding species
+      index = event - n_spp
+      if(population[index] > 0){
+        population[index] = population[index] - 1
+      }
+    }
+    
+    
+    if(i%%thin == 0){
+      # Save the results in the `pops` matrix
+      pops[ , i %/% thin] = population
+    }
+  }
+  
+  # Return the "observed" presence-absence vector
+  # along with the"true" interaction signs and strengths.
+  # The output is transposed because all fitting methods but Pairs
+  # require it in that format.
+  # Multiplying by one turns TRUEs into 1s and FALSEs into 0s
+  list(
+    observed = t(pops > 0) * 1,
+    truth = interaction_vector * interaction_signs
+  )
+}
+```
+
+```{r}
+thin = 5E3
+n_spp = 20
+n_reps = 50
+
+for(n_sites in c(25, 200, 1600)){
+  message(n_sites)
+  
+  pb = progress_bar$new(total = n_reps)
+  for(rep in 1:n_reps){
+    id = paste(n_spp, n_sites, rep, sep = "-")
+    
+    results = simulate_communities(
+      maxit = n_sites * thin, 
+      thin = thin, 
+      n_spp = n_spp
+    )
+    
+    pb$tick()
+    
+    saveRDS(results, file = paste0("fakedata/", id, ".rds"))
+    
+    # Gotelli and Ulrich's Pairs software needs a different format.
+    x = results$observed
+    
+    # It rejects empty sites, so I remove them here
+    x_subset = x[rowSums(x) != 0, colSums(x) != 0]
+    
+    # It also expects the data matrices to be transposed
+    # relative to the other methods
+    write.table(
+      t(x_subset), 
+      file = paste0("fakedata/", id, "-transposed.txt"), 
+      quote = FALSE
+    )
+  }
+}
+```
+

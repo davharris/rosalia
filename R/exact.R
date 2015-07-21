@@ -26,6 +26,33 @@ make_logistic_prior = function(location = 0, scale, ...){
   )
 }
 
+#' @export
+make_cauchy_prior = function(location = 0, scale, ...){
+  structure(
+    list(
+      log_d = function(x){dcauchy(x, location = location, scale = scale, log = TRUE)},
+      log_grad = function(x){
+        (-2 * x + 2 * location)/(scale^2 + (x - location)^2)
+      }
+    ),
+    class = "prior"
+  )
+}
+
+#' @export
+make_t_prior = function(df){
+  structure(
+    list(
+      log_d = function(x){dt(x, df, log = TRUE)},
+      log_grad = function(x){
+        -(x * (1 + df)) / (x^2 + df)
+      }
+    ),
+    class = "prior"
+  )
+}
+
+
 
 #' Make a flat prior for maximum likelihood estimation
 #' 

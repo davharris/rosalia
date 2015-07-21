@@ -219,3 +219,31 @@ test_that("logistic prior works", {
   )
 })
 
+
+test_that("cauchy prior works", {
+  x = c(pi, log(7))
+  eps = 1E-6
+  s = c(exp(2), sqrt(12))
+  
+  diff = dcauchy(x + eps, scale = s, log = TRUE) - 
+    dcauchy(x - eps, scale = s, log = TRUE)
+  
+  expect_equal(
+    make_cauchy_prior(scale = s)$log_grad(x),
+    (diff) / 2 / eps
+  )
+})
+
+test_that("t prior works", {
+  x = c(pi, log(7))
+  eps = 1E-6
+  df = c(exp(2), sqrt(12))
+  
+  diff = dt(x + eps, df = df, log = TRUE) - 
+    dt(x - eps, df = df, log = TRUE)
+  
+  expect_equal(
+    make_t_prior(df = df)$log_grad(x),
+    (diff) / 2 / eps
+  )
+})
