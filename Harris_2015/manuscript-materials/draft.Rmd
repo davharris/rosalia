@@ -76,17 +76,11 @@ contexts, these models have been used to describe interactions between
 adjacent grid cells [@harris_contact_1974; @gelfand_modelling_2005]. In
 neurobiology, they have helped researchers determine which neurons are
 connected to one another by modeling the structure in their firing patterns
-[@schneidman_weak_2006].
-
-
-Doing so
-would allow ecologists to simulate and study the landscape-level consequences
-of arbitrary species interaction matrices, even when our observations are not
-Gaussian. While ecologists explored some related approaches in the 1980's
+[@schneidman_weak_2006]. While ecologists explored some related approaches in the 1980's
 [@whittam_species_1981], computational limitations had previously imposed
 severe approximations that produced unintelligible results [e.g.
 "probabilities" greater than one; @gilpin_factors_1982].  Now that it is
-computationally feasible to fit these models exactly, the approach has become
+computationally feasible to fit these models exactly, this kind of approach has become
 worth a second look.
 
 The rest of the paper proceeds as follows. First, I discuss how Markov networks
@@ -150,17 +144,33 @@ effects propagate through the network, as discussed below.
 Estimating the marginal relationships predicted by a Markov network is more
 difficult than estimating conditional relationships, because doing so requires
 absolute probability estimates. Turning the relative probability given by
-Equation 1 into an absolute probability entails scaling by a *partition
-function*, $Z(\alpha, \beta)$, which is defined so that that the probabilities of all
+Equation 1 into an absolute probability entails scaling by a normalizing constant, $Z(\alpha, \beta)$, which is defined so that that the probabilities of all
 possible assemblages that could be produced by the model sum to one (bottom of
 Figure 2B). Calculating $Z(\alpha, \beta)$ exactly, as is done in this paper,
 quickly becomes infeasible as the number of species increases: with
 $2^N$ possible assemblages of $N$ species, the number of bookkeeping operations
-required for exact estimation spirals exponentially into the billions and beyond.
+required spirals exponentially into the billions and beyond.
 Numerous techniques are available for working with Markov networks that keep
 the computations tractable, e.g. via analytic approximations
 [@lee_learning_2012] or Monte Carlo sampling [@salakhutdinov_learning_2008],
 but they are beyond the scope of this paper.
+
+\noindent  
+***Inferring $\alpha$ and $\beta$ coefficients from presence-absence data.***
+In the previous two sections, the values of $\alpha$ and $\beta$ were known. In practice,
+however, ecologists will often need to estimate these parameters from co-occurrence data.
+When the number of species is reasonably small, one can compute exact maximum
+likelihood estimates for all of the $\alpha$ and $\beta$ coefficients by optimizing
+$p(\vec{y}; \alpha, \beta)$. Fully-observed Markov
+networks like the ones considered here have unimodal likelihood surfaces
+[@murphy_machine_2012], ensuring that this procedure will always converge on
+the global maximum. This maximum is the unique combination of $\alpha$ and $\beta$
+coefficients that would be expected to produce exactly the observed co-occurrence
+frequencies. For the analyses in this paper, I used the *rosalia* package
+[@harris_rosalia_2015] for the R programming language [@r_core_team_r_2015] to
+define the objective function and gradient as R code.  The rosalia package then
+uses the `BFGS` method in R's `optim` function to find the best values for $\alpha$
+and $\beta$.
 
 \noindent  
 ***Simulated landscapes.***
@@ -185,43 +195,34 @@ competition on each partner's death rate.  For these analyses, I simulated
 50 replicate landscapes, each with 25, 200, or 1600 sites and 20 species.
 
 \noindent  
-***Inferring $\alpha$ and $\beta$ coefficients from presence-absence data.***
-In the previous two sections, the values of $\alpha$ and $\beta$ were known. In practice,
-however, ecologists will often need to estimate these parameters from co-occurrence data.
-When the number of species is reasonably small, one can compute exact maximum
-likelihood estimates for all of the $\alpha$ and $\beta$ coefficients by optimizing
-$p(\vec{y}; \alpha, \beta)$. Fully-observed Markov
-networks like the ones considered here have unimodal likelihood surfaces
-[@murphy_machine_2012], ensuring that this procedure will always converge on
-the global maximum. This maximum is the unique combination of $\alpha$ and $\beta$
-coefficients that would be expected to produce exactly the observed co-occurrence
-frequencies. For the analyses in this paper, I used the *rosalia* package
-[@harris_rosalia_2015] for the R programming language [@r_core_team_r_2015] to
-define the objective function and gradient as R code.  The rosalia package then
-uses the `BFGS` method in R's `optim` function to find the best values for $\alpha$
-and $\beta$.
+***Recovering species interactions from simulated data.***
+I used Markov networks and  several other techniques for determining the sign and strength
+of the associations between pairs of species (Appendix B).
 
-For analyses with 5 or more species, I made a small modification to the maximum
-likelihood procedure described above. Given the large number of parameters
-associated with some of the networks to be estimated, I regularized the
-likelihood using a logistic prior distribution [@gelman_weakly_2008] with
-a scale of 1 on the $\alpha$ and $\beta$ terms.
+For the Markov networks, I used the rosalia package [@harris_rosalia_2015], as described
+above. Given the large number of parameters associated with some of the networks to
+be estimated, I regularized the likelihood using a Cauchy prior distribution
+[@gelman_weakly_2008] with a scale of 1 on the $\alpha$ and $\beta$ terms.
 
-\noindent  
-***Comparison with existing techniques.***
-After fitting Markov networks to the simulated landscapes described above, I
-used several other techniques for determining the sign and strength of marginal
-associations between pairs of species (Appendix B).
+I also evaluated five alternative methods from the existing literature to calibrate the
+performance of the Markov network as a method for estimating species interactions.
+The first two alternative interaction measures were the sample correlations and the
+partial correlations between each pair of species' data vectors on the landscape
+[@albrecht_spatial_2001; @faisal_inferring_2010]. Because partial correlations are undefined
+for landscapes with perfectly-correlated species pairs, I used a regularized
+estimate based on James-Stein shrinkage, as implemented in the corpcor package’s
+`pcor.shrink` function with the default settings [@REF]. In the context of non-Gaussian
+data, the partial correlation can be thought of as an approximation to the Markov network,
+and is much easier to compute.
 
-The first two alternative interaction measures were the sample covariances and the
-partial covariances between each pair of species' data vectors on the landscape
-[@albrecht_spatial_2001]. Because partial covariances are undefined for
-landscapes with perfectly-correlated species pairs, I used a regularized
-estimate based on ridge regression [@van_wieringen_ridge_2014; i.e. linear
-regression with a Gaussian prior]. For these analyses, I set the ridge
-parameter to 0.2 divided by the number of sites on the landscape.
+The third alternative, generalized linear models, can also be thought of as a computationally
+efficient approximation to the Markov network [@REF].  Following @faisal_inferring_2010,
+I fit regularized logistic regression models for each species, using the other species on the
+landscape as predictors. [[Observational presence-absence data does not have enough degrees
+of freedom to estimate this many parameters, so I symmetrized the pairwise correlations by
+averaging the coefficient for predicting species $i$’s status from species $j$ and vice versa.]]
 
-The third alternative method, described in @gotelli_empirical_2009, involved simulating
+The fourth alternative method, described in @gotelli_empirical_2009, involved simulating
 possible landscapes from a null model that retains the row and column sums of
 the original matrix [@strong_ecological_1984]. Using the default options in the
 Pairs software described in @gotelli_empirical_2009, I simulated  the null
@@ -232,24 +233,26 @@ multiplying this statistic by $-1$ so that positive values corresponded to
 facilitation and negative values corresponded to competition, I used it as
 another estimate of species interactions.
 
+Finally, I used the latent correlation matrix estimated by the BayesComm package [@REF]
+to evaluate the claim from recent papers that the correlation coefficients estimated by “joint
+species distribution models” provide an accurate assessment of species’ pairwise interactions
+[@pollock_understanding_2014; see also @harris_generating_2015].
+
 \noindent  
-***Method evaluation.***
+***Evaluating model performance.***
 For the simulated landscapes based on Figure 1, method evaluation was fairly
 qualitative: any method whose test statistic for the two shrubs indicated a
-negative relationship passed; other methods failed.
+negative relationship passed; other methods failed. For methods that provide
+confidence intervals or other inferential statistics, I reported them below.
 
-For the larger landscapes, I rescaled the four methods' estimates using linear
-regression through the origin so that they all had a consistent
-interpretation. In each method, I regressed the "true" $\beta$ coefficient for
-each species pair against the model's estimate, re-weighting the pairs so that
-each landscape contributed equally to the rescaled estimate. These regressions
-yielded squared errors for each of the 23,140 simulated species pairs, across
-all conditions and replicates. I then partitioned these errors into groups
-defined by the properties of the simulated landscapes (i.e. species richness,
-number of observed communities, and the presence/absence of environmental
-filtering). Within each partition, the mean squared error was used to
-calculate the proportion of variance explained (compared with a baseline model
-that assumed all interaction strengths to be zero).
+Because the different methods mostly describe species interactions on different
+scales (e.g. correlations versus $Z$ scores versus regression coefficients), I used
+linear regression through the origin to rescale the different estimates produced
+by each method so that they had a consistent interpretation. After rescaling each
+method’s estimates, I calculated squared errors for each of the [[N]] species pairs
+across all the simulated data sets and used these values to calculate the proportion of variance
+explained for landscapes with 25, 200, or 1600 sampled locations (compared with a baseline
+model that assumed all interaction strengths to be zero).
 
 \noindent  
 ***Results***
