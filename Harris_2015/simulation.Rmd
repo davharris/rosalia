@@ -3,6 +3,30 @@ library(progress)
 set.seed(1)
 ```
 
+$$r_e + r_i n_i (1 - \frac{n_i f_i(\vec{n}) + \sum_{i \neq j}{\alpha_{ij}n_i n_j}}{K})$$.
+
+When no propagules enter from outside the system ($r_e=0$) and mutualisms do
+not occur ($f_i(\vec{n})$ = 1), this reduces to a multi-species Lotka-Volterra
+system
+
+$$r_i n_i (1 - \frac{n_i + \sum_{i \neq j}{\alpha_{ij}n_i n_j}}{K})$$.
+
+where $r_i$ is the [[intrinsic rate of increase]] of species $i$, $n_i$ is its
+abundance, and $\alpha_{ij}$ describes the strength of its competition with
+species $j$.  In the more general form above, the function $f_i(\vec{n})$ 
+acts to reduce the strength of intraspecific competition in the presence of
+mutualists.  For these analyses, I used
+
+$$ $$
+
+[[demographic events happen with probability proportional to corresponding birth/death rate]].  Because these events' probabilities only depend on the 
+current state of the system, they form a Markov chain that explores the 
+space of possible species assemblages under the population dynamic model.  For
+each set of competition and mutualism coefficients, I collected one sample 
+after every `r thin`th demographic event.  For the subsequent analysis, 
+each species was considered "present" in a sample if its abundance was one
+or higher, and "absent" if its abundance in that sample was zero.
+
 ```{r}
 
 simulate_communities = function(n_spp = 20,
