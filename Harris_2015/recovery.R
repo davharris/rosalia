@@ -40,7 +40,7 @@ f = function(filename){
   
   bc = BC(Y = x, model = "community", its = 1000)
   
-  bc_inv = 0
+  `partial BayesComm` = 0
   
   for(i in 1:nrow(bc$trace$R)){
     Sigma = matrix(0, nrow = ncol(x), ncol = ncol(x))
@@ -48,7 +48,7 @@ f = function(filename){
     Sigma <- Sigma + t(Sigma)                   # Fill in lower triangle
     diag(Sigma) <- 1  # Diagonal equals 1 in multivariate probit model
     
-    bc_inv = bc_inv + cor2pcor(Sigma) / nrow(bc$trace$R)
+    `partial BayesComm` = `partial BayesComm` + cor2pcor(Sigma) / nrow(bc$trace$R)
   }
   
   data.frame(
@@ -60,7 +60,7 @@ f = function(filename){
     `Markov network` = rosie$beta[upper.tri(rosie$beta)],
     GLM = coef_matrix[upper.tri(coef_matrix)],
     `BayesComm` = colMeans(bc$trace$R),
-    bc_inv = bc_inv[upper.tri(bc_inv)]
+    `partial BayesComm` = `partial BayesComm`[upper.tri(`partial BayesComm`)]
   )
 }
 
