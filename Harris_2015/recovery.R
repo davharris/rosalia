@@ -36,9 +36,20 @@ f = function(filename){
   }
   coef_matrix = (coef_matrix + t(coef_matrix)) / 2
   
-  rosie = rosalia(x, maxit = 200, trace = 0)
+  rosie = rosalia(x, maxit = 200, trace = 0, prior = make_logistic_prior(scale = 2))
   
   bc = BC(Y = x, model = "community", its = 1000)
+  
+  bc_inv = 0
+  
+  for(i in 1:nrow(bc$trace$R)){
+    Sigma = matrix(0, nrow = ncol(x), ncol = ncol(x))
+    Sigma[upper.tri(Sigma)] <- bc$trace$R[i, ]  # Fill in upper triangle
+    Sigma <- Sigma + t(Sigma)                   # Fill in lower triangle
+    diag(Sigma) <- 1  # Diagonal equals 1 in multivariate probit model
+    
+    bc_inv = bc_inv + cor2pcor(Sigma) / nrow(bc$trace$R)
+  }
   
   data.frame(
     truth = truth, 
@@ -48,7 +59,8 @@ f = function(filename){
     correlation = corr[upper.tri(corr)],
     `Markov network` = rosie$beta[upper.tri(rosie$beta)],
     GLM = coef_matrix[upper.tri(coef_matrix)],
-    `BayesComm` = colMeans(bc$trace$R)
+    `BayesComm` = colMeans(bc$trace$R),
+    bc_inv = bc_inv[upper.tri(bc_inv)]
   )
 }
 
@@ -69,6 +81,9 @@ ggplot(z[z$n_sites >0, ], aes(x = `Markov network`, y = truth)) +
   scale_fill_gradient(low = "#F0F0F0", high = "darkblue", trans = "identity") +
   stat_smooth(method = "lm", se = FALSE, size = 1) +
   theme_bw()
+
+
+
 
 resids = sapply(
   colnames(z)[-(1:3)],
