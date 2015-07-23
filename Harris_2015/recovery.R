@@ -36,7 +36,7 @@ f = function(filename){
   }
   coef_matrix = (coef_matrix + t(coef_matrix)) / 2
   
-  rosie = rosalia(x, maxit = 200, trace = 0, prior = make_cauchy_prior(scale = 1))
+  rosie = rosalia(x, maxit = 200, trace = 0)
   
   bc = BC(Y = x, model = "community", its = 1000)
   
