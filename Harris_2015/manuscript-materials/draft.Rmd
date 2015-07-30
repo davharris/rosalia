@@ -204,13 +204,19 @@ I used Markov networks and  several other techniques for
 determining the sign and strength of the associations between
 pairs of species (Appendix B).
 
+<!-- exp(qlogis(.975, scale = 2)) -->
+
 For the Markov networks, I used the rosalia package [@harris_rosalia_2015],
-as described above. Given the large number of parameters associated with
-some of the networks to  be estimated, I regularized the likelihood
-using a logistic prior distribution with a scale of 2 on the $\alpha$ and
-$\beta$ terms.  This convex prior distribution has a similar shape to the
-Laplace distribution used in LASSO regularization (especially in the tails),
-but does not force the estimates to be exactly zero.
+as described above. For the analyses with 20 species, I added a very weak
+logistic prior distribution on the $\alpha$ and $\beta$ terms with scale 2 to
+ensure that the model estimates were always finite. The bias introduced by this
+prior should be small: the 95% credible interval on $\beta$ indicates that one
+species' presence should not generally affect the odds of observing a different
+species by more than a factor of 1500 (which is not much of a constraint). The
+logistic distribution was chosen because it is convex and has a similar shape to
+the Laplace distribution used in LASSO regularization (especially in the tails),
+but it is differentiable everywhere and does not force any estimates to be
+exactly zero.
 
 I also evaluated five alternative methods from the existing literature to
 calibrate the performance of the Markov network as a method for estimating
@@ -222,7 +228,9 @@ perfectly-correlated species pairs, I used a regularized estimate based on
 James-Stein shrinkage, as implemented in the corpcor package’s `pcor.shrink`
 function with the default settings [@REF]. In the context of non-Gaussian
 data, the partial correlation can be thought of as a computationally efficient
-approximation to the full Markov network model [@loh_structure_2013].
+approximation to the full Markov network model [@loh_structure_2013]. This sort
+of model is very common for drawing inferences about interaction networks in
+bioinformatics contexts [@REF].
 
 The third alternative, generalized linear models (GLMs), can also be
 thought of as a computationally efficient approximation to the Markov
@@ -251,7 +259,6 @@ provide an accurate assessment of species’ pairwise interactions
 both the average correlation between each pair of species’ latent variables
 across 1000 Monte Carlo samples, as well as the average *partial* correlation.
 
-
 #### Evaluating model performance.
 For the simulated landscapes based on Figure 1, method evaluation was fairly
 qualitative: any method whose test statistic for the two shrubs indicated a
@@ -259,16 +266,21 @@ negative relationship passed; other methods failed. For methods that provide
 confidence intervals or other inferential statistics (Appendix), I also reported
 how often they rejected the null hypothesis of no interaction.
 
-Because the different methods mostly describe species interactions on different
-scales (e.g. correlations versus $Z$ scores versus regression coefficients), I used
-linear regression through the origin to rescale the different estimates produced
-by each method so that they had a consistent interpretation. After rescaling each
-method’s estimates, I calculated squared errors between the scaled interaction
-estimates and “true” interaction values for each of the [[N]] species pairs
-across all the simulated data sets. These squared errors determined the
-proportion of variance explained for different combinations of method and
-landscape size (compared with a baseline model that assumed all interaction
-strengths to be zero).
+For the larger landscapes, I evaluated the relationship between each method's
+estimates and the "true" interaction strengths among all of the species that
+were observed to occur across the simulated landscapes. This kind of evaluation
+is important because ecologists need a consistent way to know how strong species
+interactions are regardless of which species were present in a particular data
+set or how many observations were taken. Because the different methods mostly
+describe species interactions on different scales (e.g. correlations versus $Z$
+scores versus regression coefficients), I used linear regression through the
+origin to rescale the different estimates produced by each method so that they
+had a consistent interpretation. After rescaling each method’s estimates, I
+calculated squared errors between the scaled interaction estimates and “true”
+interaction values for each of the [[N]] species pairs across all the simulated
+data sets. These squared errors determined the proportion of variance explained
+for different combinations of method and landscape size (compared with a
+baseline model that assumed all interaction strengths to be zero).
 
 ### Results
 
