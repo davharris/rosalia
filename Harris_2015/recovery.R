@@ -183,8 +183,11 @@ library(dichromat)
 library(RColorBrewer)
 colors = brewer.pal(8, "Dark2")[c(1, 2, 3, 4, 8, 5, 7)]
 
-pdf("manuscript-materials/figures/performance.pdf", height = 4, width = 5)
-par(mar = c(5, 4, 1, 0) + .1)
+pdf("manuscript-materials/figures/performance.pdf", height = 8, width = 5)
+par(mfrow = c(2, 1))
+par(mar = c(5, 4, 3, 0) + .1)
+
+
 matplot(
   sizes, 
   results, 
@@ -195,17 +198,22 @@ matplot(
   pch = c(15, 1, 17, 0, 16, 2, 3), 
   lty = 1,
   log = "x",
-  xlab = "Number of sites (log scale)",
+  xlab = "",
   axes = FALSE,
   xaxs = "i",
   yaxs = "i",
   col = colors,
   lwd = 1.25,
-  cex = 0.9
+  cex = 0.9,
+  bty = "l"
 )
 axis(1, c(1, 25, 200, 1600))
 axis(2, seq(0, 1, .1), las = 1)
+
 mtext(expression(R^2), side = 2, line = 3, las = 1)
+mtext("Number of sites (log scale)", side = 1, line = 2.25, at = 200)
+mtext("A.", line = 1.25, at = 25, cex = 1.5)
+
 heights = results[nrow(results), ]
 
 heights$Pairs = heights$Pairs - .01
@@ -218,10 +226,56 @@ heights$GLM = heights$GLM - .01
 
 
 text(1625, heights, colnames(results), pos = 4, cex = 0.75, col = colors)
+
+
+
+# silly code to make the next graph line up prettily with the previous one
+full_range = log10(c(25 * .9, 1600 * 8))
+base_range = log10(c(25, 1600))
+
+base_scaled = 2 * base_range / (base_range[2] - base_range[1])
+full_scaled = 2 * full_range / (base_range[2] - base_range[1])
+
+colors2 = brewer.pal(10, "Paired")[c(2, 4, 10)]
+plot(
+  z$correlation, 
+  z$Pairs, 
+  col = colors2[factor(z$n_sites)],
+  las = 1,
+  xlab = "",
+  ylab = expression(italic(Z)-score),
+  bty = "l",
+  xaxs = "i",
+  axes = FALSE,
+  xlim = full_scaled - base_scaled[2] + 1
+)
+axis(1, seq(-2, 1, .5))
+axis(2, seq(-50, 50, 10), las = 1)
+mtext("Correlation coefficient", side = 1, line = 2.25, at = 0)
+mtext("B.", line = 1.25, at = -1, cex = 1.5)
+
+legend(
+  x = 1.05, 
+  y = max(z$Pairs),
+  pch = 1,
+  lty = 0,
+  lwd = 2,
+  col = colors2[1:length(unique(z$n_sites))], 
+  legend = levels(factor(z$n_sites)),
+  title = "Number of sites",
+  bty = "n",
+  cex = 0.75,
+  pt.cex = 1
+)
+segments(-1000, 0, 1.04, 0, col = "#00000025", lwd = 1.25)
+segments(0, -1000, 0, 1000, col = "#00000025", lwd = 1.25)
+
+
 dev.off()
 
 
 total_ss = mean(resid(lm(truth ~ 0, data = z))^2)
 round(100 * sort(1 - colMeans(resids^2) / total_ss), 1)
 
+round(cor(z[ , c(7, 10, 12)], method = "spearman")[,1], 2)
 
