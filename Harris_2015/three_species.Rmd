@@ -2,12 +2,12 @@
 
 Load dependencies
 
-```{r}
+```{r, message = FALSE}
 library(dplyr)
 library(magrittr)
 library(rosalia)
 library(knitr)
-library(rosalia)
+library(corpcor)
 ```
 
 ```{r}
@@ -52,9 +52,10 @@ possible_cooc = sapply(
 
 Simulate 1000 assemblages of 3 species across 100 sites.
 
-Once a landscape has been simulated, test whether `rosalia`, the sample covariance, and the partial 
-covariance got the sign of the shrub-shrub interaction correct.
-```{r}
+Once a landscape has been simulated, test whether `rosalia`, the sample correlation, and the partial 
+correlation got the sign of the shrub-shrub interaction correct.
+
+```{r, message=FALSE, cache = TRUE}
 evaluation = sapply(
   1:1000,
   function(i){
@@ -70,19 +71,25 @@ evaluation = sapply(
       write.table(t(x[rowSums(x) > 0, ]), file = paste0("fakedata/three/", i, ".txt"))
     }
     
+    rosie = rosalia(x, trace = 0, prior = make_flat_prior(), hessian = TRUE)
     
+    se = sqrt(diag(solve(rosie$opt$hessian)))["beta3"]
+    rosalia_confident_positive = pnorm(0, mean = rosie$beta[2, 3], sd = se) < .025
+    rosalia_confident_negative = pnorm(0, mean = rosie$beta[2, 3], sd = se) > .975
+  
     c(
-      cov = cov(x)[2, 3] < 0,
-      partial = -solve(cov(x))[2, 3] < 0,
-      rosalia = rosalia(x, trace = 0, prior = make_flat_prior())$beta[2,3] < 0
+      cor = cor(x)[2, 3] < 0,
+      partial = cor2pcor(cor(x))[2, 3] < 0,
+      rosalia = rosie$beta[2,3] < 0,
+      rosalia_confident_positive = rosalia_confident_positive,
+      rosalia_confident_negative = rosalia_confident_negative
     )
   })
 
 ```
 
 
-After running the "Pairs" software on transposed versions of the files simulated above, 
-we can import its results to see how the method performed.
+After running the "Pairs" software on transposed versions of the files simulated above, we can import its results to see how the method performed.
 
 ```{r}
 Pairs.txt = readLines("fakedata/three/Pairs.txt")
@@ -94,25 +101,36 @@ z_score_column = grep("Z-Score", Pairs.txt, value = TRUE)[2] %>%
   grep("Z-Score", .)
 
 # Find the right rows of the text file, split them on whitespace, pull out
-# the column identified above, and find its sign
-pairs_evaluation = Pairs.txt[grep("(Var2.*Var1)|(Var1.*Var2)", Pairs.txt)] %>% 
+# the column identified above, and save the Z-score
+pairs_z = Pairs.txt[grep("(Var2.*Var1)|(Var1.*Var2)", Pairs.txt)] %>% 
     strsplit(" +") %>%
-    sapply(. %>% extract(z_score_column) %>% as.numeric) %>%
-    is_greater_than(0) # Z>0 implies negative interactions because the Z-score
-                       # relates to the distribution of C-scores, which describe
-                       # the frequency with which species *do not* co-occur
+    sapply(. %>% extract(z_score_column) %>% as.numeric)
+
+
+# Z>0 implies negative interactions because the Z-score relates to the
+# distribution of C-scores, which describe the frequency with which species *do
+# not* co-occur. It has the opposite sign of metrics based on when species *do*
+# co-occur.
+pairs_evaluation = pairs_z > 0
 ```
 
-Percentage of correct sign estimates:
-```{r, eval=FALSE}
-mean(pairs_evaluation) * 100
 
-rowMeans(evaluation) * 100
-```
-
-```{r, echo = FALSE}
-out = c(pairs = mean(pairs_evaluation) * 100, rowMeans(evaluation) * 100)
+```{r}
+out = c(pairs = mean(pairs_evaluation) * 100, rowMeans(evaluation)[1:3] * 100)
 
 kable(data_frame(model = names(out), percent_correct = paste(out, "%")))
+```
+
+```{r}
+# percentage of Pairs runs that found statistically significant mutualism at the
+# p<.05 level (two-tailed test)
+mean(pnorm(pairs_z) < 0.025) * 100
+
+# percentage of Pairs runs that found statistically significant competition at the
+# p<.05 level (two-tailed test)
+pairs_significant_competition = pnorm(pairs_z) > 0.975
+
+# percentage of rosalia runs whose 95% confidence intervals did not include 0
+rowMeans(evaluation)[c("rosalia_confident_negative", "rosalia_confident_positive")] * 100
 ```
 

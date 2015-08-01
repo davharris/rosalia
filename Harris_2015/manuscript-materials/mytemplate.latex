@@ -1,5 +1,8 @@
 \documentclass[12pt,$if(lang)$$lang$,$endif$$if(papersize)$$papersize$,$endif$$for(classoption)$$classoption$$sep$,$endfor$]{$documentclass$}
 \usepackage[compact]{titlesec}
+\usepackage{fancyhdr}
+\usepackage{hanging}
+\pagestyle{fancy}
 $if(fontfamily)$
 \usepackage{$fontfamily$}
 $else$

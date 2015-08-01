@@ -1,6 +1,10 @@
 ```{r}
 library(progress)
 set.seed(1)
+
+thin = 5E3
+n_spp = 20
+n_reps = 50
 ```
 
 $$r_e + r_i n_i (1 - \frac{n_i f_i(\vec{n}) + \sum_{i \neq j}{\alpha_{ij}n_i n_j}}{K})$$.
@@ -17,7 +21,9 @@ species $j$.  In the more general form above, the function $f_i(\vec{n})$
 acts to reduce the strength of intraspecific competition in the presence of
 mutualists.  For these analyses, I used
 
-$$ $$
+(1 + exp(0.2 * x / K / n_spp)) / 2 
+
+$$f(\vec{n} = $$
 
 [[demographic events happen with probability proportional to corresponding birth/death rate]].  Because these events' probabilities only depend on the 
 current state of the system, they form a Markov chain that explores the 
@@ -28,7 +34,6 @@ each species was considered "present" in a sample if its abundance was one
 or higher, and "absent" if its abundance in that sample was zero.
 
 ```{r}
-
 simulate_communities = function(n_spp = 20,
          K = n_spp / 3,
          maxit = 5E6,
@@ -147,11 +152,7 @@ simulate_communities = function(n_spp = 20,
 }
 ```
 
-```{r}
-thin = 5E3
-n_spp = 20
-n_reps = 50
-
+```{r, eval=FALSE}
 for(n_sites in c(25, 200, 1600)){
   message(n_sites)
   
@@ -185,4 +186,3 @@ for(n_sites in c(25, 200, 1600)){
   }
 }
 ```
-
