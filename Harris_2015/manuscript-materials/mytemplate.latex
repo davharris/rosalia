@@ -54,6 +54,7 @@ $endif$
 \linenumbers
 \usepackage{setspace}
 \usepackage{geometry}
+\usepackage{ifthen}
 \geometry{verbose,letterpaper,tmargin=2.54cm, bmargin=2.54cm,lmargin=2.54cm,rmargin=2.54cm}
 $if(lang)$
 \ifxetex
