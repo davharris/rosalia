@@ -352,6 +352,8 @@ predictions about the consequences of species interactions; null models (which
 presume *a priori* that interactions do not exist) have no way to make such
 predictions.
 
+[[when will indirect effects overwhelm direct ones?]]
+
 Markov networks---particularly the Ising model for binary networks---have been
 studied in statistical physics for nearly a century [@cipra_introduction_1987],
 and the models' properties, capabilities, and limits are well-understood in a

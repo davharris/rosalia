@@ -1,37 +1,78 @@
+---
+output: pdf_document
+title: Appendix [[X]]: simulating species interactions
+subtitle: \"Estimating species interactions from observational data with Markov networks\"
+author: David J. Harris
+fontsize: 11pt
+---
+
+This code simulates from a stochastic demographic model, then saves the results
+for subsequent analysis.
+
 ```{r}
-library(progress)
+# Initialize the random number generator for reproducibility
 set.seed(1)
 
-thin = 5E3
-n_spp = 20
-n_reps = 50
+thin = 5E3  # Save every 5000th sample
+n_spp = 20  # 20 species
+n_reps = 50 # 50 replicates for each landscape size
 ```
 
-$$r_e + r_i n_i (1 - \frac{n_i f_i(\vec{n}) + \sum_{i \neq j}{\alpha_{ij}n_i n_j}}{K})$$.
+In the large population limit, the number of individuals of species $i$, $n_i$,
+evolves over time based on the following differential equation, based on 
+multi-species Lotka-Volterra dynamics.  The basic multi-species model is
 
-When no propagules enter from outside the system ($r_e=0$) and mutualisms do
-not occur ($f_i(\vec{n})$ = 1), this reduces to a multi-species Lotka-Volterra
-system
+\begin{equation}
+\frac{\mathrm{d}n_i}{\mathrm{d}t} =  
+    r_i n_i (1 - \frac{n_i + \sum{\alpha_{ij}n_j}}{K}),
+\end{equation}
 
-$$r_i n_i (1 - \frac{n_i + \sum_{i \neq j}{\alpha_{ij}n_i n_j}}{K})$$.
+where $r_i$ is the per-capita growth rate of species $i$, $n_i$ is its
+abundance, $\alpha_{ij}$ describes the strength of its competition with
+species $j$, and $K$ is the carrying capacity.  These simulations use a
+more general form, which includes propagules from outside the system ($r_e$)
+and a separate mechanism for mutualisms ($f_i(\vec{n})$).
 
-where $r_i$ is the [[intrinsic rate of increase]] of species $i$, $n_i$ is its
-abundance, and $\alpha_{ij}$ describes the strength of its competition with
-species $j$.  In the more general form above, the function $f_i(\vec{n})$ 
-acts to reduce the strength of intraspecific competition in the presence of
-mutualists.  For these analyses, I used
+\begin{equation}
+\frac{\mathrm{d}n_i}{\mathrm{d}t} =  
+   r_e + r_i n_i (1 - \frac{n_i f_i(\vec{n}) + \sum{\alpha_{ij}n_j}}{K}).
+\end{equation}
 
-(1 + exp(0.2 * x / K / n_spp)) / 2 
+Setting $r_e=0$ and $f_i(\vec{n}) = 1$ recovers the original Lotka-Volterra
+dynamics. The function $f_i(\vec{n})$ acts to reduce the strength of
+intraspecific competition in the presence of mutualists.  For these simulations,
+I used
 
-$$f(\vec{n} = $$
+\begin{equation}
+f_i(\vec{n}) = \frac{1}{2}(1 + \mathrm{exp}(-\frac{\sum_j{\gamma_{ij} n_j}}{5K}),
+\end{equation}
 
-[[demographic events happen with probability proportional to corresponding birth/death rate]].  Because these events' probabilities only depend on the 
-current state of the system, they form a Markov chain that explores the 
-space of possible species assemblages under the population dynamic model.  For
-each set of competition and mutualism coefficients, I collected one sample 
-after every `r thin`th demographic event.  For the subsequent analysis, 
-each species was considered "present" in a sample if its abundance was one
-or higher, and "absent" if its abundance in that sample was zero.
+where $\gamma_{ij}$ is the strength of the mutualism between species $i$ and
+species $j$.  The nonlinearity ensures that mutualisms can never eliminate more
+than half of the effects of intraspecific competition and destabilize the system
+too strongly. In these simulations, each species pair acted either as competitors
+$\alpha_{ij} > 0$ or as mutualists $\gamma_{ij} > 0$, but not both. Note that
+$\alpha_{ii}$ and $\gamma_{ii}$ were always zero (i.e. intraspecific competition
+is modeled outside of the $\alpha$ term and species cannot be their own
+mutualists).
+
+Equation 2 can be decomposed into a birth rate, $r_e + r_i n_i$, and a death 
+rate, $r_i n_i (\frac{n_i f_i(\vec{n}) + \sum{\alpha_{ij}n_j}}{K})$.  If we
+treat births and deaths as discrete events (e.g. if we leave the large population
+regime), then the probability that the next event will be a birth (or death) of
+species $i$ is directly proportional to the corresponding demographic rate.
+
+Because these events' probabilities only depend on the  current state of the 
+system, they form a Markov chain that explores the  space of possible species 
+assemblages under the population dynamic model.  For each set of competition and
+mutualism coefficients, I simulated births and deaths in this chain, collecting
+one sample after every `r thin`th demographic event.  For the subsequent analysis,
+each species was considered "present" in a  sample if one or more individuals was
+present, and "absent" if its abundance in that sample was zero.
+
+The following function randomly generates a set of $\alpha$ and $\gamma$ values,
+then simulates `maxit` demographic events with those parameters, retaining every
+`thin`=`r thin` samples.
 
 ```{r}
 simulate_communities = function(n_spp = 20,
@@ -49,7 +90,7 @@ simulate_communities = function(n_spp = 20,
   # maximal amount.  This function rescales the mutualism effect so that
   # it doesn't turn off intraspecific competition entirely.
   mutualism_scaler = function(x, mutualism_maximum){
-    (1 + exp(-4 * x / K / n_spp)) * (1 - mutualism_maximum)
+    (1 + exp(- x / 5 / K)) * (1 - mutualism_maximum)
   }
   
   # Randomly generate a vector of interaction strengths (one for each 
@@ -152,11 +193,14 @@ simulate_communities = function(n_spp = 20,
 }
 ```
 
+I called the above code `r n_reps` times for each landscape size, saving the
+results in a folder called `fakedata` in two formats (one for Gotelli and 
+Ulrich's Pairs software, and one for the other methods).
+
 ```{r, eval=FALSE}
 for(n_sites in c(25, 200, 1600)){
   message(n_sites)
   
-  pb = progress_bar$new(total = n_reps)
   for(rep in 1:n_reps){
     id = paste(n_spp, n_sites, rep, sep = "-")
     
@@ -165,8 +209,6 @@ for(n_sites in c(25, 200, 1600)){
       thin = thin, 
       n_spp = n_spp
     )
-    
-    pb$tick()
     
     saveRDS(results, file = paste0("fakedata/", id, ".rds"))
     
