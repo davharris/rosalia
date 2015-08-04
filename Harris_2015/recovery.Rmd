@@ -2,14 +2,14 @@
 output: 
   pdf_document:
     keep_tex: true
-title: Appendix [[X]]":"" estimating species interactions
+title: "Appendix 3: Estimating species interactions"
 subtitle: \"Estimating species interactions from observational data with Markov networks\"
 author: David J. Harris
 fontsize: 11pt
 ---
 
 This document describes how the different models were fit to the simulated data 
-from Appendix [[XX]] and how each model's performance was evaluated.[^1]
+from Appendix 2 and how each model's performance was evaluated.[^1]
 
 [^1]: The PDF version of this document has been manually altered to omit 150
 lines of output from the `corpcor` package of the form "`## Estimating optimal shrinkage intensity lambda (correlation matrix): 0.0326`"
@@ -97,7 +97,7 @@ fit_all = function(filename){
   rosie = rosalia(x, maxit = 200, trace = 0, prior = make_logistic_prior(scale = 2))
   
   ######## BayesComm and partial BayesComm ########
-  bc = BC(Y = x, model = "community", its = 10)
+  bc = BC(Y = x, model = "community", its = 1000)
   
   `partial BayesComm` = 0
   
@@ -330,25 +330,27 @@ Plot the true interactions versus estimated interactions for two methods:
 ```{r, cache = TRUE}
 library(ggplot2)
 
-# ggplot(z[z$n_sites >0, ], aes(x = `Markov network`, y = truth)) + 
-#   stat_binhex(bins = 100) + 
-#   xlab("Estimated coefficient value") + 
-#   ylab("\"True\" coefficient value") + 
-#   stat_hline(yintercept = 0, size = 1/8) + 
-#   stat_vline(xintercept = 0, size = 1/8) + 
-#   scale_fill_gradient(low = "#F0F0F0", high = "darkblue", trans = "identity") +
-#   stat_smooth(method = "lm", se = FALSE, size = 1) +
-#   theme_bw()
-
-ggplot(z[z$n_sites >0, ], aes(x = -`Pairs`, y = truth)) + 
+ggplot(z[z$n_sites >0, ], aes(x = `Markov network`, y = truth)) + 
   stat_binhex(bins = 100) + 
   xlab("Estimated coefficient value") + 
   ylab("\"True\" coefficient value") + 
   stat_hline(yintercept = 0, size = 1/8) + 
   stat_vline(xintercept = 0, size = 1/8) + 
   scale_fill_gradient(low = "#F0F0F0", high = "darkblue", trans = "identity") +
-  stat_smooth(method = "lm", se = FALSE, size = 1) +
-  theme_bw()
+  theme_bw() + 
+  ggtitle("Markov network") + 
+  stat_abline(intercept = 0, slope = coef(lm(z$truth ~ z$`Markov network` + 0)))
+
+ggplot(z[z$n_sites >0, ], aes(x = `Pairs`, y = truth)) + 
+  stat_binhex(bins = 100) + 
+  xlab("Estimated coefficient value") + 
+  ylab("\"True\" coefficient value") + 
+  stat_hline(yintercept = 0, size = 1/8) + 
+  stat_vline(xintercept = 0, size = 1/8) + 
+  scale_fill_gradient(low = "#F0F0F0", high = "darkblue", trans = "identity") +
+  theme_bw() + 
+  ggtitle("Null model (\"Pairs\")") + 
+  stat_abline(intercept = 0, slope = coef(lm(z$truth ~ z$Pairs + 0)))
 ```
 
 Bootstrap resample from each of the three landscape size classes, generating

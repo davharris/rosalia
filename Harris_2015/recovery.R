@@ -1,13 +1,22 @@
-library(dplyr)
-library(corpcor)
-library(rosalia)
-library(arm)
-library(BayesComm)
+library(dplyr)        # For manipulating data structures
+library(corpcor)      # For regularized partial covariances
+library(rosalia)      # For Markov networks
+library(arm)          # For regularized logistic regression
+library(BayesComm)    # For joint species distribution modeling
+library(RColorBrewer) # For color palette
 
-set.seed(1)
+set.seed(1) # set seed for reproducibility
 
 
-# Load in the results from the `pairs` program
+# Load in the results from the `pairs` program, run outside of R with
+# the following options:
+#   Batch mode
+#   Sequential swap ("s")
+#   Printing all pairs ("y")
+#   C-score co-occurrence measure ("c")
+#   Default confidence limits (0.05)
+#   Default iterations (100)
+#   Maximum of 20 species
 pairs_txt = readLines("fakedata/Pairs.txt")
 
 # Find areas of the data file that correspond
@@ -20,7 +29,7 @@ ends = c(
 # The above code breaks on the very last line of the file
 ends[length(ends)] = ends[length(ends)] + 1
 
-
+# Import the data file and run each method on it
 f = function(filename){
   # Multiplying by one is necessary to prevent silly errors
   # regarding TRUE/FALSE versus 1/0
@@ -130,42 +139,26 @@ f = function(filename){
 }
 
 
-
+# Find all the .rds files in the fakedata folder
 files = dir("fakedata", pattern = "\\.rds$", full.names = TRUE)
 
+# Run all the analyses on all the files
 z = lapply(files, f) %>% bind_rows %>% as.data.frame
+
+# Fix a formatting issue with the column names
 colnames(z) = gsub("\\.", " ", colnames(z))
 
-library(ggplot2)
-ggplot(z[z$n_sites >0, ], aes(x = `Markov network`, y = truth)) + 
-  stat_binhex(bins = 100) + 
-  xlab("Estimated coefficient value") + 
-  ylab("\"True\" coefficient value") + 
-  stat_hline(yintercept = 0, size = 1/8) + 
-  stat_vline(xintercept = 0, size = 1/8) + 
-  scale_fill_gradient(low = "#F0F0F0", high = "darkblue", trans = "identity") +
-  stat_smooth(method = "lm", se = FALSE, size = 1) +
-  theme_bw()
 
-ggplot(z[z$n_sites >0, ], aes(x = -`Pairs`, y = truth)) + 
-  stat_binhex(bins = 100) + 
-  xlab("Estimated coefficient value") + 
-  ylab("\"True\" coefficient value") + 
-  stat_hline(yintercept = 0, size = 1/8) + 
-  stat_vline(xintercept = 0, size = 1/8) + 
-  scale_fill_gradient(low = "#F0F0F0", high = "darkblue", trans = "identity") +
-  stat_smooth(method = "lm", se = FALSE, size = 1) +
-  theme_bw()
-
-
-
-
+# Calculate residuals for each method
 resids = sapply(
   colnames(z)[-(1:5)],
   function(i){resid(lm(z$truth ~ z[,i] + 0))}
 )
 
 sizes = sort(unique(z$n_sites))
+
+# Compute proportion of variance explained, compared with a null that
+# assumes all species interactions are 0.
 results = as.data.frame(
   t(
     sapply(
@@ -177,17 +170,18 @@ results = as.data.frame(
     )
   )
 )
+# Sort the results in decreasing order
 results = results[order(colMeans(results), decreasing = TRUE)]
 
-library(dichromat)
-library(RColorBrewer)
 colors = brewer.pal(8, "Dark2")[c(1, 2, 3, 4, 8, 5, 7)]
 
+
+# Set up the plotting canvas
 pdf("manuscript-materials/figures/performance.pdf", height = 8, width = 5)
 par(mfrow = c(2, 1))
 par(mar = c(5, 4, 3, 0) + .1)
 
-
+# Plot the model performance
 matplot(
   sizes, 
   results, 
@@ -214,6 +208,8 @@ mtext(expression(R^2), side = 2, line = 3, las = 1)
 mtext("Number of sites (log scale)", side = 1, line = 2.25, at = 200)
 mtext("A.", line = 1.25, at = 25, cex = 1.5)
 
+# Determine how high on the y-axis each method label should be so they
+# don't overlap.
 heights = results[nrow(results), ]
 
 heights$Pairs = heights$Pairs - .01
@@ -224,10 +220,9 @@ heights$`partial BayesComm` = heights$`partial BayesComm` - .01
 
 heights$GLM = heights$GLM - .01
 
-
 text(1625, heights, colnames(results), pos = 4, cex = 0.75, col = colors)
 
-
+######
 
 # silly code to make the next graph line up prettily with the previous one
 full_range = log10(c(25 * .9, 1600 * 8))
@@ -236,6 +231,7 @@ base_range = log10(c(25, 1600))
 base_scaled = 2 * base_range / (base_range[2] - base_range[1])
 full_scaled = 2 * full_range / (base_range[2] - base_range[1])
 
+# New colors for plot B
 colors2 = brewer.pal(10, "Paired")[c(2, 4, 10)]
 plot(
   z$correlation, 
@@ -273,9 +269,34 @@ segments(0, -1000, 0, 1000, col = "#00000025", lwd = 1.25)
 
 dev.off()
 
-
+# R-squareds computed across *all* landscape types
 total_ss = mean(resid(lm(truth ~ 0, data = z))^2)
 round(100 * sort(1 - colMeans(resids^2) / total_ss), 1)
 
+
+# Rank correlations among the methods that estimate marginal relationships
 round(cor(z[ , c(7, 10, 12)], method = "spearman")[,1], 2)
 
+# Plot the true interactions versus estimated interactions for
+# two methods
+library(ggplot2)
+
+ggplot(z[z$n_sites >0, ], aes(x = `Markov network`, y = truth)) + 
+  stat_binhex(bins = 100) + 
+  xlab("Estimated coefficient value") + 
+  ylab("\"True\" coefficient value") + 
+  stat_hline(yintercept = 0, size = 1/8) + 
+  stat_vline(xintercept = 0, size = 1/8) + 
+  scale_fill_gradient(low = "#F0F0F0", high = "darkblue", trans = "identity") +
+  stat_smooth(method = "lm", se = FALSE, size = 1) +
+  theme_bw()
+
+ggplot(z[z$n_sites >0, ], aes(x = -`Pairs`, y = truth)) + 
+  stat_binhex(bins = 100) + 
+  xlab("Estimated coefficient value") + 
+  ylab("\"True\" coefficient value") + 
+  stat_hline(yintercept = 0, size = 1/8) + 
+  stat_vline(xintercept = 0, size = 1/8) + 
+  scale_fill_gradient(low = "#F0F0F0", high = "darkblue", trans = "identity") +
+  stat_smooth(method = "lm", se = FALSE, size = 1) +
+  theme_bw()

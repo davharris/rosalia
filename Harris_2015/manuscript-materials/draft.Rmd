@@ -1,6 +1,7 @@
 \chead{\ifthenelse{\value{page}=1}{}{\textit{Species interactions in Markov networks}}}
 \renewcommand{\headrulewidth}{0pt}
 
+\setlength{\parskip}{0pt}
 
 **Title:** Estimating species interactions from observational data with Markov
 networks
@@ -30,10 +31,10 @@ to produce incorrect inferences, however.
 Markov network; Markov random field; Ising model; Biogeography;
 Presence–absence matrix; Null model
 
+### Introduction
+
 \setlength{\parindent}{1em}
 \setlength{\parskip}{3pt}
-
-### Introduction
 
 If nontrophic species interactions, such as competition, are important drivers
 of community assembly, then ecologists might expect to see their influence in
@@ -45,14 +46,16 @@ on community structure are unreliable [@gotelli_empirical_2009]. In particular,
 species' effects on one another can become lost in the complex web of direct and
 indirect interactions in real assemblages. For example, the competitive
 interaction between the two shrub species in Figure 1A can become obscured by
-their shared tendency to occur in unshaded areas (Figure 1B). If this sort of
-effect is common, then the vast majority of ecologists' methods, which rely on
-test statistics describing the total number of co-occurrences or overall
-correlation between putatively interacting species [@diamond_island_1975;
-@strong_ecological_1984; @gotelli_empirical_2009; @veech_probabilistic_2013;
-@pollock_understanding_2014] will not generally provide much evidence regarding
-species' direct effects on one another. The goal of this paper is to resolve
-this long-standing problem in community ecology.
+their shared tendency to occur in unshaded areas (Figure 1B). While ecologists
+have long known that indirect effects can overwhelm direct ones at the landscape
+level [@dodson_complementary_1970; @levine_competitive_1976], the vast majority of our methods for drawing
+inferenes from observational data do not control for these effects
+[e.g. @diamond_island_1975; @strong_ecological_1984; @gotelli_empirical_2009;
+@veech_probabilistic_2013; @pollock_understanding_2014]. To the extent that
+indirect interactions like those in Figure 1 are generally important
+[@dodson_complementary_1970], existing methods will thus not generally provide
+much evidence regarding species' direct effects on one another. The goal of this
+paper is to resolve this long-standing problem.
 
 While competition doesn't reliably leave the expected pattern in community
 structure (low co-occurrence rates at the landscape level), it nevertheless
@@ -67,39 +70,39 @@ assumptions that all the pairwise interactions are zero and thus don’t need to
 be controlled for.  Nevertheless, null models have dominated this field for more
 than three decades [@strong_ecological_1984; @gotelli_empirical_2009].
 
-In this paper, following recent work by @azaele_inferring_2010 and
-@fort_statistical_2013, I show that Markov networks [undirected graphical models
-also known as Markov random fields; @murphy_machine_2012] can provide a
-framework for understanding the landscape-level consequences of pairwise species
-interactions, and  for detecting them from observed presence-absence matrices.
-Markov networks have been used in many scientific fields for decades in similar
-contexts, from physics [where nearby particles interact magnetically with one
-another; @cipra_introduction_1987] to spatial statistics [where adjacent grid
-cells interact with one another; @harris_contact_1974; @gelfand_modelling_2005].
-While community ecologists explored some related approaches in the 1980's
-[@whittam_species_1981], computational limitations had previously imposed severe
-approximations that led to unintelligible results [e.g. "probabilities" greater
-than one; @gilpin_factors_1982].
+Following recent work by @azaele_inferring_2010 and @fort_statistical_2013, this
+paper shows that Markov networks [undirected graphical models also known as
+Markov random fields; @murphy_machine_2012] can provide a framework for
+understanding the landscape-level consequences of pairwise species interactions,
+and for detecting them from observed presence-absence matrices. Markov networks
+have been used in many scientific fields for decades in similar contexts, from
+physics [where nearby particles interact magnetically; @cipra_introduction_1987]
+to spatial statistics [where adjacent grid cells have correlated values;
+@harris_contact_1974; @gelfand_modelling_2005]. While community ecologists
+explored some related approaches in the 1980's [@whittam_species_1981],
+they used severe approximations that led to unintelligible results
+[e.g. "probabilities" greater than one; @gilpin_factors_1982].
 
-The rest of the paper proceeds as follows. First, I discuss how Markov networks
-operate and how they can be used to simulate landscape-level data or to make
-exact predictions regarding the direct and indirect consequences of possible
-interaction matrices. Then, using simulated data sets where the "true"
-ecological structure is known, I compare this approach with several existing
-methods for detecting species interactions. Finally, I discuss opportunities for
-extending the approach presented here to other problems in community ecology,
-such as disentangling the effects of biotic and abiotic interactions on species
-composition.
+Below, I introduce Markov networks and show how they can be used to simulate
+landscape-level data or to make exact predictions about the direct and
+indirect consequences of possible interaction matrices. Then, using simulated
+data sets where the "true" interactions are known, I compare this approach with
+several existing methods. Finally, I discuss opportunities for extending the
+approach presented here to other problems in community ecology, e.g. quantifying
+the overall effect of species interactions on occurrence rates
+[@roughgarden_competition_1983] and disentangling the effects of biotic versus
+abiotic interactions on species composition [@kissling_towards_2012;
+@pollock_understanding_2014].
 
 ### Methods
 
 #### Markov networks.
 Markov networks provide a framework for translating back and forth between the
 conditional relationships among species (Figure 1C) and the kinds of species
-assemblages that these relationships produce. In this section, I show how a set
-of conditional relationships can be used to determine the how groups of species
-can co-occur. Methods for estimating conditional relationships from
-presence-absence data are discussed in the next section.
+assemblages that these relationships produce. Here, I show how a set of
+conditional relationships can be used to determine the how groups of species
+can co-occur. Methods for estimating conditional relationships from data are
+discussed in the next section.
 
 A Markov network defines the relative probability of observing a given vector of
 species-level presences (1s) and absences (0s), $\vec{y}$, as
@@ -119,13 +122,13 @@ log-probability; it controls the conditional relationship between two species,
 i.e. the probability that they will be found together, after controlling for the
 other species in the network (Figure 2A, Figure 2B). For example, $\beta_{ij}$
 might have a value of $+2$ for two mutualists, indicating that the odds of
-observing one species are $e^2$ times higher its partner is present than when
-it is absent. Because the relative probability of a presence-absence vector
-increases when positively-associated species co-occur and decreases when
-negatively-associated species co-occur, the model tends---all else equal---to
-produce assemblages that have many pairs of positively-associated species and
-relatively few pairs of negatively-associated species (exactly as an ecologist
-might expect).
+observing one species are $e^2$ times higher in sites where its partner is
+present than in comparable sites where its partner is absent. Because the
+relative probability of a presence-absence vector increases when
+positively-associated species co-occur and decreases when negatively-associated
+species co-occur, the model tends---all else equal---to produce assemblages that
+have many pairs of positively-associated species and relatively few pairs of
+negatively-associated species (exactly as an ecologist might expect).
 
 Of course, if all else is *not* equal (e.g. Figure 1, where the presence of one
 competitor is associated with release from another competitor), then species'
@@ -152,63 +155,64 @@ ones considered here have unimodal likelihood surfaces [@murphy_machine_2012],
 ensuring that this procedure will always converge on the global maximum. This
 maximum represents the unique combination of $\alpha$ and $\beta$ coefficients
 that would be expected to produce exactly the observed co-occurrence frequencies
-on average (i.e. it matches the sufficient statistics of the model distribution
-to the sufficient statistics of the data). For the analyses in this paper, I
-used the *rosalia* package [@harris_rosalia_2015] for the R programming language
-[@r_core_team_r_2015] to optimize the Markov network parameters.
+on average [i.e. it matches the sufficient statistics of the model distribution
+to the sufficient statistics of the data; @murphy_machine_2012]. I used the
+rosalia package [@harris_rosalia_2015] for the R programming language
+[@r_core_team_r_2015] to optimize the Markov network parameters. The package was
+named after Santa Rosalia, the patron saint of biodiversity, whose supposedly
+miraculous healing powers played an important rhetorical role in the null model
+debates of the 1970's and 1980's [@lewin_santa_1983].
 
 #### Simulated landscapes.
 In order to compare different methods, I simulated two sets of landscapes using
-known parameters.
-
-The first set of simulated landscapes included the three competing species
-shown in Figure 1. For each of 1000 replicates, I generated a landscape with
-100 sites by sampling exactly from a probability distribution defined by the
-interaction coefficients in that figure (Appendix A). Each of the methods
-described below was then evaluated on its ability to correctly infer that the
-two shrub species competed with one another, despite their frequent
-co-occurrence.
+known parameters. The first set included the three competing species shown in
+Figure 1. For each of 1000 replicates, I generated a landscape with 100 sites by
+sampling from a probability distribution defined by the figure's interaction
+coefficients (Appendix 1). Each of the methods described below was then
+evaluated on its ability to correctly infer that the two shrub species competed
+with one another, despite their frequent co-occurrence.
 
 I also simulated a second set of landscapes using a stochastic community model
-based on generalized Lotka-Volterra dynamics, as described in the Appendix. In
+based on generalized Lotka-Volterra dynamics, as described in Appendix 2. In
 these simulations, each species pair was randomly assigned to either compete for
 a portion of the available carrying capacity (negative interaction) or to act as
 mutualists (positive interaction).  Here, mutualisms operate by mitigating the
 effects of intraspecific competition on each partner's death rate.  For these
 analyses, I simulated landscapes with up to 20 species and 25, 200, or 1600
-sites (50 replicates per landscape size; see Appendix).
+sites (50 replicates per landscape size; see Appendix 2).
 
 #### Recovering species interactions from simulated data.
-I used Markov networks and several other techniques for determining the sign and
-strength of the associations between pairs of species (Appendix B).
+I compared seven techniques for determining the sign and strength of the
+associations between pairs of species from simulated data (Appendix 3).
 
 <!-- exp(qlogis(.975, scale = 2)) -->
 
-For the Markov networks, I used the rosalia package [@harris_rosalia_2015],
-as described above. For the analyses with 20 species, I added a very weak
-logistic prior distribution on the $\alpha$ and $\beta$ terms with scale 2 to
-ensure that the model estimates were always finite. The bias introduced by this
-prior should be small: the 95% credible interval on $\beta$ only requires that
-one species' effect on the odds of observing a different species to be less than
-a factor of 1500 (which is not much of a constraint). The logistic distribution
-was chosen because it is convex and has a similar shape to the Laplace
-distribution used in LASSO regularization (especially in the tails), but unlike
-the Laplace distribution it is differentiable everywhere and does not force any
-estimates to be exactly zero. To confirm that this procedure produced reliable
-estimates, I evaluated it on 50 bootstrap replicates (Appendix).
+First, I used the rosalia package [@harris_rosalia_2015] to fit Markov newtork
+models,  as described above. For the analyses with 20 species, I added a very
+weak logistic prior distribution on the $\alpha$ and $\beta$ terms with scale 2
+to ensure that the model estimates were always finite. The bias introduced by
+this prior should be small: the 95% credible interval on $\beta$ only requires
+that one species' effect on the odds of observing a different species to be less
+than a factor of 1500 (which is not much of a constraint). The logistic
+distribution was chosen because it is convex and has a similar shape to the
+Laplace distribution used in LASSO regularization (especially in the tails), but
+unlike the Laplace distribution it is differentiable everywhere and does not
+force any estimates to be exactly zero. To confirm that this procedure produced
+stable estimates, I compared its estimates on 50 bootstrap replicates
+(Appendix 4).
 
 I also evaluated five alternative methods from the existing literature (plus a
 novel variant of the fifth method). The first two alternative interaction
 measures were the sample correlations and the partial correlations between each
 pair of species' data vectors on the landscape [@albrecht_spatial_2001;
-@faisal_inferring_2010]. Because partial correlations are undefined for
+@faisal_inferring_2010]. In the context of non-Gaussian data, the partial
+correlation can be thought of as a computationally efficient approximation to
+the full Markov network model [@loh_structure_2013]. This sort of model is very
+common for estimating relationships among genes and gene products
+[@friedman_sparse_2008]. Because partial correlations are undefined for
 landscapes with perfectly-correlated species pairs, I used a regularized
 estimate based on James-Stein shrinkage, as implemented in the corpcor package’s
-`pcor.shrink` function with the default settings [@schafer_corpcor_2014]. In the
-context of non-Gaussian data, the partial correlation can be thought of as a
-computationally efficient approximation to the full Markov network model
-[@loh_structure_2013]. This sort of model is very common for estimating
-relationships among genes and gene products [@friedman_sparse_2008].
+`pcor.shrink` function with the default settings [@schafer_corpcor_2014].
 
 The third alternative, generalized linear models (GLMs), can also be
 thought of as a computationally efficient approximation to the Markov
@@ -226,38 +230,36 @@ computed by the Pairs software described in @gotelli_empirical_2009 as my null
 model-based estimator of species interactions.
 
 The last two estimators used the latent correlation matrix estimated by the
-BayesComm package [@golding_bayescomm_2015] in order to evaluate the untested
-claim from recent papers that the correlation coefficients estimated by "joint
-species distribution models" provide an accurate assessment of species’ pairwise
-interactions [@pollock_understanding_2014; see also @harris_generating_2015].  
-In addition to using the posterior mean of the correlation coefficient
-[@pollock_understanding_2014], I also used the posterior mean of the *partial*
-correlation, which might provide a better estimate of species' conditional
-associations.
+BayesComm package [@golding_bayescomm_2015] in order to evaluate the recent
+claim that the correlation coefficients estimated by "joint species distribution
+models" provide an accurate assessment of species’ pairwise interactions
+[@pollock_understanding_2014; see also @harris_generating_2015]. In addition to
+using the posterior mean correlation [@pollock_understanding_2014], I also used
+the posterior mean *partial* correlation, which might be able to control for
+indirect effects.
 
 #### Evaluating model performance.
-For the simulated landscapes based on Figure 1, method evaluation was fairly
-qualitative: any method whose test statistic for the two shrubs indicated a
-negative relationship passed; other methods failed (Appendix). For the null
-model (Pairs), I calculated statistical significance using its $Z$-score. For
-the Markov network, I used the Hessian matrix to generate approximate confidence
-intervals and noted whether these intervals included zero.
+For the simulated landscapes based on Figure 1, I assessed whether each method's
+test statistic indicated a positive or negative relationship between the two
+shrubs (Appendix 1). For the null model (Pairs), I calculated statistical
+significance using its $Z$-score. For the Markov network, I used the Hessian
+matrix to generate approximate confidence intervals and noted whether these
+intervals included zero.
 
-For the larger landscapes, I evaluated the relationship between each method's
-estimates and the "true" interaction strengths among all of the species pairs
-from the simulated landscapes. This kind of evaluation is important because
-ecologists need a consistent way to know how strong species interactions are
-regardless of which species were present in a particular data set or how many
-observations were taken. Because the different methods mostly describe species
-interactions on different scales (e.g. correlations versus $Z$ scores versus
-regression coefficients), I used linear regression through the origin to rescale
-the different estimates produced by each method so that they had a consistent
-interpretation. After rescaling each method’s estimates, I calculated squared
-errors between the scaled interaction estimates and “true” interaction values
-across all the simulated data sets. These squared errors determined the
-proportion of variance explained for different combinations of method and
-landscape size (compared with a baseline model that assumed all interaction
-strengths to be zero).
+I then evaluated the relationship between each method's estimates and the "true"
+interaction strengths among all of the species pairs from the larger simulated
+landscapes. This determined which the methods provide a consistent way to know
+how strong species interactions are---regardless of which species were present
+in a particular data set or how many observations were taken. Because the
+different methods mostly describe species interactions on different scales
+(e.g. correlations versus $Z$ scores versus regression coefficients), I used
+linear regression through the origin to rescale the different estimates produced
+by each method so that they had a consistent interpretation. After rescaling
+each method’s estimates, I calculated squared errors between the scaled
+interaction estimates and “true” interaction values across all the simulated
+data sets. These squared errors determined the proportion of variance explained
+for different combinations of method and landscape size (compared with a
+null model that assumed all interaction strengths to be zero).
 
 ### Results
 
@@ -267,41 +269,44 @@ was positive---despite their competition for space at a mechanistic level---due
 to indirect effects of the dominant tree species. As a result, the correlation
 between these species was positive in 94% of replicates, and the
 randomization-based null model falsely reported positive associations 100% of
-the time. Worse, more than 98% of false conclusions from the null model were
-statistically significant. The partial correlation and Markov network estimates,
-on the other hand, each correctly isolated the direct negative interaction
-between the shrubs from their positive indirect interaction 94% of the time
-(although the confidence intervals overlapped zero in most replicates).
+the time. Worse, more than 98% of these false conclusions were statistically
+significant. The partial correlation and Markov network estimates, on the other
+hand, each correctly isolated the direct negative interaction between the shrubs
+from their positive indirect interaction 94% of the time (although the
+confidence intervals overlapped zero in most replicates).
 
 #### Twenty species.
-The accuracy of the evaluated methods varied substantially, depending on
-the parameters that produced the simulated communities (Figure 3A). In general,
-however, there was a consistent ordering, with the four methods that controlled
-for indirect effects of species interactions performing the best: the Markov
-network explained the largest portion of the variance (35% overall), followed
-by the generalized linear models (30%), partial correlations from the raw
-presence-absence data (28%), and partial correlations from BayesComm, the
-joint species distribution model (26%).  The benefit of choosing the full
-Markov network over the other three methods was largest on the smaller
-landscapes, which are also the ones that are most representative of typical
-analyses in this field [@gotelli_empirical_2009].
+Despite some variability across contexts (Figure 3A), the four methods that
+controlled for indirect effects clearly performed the best: the Markov network
+explained the largest portion of the variance in the "true" interaction
+coefficients (35% overall), followed by the generalized linear models (30%),
+partial correlations from the raw presence-absence data (28%), and partial
+correlations from BayesComm, the joint species distribution model (26%).  The
+benefit of choosing the full Markov network over the other three methods was
+largest on the smaller landscapes, which are also the ones that are most
+representative of typical analyses in this field [@gotelli_empirical_2009].
 
 The three methods that did not attempt to control for indirect interactions all
 explained less than 20% of the variance. Of these, the sample correlation matrix
 based on the raw data performed the best (19%), followed by the null model
 (15%) and BayesComm's correlation matrix (11%). Although these last three
 methods had different $R^2$ values, there was a close mapping among
-their estimates (after controlling for the size of the simulated landscapes;
-Figure 3B).  This suggests that the correlation matrices from joint species
-distribution models and especially the effect sizes from null models only
-contain noisy versions of the same information that could be obtained more
-easily and interpretably by calculating correlation coefficients between
-species' presence-absence vectors.
+their estimates (especially after controlling for the size of the simulated
+landscapes; Figure 3B).  This suggests that the effect sizes from the null model
+(and, to a lesser extent, the correlation matrices from joint species
+distribution models) only contain noisy versions of the same information that
+could be obtained more easily and interpretably by calculating correlation
+coefficients between species' presence-absence vectors.
 
-The bootstrapped results confirmed that the rosalia package's estimates of
-species' conditional relationships were reasonably insensitive to sampling
-variation (Appendix), and that the above ranking of the different methods was
-robust (Appendix).
+Bootstrap resampling indicated that the above ranking of the different methods
+was robust (Appendix 3). In particular, the 95% confidence interval of the
+bootstrap distribution indicated that the Markov network's overall $R^2$ value
+was between 14 and 18 percent higher than the second-most effective
+method (generalized linear models) and between 2.12 and 2.38 times higher than
+could be achieved by the null model (Pairs).  Bootstrap resampling of a 200-site
+landscape also confirmed that the rosalia package's estimates of species'
+conditional relationships were reasonably robust to sampling variation
+(Appendix 4).
 
 ### Discussion
 
@@ -339,20 +344,19 @@ data sets than was shown in Figure 3A.
 Despite their limitations, Markov networks have enormous potential to improve
 ecological understanding. In particular, they are less vulnerable than some
 of the most commonly-used methods to mistakenly identifying positive species
-interactions between competing species. They also provide a simple answer to the
-question of how competition should affect a species' overall prevalence, which
-was a major flashpoint for the null model debates in the 1980’s
-[@roughgarden_competition_1983; @strong_ecological_1984]. Equation 1 can be used
-to calculate the expected prevalence of a species in the absence of biotic
-influences [$\frac{1}{1 + e^{-\alpha}}$; @lee_learning_2012]. Competition's
-effect on prevalence in a Markov network can then be calculated by subtracting
-this value and the observed prevalence (cf Figure 2D). This kind of insight
-would have been difficult to obtain without a generative model that makes
-predictions about the consequences of species interactions; null models (which
-presume *a priori* that interactions do not exist) have no way to make such
-predictions.
-
-[[when will indirect effects overwhelm direct ones?]]
+interactions between competing species, and can make precise statements about
+the conditions whre indirect interactions will overwhelm direct ones. They also
+provide a simple answer to the question of how competition should affect a
+species' overall prevalence, which was a major flashpoint for the null model
+debates in the 1980’s [@roughgarden_competition_1983; @strong_ecological_1984].
+Equation 1 can be used to calculate the expected prevalence of a species in the
+absence of biotic influences [$\frac{1}{1 + e^{-\alpha}}$; @lee_learning_2012].
+Competition's effect on prevalence in a Markov network can then be calculated by
+subtracting this value from the observed prevalence (cf Figure 2D). This kind of
+insight would have been difficult to obtain without a generative model that
+makes predictions about the consequences of species interactions; null models
+(which presume *a priori* that interactions do not exist) have no way to make
+such predictions.
 
 Markov networks---particularly the Ising model for binary networks---have been
 studied in statistical physics for nearly a century [@cipra_introduction_1987],
@@ -361,38 +365,36 @@ huge range of applications. Using the same framework for species interactions
 would thus allow ecologists to tap into an enormous set of existing
 discoveries and techniques for dealing with indirect effects, stability, and
 alternative stable states. Numerous other extensions are possible: for example,
-Markov networks can be fit with a mix of discrete and continuous variables,
-and likely states of the interaction network can be modeled as a function of
+the states of the interaction network can be modeled as a function of
 the local abiotic environment [@lee_learning_2012], which would provide a
-rigorous and straightforward way to incorporate whole networks of biotic
-interactions into species distribution models. Estimating each species'
-conditional relationship with both biotic and abiotic factors in the same model
-should lead to a better understanding of both kinds of ecological process. There
-are even methods [@whittam_species_1981; @tjelmeland_markov_1998] that would
-allow one species to affect the sign or strength of the relationship between
-two other species, tipping the balance between facilitation and exploitation
-[@bruno_inclusion_2003].
+rigorous and straightforward approach to the difficult and important task of
+incorporating whole networks of biotic interactions into species distribution
+models [@kissling_towards_2012; @pollock_understanding_2014], leading to a
+better understanding of the interplay between biotic and abiotic effects on
+community structure. There are even methods [@whittam_species_1981;
+@tjelmeland_markov_1998] that would allow one species to affect the sign or
+strength of the relationship between two other species, tipping the balance
+between facilitation and exploitation [@bruno_inclusion_2003].
 
 Finally, the results presented here have important implications for
-ecologists' continued use of null models to draw inferences about species
-interactions. Null and neutral models can be very useful for clarifying our
-thinking about the numerical consequences of species' richness and abundance
-patterns [@harris_occupancy_2011; @xiao_strong_2015], but deviations from a
-particular null model must be interpreted with care
-[@roughgarden_competition_1983]. Even in small networks with three species, it
-may simply not be possible to implicate individual species pairs or specific
-ecological processes like competition by rejecting a general-purpose null
-[@gotelli_empirical_2009], especially when the test statistic is effectively
-just a correlation coefficient (Figure 3B). Simultaneous estimation of multiple
-ecological parameters seems like a much more promising approach: to the extent
-that the models' relative performance on real data sets is similar to the range
-of results shown in Figure 3A, scientists in this field could often double their
-explanatory power by switching from null models to Markov networks (or increase
-it by nearly as much with linear or generalized linear approximations).
-Regardless of the specific methods ecologists ultimately choose, the most
-important consideration is clearly that ecologists need to control for indirect
-effects and estimate conditional relationships between species, rather than
-marginal ones.
+ecologists' continued use of null models for studying species interactions. Null
+and neutral models can be useful for clarifying our thinking about the numerical
+consequences of species' richness and abundance patterns
+[@harris_occupancy_2011; @xiao_strong_2015], but deviations from a particular
+null model must be interpreted with care [@roughgarden_competition_1983]. Even
+in small networks with three species, it may simply not be possible to implicate
+individual species pairs or specific ecological processes like competition by
+rejecting a general-purpose null [@gotelli_empirical_2009], especially when the
+test statistic is effectively just a correlation coefficient (Figure 3B).
+Simultaneous estimation of multiple ecological parameters seems like a much more
+promising approach: to the extent that the models' relative performance on real
+data sets is similar to the range of results shown in Figure 3A, scientists in
+this field could often double their explanatory power by switching from null
+models to Markov networks (or increase it substantially by with linear or
+generalized linear approximations). Regardless of the methods ecologists
+ultimately choose, controlling for indirect effects could clearly improve our
+understanding of species' direct effects on one another and on community
+structure.
 
 #### Acknowledgements:
 This research was funded by a Graduate Research Fellowship from the US
@@ -431,17 +433,19 @@ is present ($y_1 = 1$), but not when it is absent ($y_1 = 0$).  Similarly, the
 exponent includes $\alpha_2$ only when species $2$ is present ($y_2 = 1$), and
 $\beta$ only when both are present ($y_1y_2 = 1$). The normalizing constant $Z$,
 ensures that the four relative probabilities sum to 1.  In this case, $Z$ is
-about 18.5.  **C.** Using the probabilities, we can find the expected
-frequencies of all possible co-occurrence patterns between the two species of
-interest. **D.** If $\beta$ equaled zero (e.g. if the species no longer competed
-for the same resources), then the reduction in competition would allow each
-species to increase its occurrence rate and the co-occurrence deficit would
-be eliminated.
+about 18.5.  **C.** We can find the expected frequencies of all possible
+co-occurrence patterns between the two species of interest. **D.** If
+$\beta_{12}$ equaled zero (e.g. if the species no longer competed for the same
+resources), then the reduction in competition would allow each species to
+increase its occurrence rate and the co-occurrence deficit would be eliminated.
 
 **Figure 3.**
 **A.** Proportion of variance in interaction coefficients explained by each
-method across varying numbers of sampled locations.
-**B.** The $Z$-scores produced by the null model (i.e. the Pairs software) for
-each pair of species are very predictable from the correlation between the
-presence-absence vectors of those same species and from the number of sites on
-the landscape.
+versus number of sampled locations.
+**B.** The $Z$-scores produced by the null model ("Pairs") for each pair of
+species are very predictable from the correlation between the presence-absence
+vectors of those same species and from the number of sites on the landscape.
+
+\setlength{\parskip}{0pt}
+\setlength{\parindent}{-1em}
+\setlength{\leftskip}{1em}
