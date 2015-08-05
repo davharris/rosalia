@@ -1,3 +1,5 @@
+# Appendix 4: bootstrap estimates of model stability
+
 library(rosalia)
 
 set.seed(1)

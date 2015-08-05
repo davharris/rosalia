@@ -1,4 +1,7 @@
-# Evaluation of the three species in Figure 1
+---
+output: pdf_document
+title: "Appendix 1: Evaluation of the three species in Figure 1"
+---
 
 Load dependencies
 

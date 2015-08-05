@@ -3,7 +3,7 @@ sed -i "" "s/:_/_/g" My\ Library.bib
 
 pandoc -o draft.tex --template=mytemplate.latex --bibliography=My\ Library.bib --csl=ecology.csl draft.Rmd
 
-pandoc -o draft.pdf --template=mytemplate.latex --bibliography=My\ Library.bib --csl=ecology.csl draft.Rmd
+pdflatex draft.tex
 
 pandoc -o Appendices.pdf --bibliography=My\ Library.bib --csl=ecology.csl Appendices.Rmd
 
