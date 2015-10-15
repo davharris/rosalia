@@ -74,27 +74,53 @@ evaluation = sapply(
       write.table(t(x[rowSums(x) > 0, ]), file = paste0("fakedata/three/", i, ".txt"))
     }
     
-    rosie = rosalia(x, trace = 0, prior = make_flat_prior(), hessian = TRUE)
+    rosie = rosalia(x, trace = 0, prior = make_logistic_prior(scale = 2), hessian = TRUE)
     
-    se = sqrt(diag(solve(rosie$opt$hessian)))["beta3"]
-    rosalia_confident_positive = pnorm(0, mean = rosie$beta[2, 3], sd = se) < .025
-    rosalia_confident_negative = pnorm(0, mean = rosie$beta[2, 3], sd = se) > .975
-  
     c(
       cor = cor(x)[2, 3] < 0,
       partial = cor2pcor(cor(x))[2, 3] < 0,
-      rosalia = rosie$beta[2,3] < 0,
-      rosalia_confident_positive = rosalia_confident_positive,
-      rosalia_confident_negative = rosalia_confident_negative
+      rosalia = rosie$beta[2,3],
+      rosalia_se = sqrt(diag(solve(rosie$opt$hessian)))["beta3"]
     )
   })
 
 ```
 
 
-After running the "Pairs" software on transposed versions of the files simulated above, we can import its results to see how the method performed.
 
 ```{r}
+upper_ci_below_zero = evaluation["rosalia", ] + 
+  qnorm(.975) * evaluation["rosalia_se.beta3", ] < 0
+lower_ci_above_zero = evaluation["rosalia", ] + 
+  qnorm(.025) * evaluation["rosalia_se.beta3", ] > 0
+```
+
+
+Evaluate the frequentist coverage of the confidence intervals (CIs). If the coverage is good, then approximately 95% of the confidence intervals generated on independent data sets should contain the true value (i.e., in 95% of cases, the upper CI should be above the true value of $-1$ and the lower CI should be below the true value).
+
+```{r}
+upper_ci_above_true = evaluation["rosalia", ] + 
+  qnorm(.975) * evaluation["rosalia_se.beta3", ] > -1
+lower_ci_below_true = evaluation["rosalia", ] + 
+  qnorm(.025) * evaluation["rosalia_se.beta3", ] < -1
+
+# Coverage is close to 95%
+100 * mean(upper_ci_above_true & lower_ci_below_true)
+
+# According to this binomial test, the confidence intervals include the
+# true value a bit too often to be consistent with 95% coverage (i.e. there
+# is some evidence that the confidence intervals are too conservative).
+binom.test(x = sum(upper_ci_above_true & lower_ci_below_true), 
+           n = length(upper_ci_above_true), 
+           p = 0.95,
+           conf.level = 0.95
+)
+
+```
+
+After running the "Pairs" software on transposed versions of the files simulated above, we can import its results to see how the method performed.
+
+```{r, eval = FALSE}
 Pairs.txt = readLines("fakedata/three/Pairs.txt")
 
 # Find the column that contains the Z-score
@@ -118,13 +144,13 @@ pairs_evaluation = pairs_z > 0
 ```
 
 
-```{r}
+```{r, eval = FALSE}
 out = c(pairs = mean(pairs_evaluation) * 100, rowMeans(evaluation)[1:3] * 100)
 
 kable(data_frame(model = names(out), percent_correct = paste(out, "%")))
 ```
 
-```{r}
+```{r, eval = FALSE}
 # percentage of Pairs runs that found statistically significant mutualism at the
 # p<.05 level (two-tailed test)
 mean(pnorm(pairs_z) < 0.025) * 100

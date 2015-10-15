@@ -17,7 +17,7 @@ lines of output from the `corpcor` package of the form "`## Estimating optimal s
 
 Initialization:
 
-```{r, cache = TRUE, message = FALSE}
+```{r, cache = TRUE, message = FALSE, eval = FALSE}
 library(dplyr)        # For manipulating data structures
 library(corpcor)      # For regularized partial covariances
 library(rosalia)      # For Markov networks
@@ -39,7 +39,7 @@ the following options:
   * Default iterations (100)
   * Maximum of 20 species
 
-```{r, cache = TRUE}
+```{r, cache = TRUE, eval = FALSE}
 pairs_txt = readLines("fakedata/Pairs.txt")
 
 # Find areas of the data file that correspond
@@ -56,7 +56,7 @@ ends[length(ends)] = ends[length(ends)] + 1
 
 A function to import the data file and run each method on it: 
 
-```{r, cache = TRUE}
+```{r, cache = TRUE, eval = FALSE}
 fit_all = function(filename){
   ######## Import ########
   
@@ -170,7 +170,7 @@ fit_all = function(filename){
 
 Run the above function on all the files:
 
-```{r, cache = TRUE}
+```{r, cache = TRUE, eval = FALSE}
 
 # Find all the .rds files in the fakedata folder
 files = dir("fakedata", pattern = "\\.rds$", full.names = TRUE)
@@ -184,7 +184,7 @@ colnames(z) = gsub("\\.", " ", colnames(z))
 
 Summarize the results of all 7 methods across the simulated landscapes:
 
-```{r, cache = TRUE}
+```{r, cache = TRUE, eval = FALSE}
 
 # Calculate residuals for each method
 resids = sapply(
@@ -213,7 +213,7 @@ results = results[order(colMeans(results), decreasing = TRUE)]
 
 Plot the results: 
 
-```{r, cache = TRUE, message=FALSE}
+```{r, cache = TRUE, message=FALSE, eval = FALSE}
 colors = brewer.pal(8, "Dark2")[c(1, 2, 3, 4, 8, 5, 7)]
 
 # Set up the plotting canvas
@@ -314,7 +314,7 @@ dev.off()
 
 Summarize the results:
 
-```{r, cache = TRUE}
+```{r, cache = TRUE, eval = FALSE}
 
 # R-squareds computed across *all* landscape types
 total_ss = mean(resid(lm(truth ~ 0, data = z))^2)
@@ -327,7 +327,7 @@ round(cor(z[ , c(7, 10, 12)], method = "spearman")[,1], 2)
 
 Plot the true interactions versus estimated interactions for two methods:
 
-```{r, cache = TRUE}
+```{r, cache = TRUE, eval = FALSE}
 library(ggplot2)
 
 ggplot(z[z$n_sites >0, ], aes(x = `Markov network`, y = truth)) + 
@@ -341,7 +341,8 @@ ggplot(z[z$n_sites >0, ], aes(x = `Markov network`, y = truth)) +
   ggtitle("Markov network") + 
   stat_abline(intercept = 0, slope = coef(lm(z$truth ~ z$`Markov network` + 0)))
 
-ggplot(z[z$n_sites >0, ], aes(x = `Pairs`, y = truth)) + 
+z$`-Pairs` = -z$Pairs
+ggplot(z[z$n_sites >0, ], aes(x = `-Pairs`, y = truth)) + 
   stat_binhex(bins = 100) + 
   xlab("Estimated coefficient value") + 
   ylab("\"True\" coefficient value") + 
@@ -350,7 +351,7 @@ ggplot(z[z$n_sites >0, ], aes(x = `Pairs`, y = truth)) +
   scale_fill_gradient(low = "#F0F0F0", high = "darkblue", trans = "identity") +
   theme_bw() + 
   ggtitle("Null model (\"Pairs\")") + 
-  stat_abline(intercept = 0, slope = coef(lm(z$truth ~ z$Pairs + 0)))
+  stat_abline(intercept = 0, slope = coef(lm(z$truth ~ z$`-Pairs` + 0)))
 ```
 
 Bootstrap resample from each of the three landscape size classes, generating
@@ -358,7 +359,7 @@ new sets of 150 landscapes. For each one, calculate the proportion of variance
 explained (compared to a null baseline that assumes all species pairs' 
 interaction strengths are zero).
 
-```{r, cache = TRUE}
+```{r, cache = TRUE, eval = FALSE}
 rep = 12
 n = 200
 boots = replicate(500,
@@ -385,7 +386,7 @@ boots = replicate(500,
 
 Summarize the bootstrap results:
 
-```{r, cache = TRUE}
+```{r, cache = TRUE, eval = FALSE}
 for(compared in c("partial correlation", "correlation", "GLM", "BayesComm", "partial BayesComm", "Pairs")){
   CI = round(
     quantile(
@@ -396,5 +397,9 @@ for(compared in c("partial correlation", "correlation", "GLM", "BayesComm", "par
   
   message("R-squared is " , CI[1], "-", CI[2], " times higher than from ", compared, " (95% bootstrap CI)")
 }
+```
+
+```{r, eval = FALSE}
+save(results, sizes, file = "graph_data.Rdata")
 ```
 

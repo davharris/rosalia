@@ -14,6 +14,14 @@ rosalia.Rproj
 Harris_2015/fakedata/
 !Harris_2015/fakedata.zip
 Harris_2015/models_cache/
-Harris_2015/models_files/
-Harris_2015/models.html
-Harris_2015/three_species.html
+Harris_2015/three_species_cache/
+Harris_2015/recovery_cache/
+stochastic/stochastic-recovery_cache/
+recovery.md
+simulation.md
+stochastic-recovery.md
+three_species.md
+cache/*
+*.out
+*.log
+*.aux

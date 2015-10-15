@@ -1,6 +1,6 @@
 ---
 output: pdf_document
-title: Appendix [[X]]: simulating species interactions
+title: Appendix 2: simulating species interactions
 subtitle: \"Estimating species interactions from observational data with Markov networks\"
 author: David J. Harris
 fontsize: 11pt

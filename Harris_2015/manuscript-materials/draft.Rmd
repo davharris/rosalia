@@ -55,6 +55,16 @@ indirect interactions like those in Figure 1 are generally important
 much evidence regarding species' direct effects on one another. The goal of this
 paper is to resolve this long-standing problem.
 
+![**Figure 1.** **A.** A small network of three competing species. The tree (top) tends not to
+co-occur with either of the two shrub species, as indicated by the strongly
+negative coefficient linking them. The two shrub species also compete with one
+another, but more weakly (circled coefficient). **B.** In spite of the
+competitive interactions between the two shrub species, their shared tendency to
+occur in locations without trees makes their occurrence vectors positively
+correlated (circled). **C.** Controlling for the tree species' presence with a
+conditional method such as a partial covariance or a Markov network leads to
+correct identification of the negative shrub-shrub interaction (circled).](figures/Figure_1.pdf)
+
 While competition doesn't reliably reduce co-occurrence rates at the whole-landscape
 level (as most of our methods assume), it nevertheless does leave a signal in
 the data (Figure 1C). Specifically, after partitioning the data set into shaded
@@ -127,6 +137,23 @@ positively-associated species co-occur and decreases when negatively-associated
 species co-occur, the model tends---all else equal---to produce assemblages that
 have many pairs of positively-associated species and relatively few pairs of
 negatively-associated species (exactly as an ecologist might expect).
+
+![**Figure 2.**
+**A.** A small Markov network with two species.  The abiotic environment favors
+the occurrence of both species ($\alpha >0$), particularly species 2
+($\alpha_2 > \alpha_1$). The  negative $\beta$ coefficient linking these two
+species implies that they co-occur less than expected under independence.
+**B.** Relative probabilities of all four possible presence-absence combinations
+for Species 1 and Species 2. The exponent includes $\alpha_1$ whenever Species 1
+is present ($y_1 = 1$), but not when it is absent ($y_1 = 0$).  Similarly, the
+exponent includes $\alpha_2$ only when species $2$ is present ($y_2 = 1$), and
+$\beta$ only when both are present ($y_1y_2 = 1$). The normalizing constant $Z$,
+ensures that the four relative probabilities sum to 1.  In this case, $Z$ is
+about 18.5.  **C.** We can find the expected frequencies of all possible
+co-occurrence patterns between the two species of interest. **D.** If
+$\beta_{12}$ equaled zero (e.g. if the species no longer competed for the same
+resources), then the reduction in competition would allow each species to
+increase its occurrence rate and the co-occurrence deficit would be eliminated.](figures/Figure_2.pdf)
 
 Of course, if all else is *not* equal (e.g. Figure 1, where the presence of one
 competitor is associated with release from another competitor), then species'
@@ -284,6 +311,13 @@ benefit of choosing the full Markov network over the other three methods was
 largest on the smaller landscapes, which are also the ones that are most
 representative of typical analyses in this field [@gotelli_empirical_2009].
 
+![**Figure 3.**
+**A.** Proportion of variance in interaction coefficients explained by each
+method versus number of sampled locations.
+**B.** The $Z$-scores produced by the null model ("Pairs") for each pair of
+species can be predicted using the correlation between the presence-absence
+vectors of those same species and from the number of sites on the landscape.](figures/performance.pdf)
+
 The three methods that did not attempt to control for indirect interactions all
 explained less than 20% of the variance. Of these, the sample correlation matrix
 based on the raw data performed the best (19%), followed by the null model
@@ -405,44 +439,6 @@ very helpful feedback on the text.
 \setlength{\parindent}{0cm}
 
 **References:**
-
-
-**Figure captions**
-
-**Figure 1.**
-**A.** A small network of three competing species. The tree (top) tends not to
-co-occur with either of the two shrub species, as indicated by the strongly
-negative coefficient linking them. The two shrub species also compete with one
-another, but more weakly (circled coefficient). **B.** In spite of the
-competitive interactions between the two shrub species, their shared tendency to
-occur in locations without trees makes their occurrence vectors positively
-correlated (circled). **C.** Controlling for the tree species' presence with a
-conditional method such as a partial covariance or a Markov network leads to
-correct identification of the negative shrub-shrub interaction (circled).
-
-**Figure 2.**
-**A.** A small Markov network with two species.  The abiotic environment favors
-the occurrence of both species ($\alpha >0$), particularly species 2
-($\alpha_2 > \alpha_1$). The  negative $\beta$ coefficient linking these two
-species implies that they co-occur less than expected under independence.
-**B.** Relative probabilities of all four possible presence-absence combinations
-for Species 1 and Species 2. The exponent includes $\alpha_1$ whenever Species 1
-is present ($y_1 = 1$), but not when it is absent ($y_1 = 0$).  Similarly, the
-exponent includes $\alpha_2$ only when species $2$ is present ($y_2 = 1$), and
-$\beta$ only when both are present ($y_1y_2 = 1$). The normalizing constant $Z$,
-ensures that the four relative probabilities sum to 1.  In this case, $Z$ is
-about 18.5.  **C.** We can find the expected frequencies of all possible
-co-occurrence patterns between the two species of interest. **D.** If
-$\beta_{12}$ equaled zero (e.g. if the species no longer competed for the same
-resources), then the reduction in competition would allow each species to
-increase its occurrence rate and the co-occurrence deficit would be eliminated.
-
-**Figure 3.**
-**A.** Proportion of variance in interaction coefficients explained by each
-method versus number of sampled locations.
-**B.** The $Z$-scores produced by the null model ("Pairs") for each pair of
-species can be predicted using the correlation between the presence-absence
-vectors of those same species and from the number of sites on the landscape.
 
 \setlength{\parskip}{0pt}
 \setlength{\parindent}{-1em}
