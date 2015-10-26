@@ -41,7 +41,7 @@ result_summary %>%
 
 
 
-pdf("manuscript-materials/figures/performance.pdf", width = 7.5, height = 3)
+pdf("manuscript-materials/figures/performance.pdf", width = 7.5, height = 2.5)
 ggplot(result_summary, aes(x = n_sites, y = r2, col = method)) + 
   facet_grid(~simulation_type) + 
   geom_line(size = .5) + 
@@ -71,6 +71,21 @@ ggplot(result_summary, aes(x = n_sites, y = r2, col = method)) +
 dev.off()
 
 
+####
+library(lme4)
+library(multcomp)
+
+landscape_estimates = x %>% 
+  group_by(method, simulation_type) %>%
+  do(data.frame(., resids = resids(.))) %>%
+  ungroup %>%
+  group_by(method, simulation_type, rep_name, n_sites) %>%
+  summarise(r2 = 1 - sum(resids^2) / sum(truth^2))
+
+
+summary(lmer(r2 ~ method + n_sites + simulation_type + (1|rep_name), data = landscape_estimates))
+
+####
 
 
 xx = x[x$method == "Markov network" & grepl("^env[0-9]*$", x$rep_name), ]
@@ -84,7 +99,20 @@ pdf("manuscript-materials/figures/error_rates.pdf", width = 5, height = 5)
 plot(p_ns[order(xx$truth)] ~ sort(xx$truth), type = "l", lwd = 3, ylim = c(0, 1), yaxs = "i", bty = "l", ylab = "Proportion", las = 1, xlab = "\"True\" coefficient", xaxs = "i")
 lines(p_positive[order(xx$truth)] ~ sort(xx$truth), lwd = 3, col = 4)
 lines(p_negative[order(xx$truth)] ~ sort(xx$truth), lwd = 3, col = 2)
-text(0, .95, "Not\nsignificant")
+text(0, .95, "Not significant\nat the 0.05 level")
 text(5, .8, "Significantly\npositive", col = 4)
 text(-7, .35, "Significantly\nnegative", col = 2)
 dev.off()
+
+
+library(tidyr)
+z = x %>%
+  filter(method %in% c("correlation", "BayesComm") & simulation_type == "no_env") %>%
+  dplyr::select(-lower, -upper, -X) %>%
+  spread(method, estimate)
+
+ggplot(z, aes(x = correlation, y = BayesComm, col = factor(n_sites))) + 
+  geom_point()
+
+
+
