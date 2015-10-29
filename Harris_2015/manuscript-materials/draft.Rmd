@@ -294,10 +294,10 @@ Whereas Figure 3 summarizes the accuracy of each model's point estimates, Figure
 When the "true" $\beta$ coefficient is near zero, the Markov network's 95%
 confidence intervals usually include zero (but not quite 95% of the time), and
 it is rare for the model to confidently attribute the wrong sign to a
-coefficient (Figure 4A). The null model, by contrast, typically rejects the null
+coefficient (Figure 4A). The Pairs software, by contrast, typically rejects the null
 hypothesis at the $p=0.05$ level regardless of the underlying parameters, and
 the sign of its $Z$-scores is not a reliable indicator of the interaction's
-actual sign.
+actual sign (Figure 4B).
 
 ### Discussion
 
