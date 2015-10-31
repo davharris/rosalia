@@ -174,60 +174,124 @@ landscape_estimates = x %>%
   summarise(r2 = 1 - sum(resids^2) / sum(truth^2))
 
 
-summary(lmer(r2 ~ method + n_sites + simulation_type + (1|rep_name), data = landscape_estimates))
-
 ####
 
+summary(lmer(r2 ~ method + n_sites + simulation_type + (1|rep_name), data = landscape_estimates))
 
-xx = x[x$method == "Markov network" & grepl("^env[0-9]*$", x$rep_name), ]
-
-p_positive = predict(gam(I(lower > 0) ~ s(truth), family = binomial, data = xx), type = "response")
-p_negative = predict(gam(I(upper < 0) ~ s(truth), family = binomial, data = xx), type = "response")
-p_ns = predict(gam(I(lower < 0 & upper > 0) ~ s(truth), family = binomial, data = xx), type = "response")
-
-xx2 = x[x$method == "null" & grepl("^env[0-9]*$", x$rep_name), ]
-
-p_positive2 = predict(gam(I(estimate < pnorm(.025)) ~ s(truth), family = binomial, data = xx2), type = "response")
-p_negative2 = predict(gam(I(estimate > pnorm(.975)) ~ s(truth), family = binomial, data = xx2), type = "response")
-p_ns2 = predict(gam(I(abs(estimate) < pnorm(.975)) ~ s(truth), family = binomial, data = xx2), type = "response")
+pairs_summary = x[x$method == "null" & !grepl("pop", x$rep_name), ]
+markov_summary = x[x$method == "Markov network" & !grepl("pop", x$rep_name), ]
 
 
+# Pairs's Z score is based on C-scores, which are positive when species are 
+# disaggregated.  So significantly positive interactions == negative estimates
+pairs_summary$sig_pos = pairs_summary$estimate < qnorm(.025)
+pairs_summary$sig_neg = pairs_summary$estimate > qnorm(.975)
 
-pdf("manuscript-materials/figures/error_rates.pdf", width = 10, height = 5)
-par(mfrow = c(1, 2))
-plot(p_ns[order(xx$truth)] ~ sort(xx$truth), type = "l", lwd = 3, ylim = c(0, 1), yaxs = "i", bty = "l", ylab = "Proportion", las = 1, xlab = "\"True\" coefficient", xaxs = "i")
-lines(p_positive[order(xx$truth)] ~ sort(xx$truth), lwd = 3, col = 4)
-lines(p_negative[order(xx$truth)] ~ sort(xx$truth), lwd = 3, col = 2)
-text(0, .95, "Not significant\nat the 0.05 level")
-text(5, .8, "Significantly\npositive", col = 4)
-text(-7, .35, "Significantly\nnegative", col = 2)
+# Markov network is significant when lower bound is above zero or lower bound is
+# below zero
+markov_summary$sig_pos = markov_summary$lower > 0
+markov_summary$sig_neg = markov_summary$upper < 0
 
-plot(p_ns2[order(xx2$truth)] ~ sort(xx2$truth), type = "l", lwd = 3, ylim = c(0, 1), yaxs = "i", bty = "l", ylab = "Proportion", las = 1, xlab = "\"True\" coefficient", xaxs = "i")
-lines(p_positive2[order(xx2$truth)] ~ sort(xx2$truth), lwd = 3, col = 4)
-lines(p_negative2[order(xx2$truth)] ~ sort(xx2$truth), lwd = 3, col = 2)
-text(0, .95, "Not significant\nat the 0.05 level")
-text(5, .8, "Significantly\npositive", col = 4)
-text(-7, .35, "Significantly\nnegative", col = 2)
+
+my_geom_smooth = function(data, color, ...){
+  geom_smooth(
+    data = data,
+    aes(
+      x = truth, 
+      y = as.integer((sig_neg & truth > 0) | (sig_pos & truth < 0)),
+      color = color
+    ),
+    method = gam, 
+    family = binomial, 
+    formula = y ~ s(x),
+    se = FALSE,
+    n = 1024,
+    ...
+  )
+}
+
+
+truth_seq = seq(min(data$truth), max(data$truth), length = 1000)
+
+plotfun = function(..., add){
+  if(add){
+    lines(...)
+  }else{
+    plot(...)
+  }
+}
+
+
+error_smoother = function(data){
+  predict(
+    gam(
+      I((sig_neg & truth > 0) | (sig_pos & truth < 0)) ~ s(truth),
+      data = data,
+      family = binomial
+    ),
+    data.frame(truth = truth_seq),
+    type = "response"
+  )
+}
+
+y_pairs = error_smoother(pairs_summary)
+y_markov = error_smoother(markov_summary)
+
+
+null_cor = x %>%
+  dplyr::select(-lower, -upper, -X) %>%
+  spread(method, estimate) %>%
+  na.omit()
+
+# R-squared
+round(summary(lm(null ~ I(correlation*sqrt(n_sites)), data = null_cor))$r.squared, 2)
+
+
+pdf("manuscript-materials/figures/error_rates.pdf", height = 8, width = 4)
+par(mfrow = c(2, 1))
+plotfun(
+  truth_seq,
+  y_pairs,
+  type = "l",
+  xlab = "\"True\" interaction strength",
+  ylab = "P(confidently predict wrong sign)",
+  bty = "l",
+  yaxs = "i",
+  col = 2,
+  add = FALSE,
+  ylim = c(0, .2),
+  lwd = 2
+)
+mtext("A. Error rate vs. interaction strength", side = 3, adj = 0, font = 2, line = 1.2) 
+plotfun(truth_seq, y_markov, add = TRUE, lwd = 2)
+legend("topleft", lwd = 2, legend = c("Null model", "Markov network"), col = c(2, 1), bty = "n", cex = .75)
+
+
+with(
+  null_cor, 
+  plot(
+    correlation * sqrt(n_sites), 
+    null, 
+    pch = ".", 
+    col = "#00000020",
+    ylab = "Z-score",
+    xlab = expression("correlation" %*% sqrt(number~~of~~sites)),
+    bty = "l"
+  )
+)
+mtext("B. Null model estimates vs.\nscaled correlation coefficient", adj = 0, side = 3, font = 2, line = 1.2) 
+abline(lm(null ~ I(correlation*sqrt(n_sites)), data = null_cor))
+text(10, 12, expression(R^2==.95))
+
 dev.off()
 
 
-plot((p_positive / (p_positive + p_negative))[order(xx$truth)] ~ sort(xx$truth), type = "l")
+# P(Pairs confidently wrong)
+with(pairs_summary,  mean((sig_neg & truth > 0) | (sig_pos & truth < 0)))
+# P(Markov network confidently wrong)
+with(markov_summary, mean((sig_neg & truth > 0) | (sig_pos & truth < 0)))
 
 
-
-z = x %>%
-  dplyr::select(-lower, -upper, -X) %>%
-  spread(method, estimate)
-
-ggplot(z, aes(x = correlation, y = null, col = factor(n_sites))) + 
-  geom_point()
-
-ggplot(z, aes(x = correlation, y = BayesComm, col = factor(n_sites))) + 
-  geom_point()
-
-
-summary(lm(null ~ correlation * factor(n_sites), data = z))
-
-summary(lm(BayesComm ~  correlation * factor(n_sites), data = z))
-
-summary(lm(`Markov network` ~  correlation * factor(n_sites), data = z))
+# P(reject null)
+with(pairs_summary,  mean(sig_neg | sig_pos))
+with(markov_summary,  mean(sig_neg | sig_pos))
