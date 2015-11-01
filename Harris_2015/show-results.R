@@ -133,10 +133,11 @@ result_summary %>%
 
 
 pdf("manuscript-materials/figures/performance.pdf", width = 7.5, height = 2.5)
-ggplot(result_summary, aes(x = n_sites, y = r2, col = method)) + 
+ggplot(result_summary, aes(x = n_sites, y = r2, col = method, shape = method)) + 
   facet_grid(~simulation_type) + 
   geom_line(size = .5) + 
-  geom_point(size = 2, fill = "white") + 
+  geom_point(size = 2.5, fill = "white") + 
+  scale_shape_manual(values = c(16, 22, 17, 23, 18, 24, 15)) +
   geom_hline(yintercept = 0, size = 1/2) +
   geom_vline(xintercept = 0, size = 1) + 
   #scale_shape_manual(values = c(21, 25, 15, 18)) + 
@@ -193,6 +194,18 @@ markov_summary$sig_pos = markov_summary$lower > 0
 markov_summary$sig_neg = markov_summary$upper < 0
 
 
+# Compare 
+null_cor = x %>%
+  dplyr::select(-lower, -upper, -X) %>%
+  spread(method, estimate) %>%
+  na.omit()
+
+# R-squared
+round(summary(lm(null ~ I(correlation*sqrt(n_sites)), data = null_cor))$r.squared, 2)
+
+
+
+
 my_geom_smooth = function(data, color, ...){
   geom_smooth(
     data = data,
@@ -211,7 +224,7 @@ my_geom_smooth = function(data, color, ...){
 }
 
 
-truth_seq = seq(min(data$truth), max(data$truth), length = 1000)
+truth_seq = seq(min(markov_summary$truth), max(markov_summary$truth), length = 1000)
 
 plotfun = function(..., add){
   if(add){
@@ -238,34 +251,23 @@ y_pairs = error_smoother(pairs_summary)
 y_markov = error_smoother(markov_summary)
 
 
-null_cor = x %>%
-  dplyr::select(-lower, -upper, -X) %>%
-  spread(method, estimate) %>%
-  na.omit()
-
-# R-squared
-round(summary(lm(null ~ I(correlation*sqrt(n_sites)), data = null_cor))$r.squared, 2)
-
-
-pdf("manuscript-materials/figures/error_rates.pdf", height = 8, width = 4)
-par(mfrow = c(2, 1))
-plotfun(
-  truth_seq,
-  y_pairs,
-  type = "l",
-  xlab = "\"True\" interaction strength",
-  ylab = "P(confidently predict wrong sign)",
-  bty = "l",
-  yaxs = "i",
-  col = 2,
-  add = FALSE,
-  ylim = c(0, .2),
-  lwd = 2
+pdf("manuscript-materials/figures/error_rates.pdf", height = 9, width = 3)
+par(mfrow = c(3, 1))
+with(
+  null_cor, 
+  plot(
+    `Markov network`, 
+    GLM, 
+    pch = ".", 
+    col = "#00000020",
+    ylab = "Markov network estimate",
+    xlab = "GLM estimate",
+    bty = "l"
+  )
 )
-mtext("A. Error rate vs. interaction strength", side = 3, adj = 0, font = 2, line = 1.2) 
-plotfun(truth_seq, y_markov, add = TRUE, lwd = 2)
-legend("topleft", lwd = 2, legend = c("Null model", "Markov network"), col = c(2, 1), bty = "n", cex = .75)
-
+mtext("A. Markov network estimates\nvs. GLM estimates", adj = 0, side = 3, font = 2, line = 1.2) 
+abline(lm(`Markov network` ~ GLM, data = null_cor))
+text(0, 5, expression(R^2==.94))
 
 with(
   null_cor, 
@@ -279,11 +281,28 @@ with(
     bty = "l"
   )
 )
-mtext("B. Null model estimates vs.\nscaled correlation coefficient", adj = 0, side = 3, font = 2, line = 1.2) 
+mtext("B. Null model estimates vs.\nscaled correlation coefficients", adj = 0, side = 3, font = 2, line = 1.2) 
 abline(lm(null ~ I(correlation*sqrt(n_sites)), data = null_cor))
 text(10, 12, expression(R^2==.95))
 
+plotfun(
+  truth_seq,
+  y_pairs,
+  type = "l",
+  xlab = "\"True\" interaction strength",
+  ylab = "P(confidently predict wrong sign)",
+  bty = "l",
+  yaxs = "i",
+  col = 2,
+  add = FALSE,
+  ylim = c(0, .2),
+  lwd = 2
+)
+mtext("C. Error rate vs.\ninteraction strength", side = 3, adj = 0, font = 2, line = 1.2) 
+plotfun(truth_seq, y_markov, add = TRUE, lwd = 2)
+legend("topleft", lwd = 2, legend = c("Null model", "Markov network"), col = c(2, 1), bty = "n", cex = .9)
 dev.off()
+
 
 
 # P(Pairs confidently wrong)
@@ -295,3 +314,15 @@ with(markov_summary, mean((sig_neg & truth > 0) | (sig_pos & truth < 0)))
 # P(reject null)
 with(pairs_summary,  mean(sig_neg | sig_pos))
 with(markov_summary,  mean(sig_neg | sig_pos))
+
+
+# P(reject null | small interaction)
+markov_summary %>%
+  group_by(simulation_type) %>% 
+  filter(abs(truth) < .1) %>% 
+  summarize(Type_1_error_rate = round(mean(sig_neg | sig_pos), 2))
+
+pairs_summary %>%
+  group_by(simulation_type) %>% 
+  filter(abs(truth) < .1) %>% 
+  summarize(Type_1_error_rate = round(mean(sig_neg | sig_pos), 2))

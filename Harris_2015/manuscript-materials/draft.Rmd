@@ -31,10 +31,11 @@ to produce incorrect inferences, however.
 Markov network; Markov random field; Ising model; Biogeography;
 Presence–absence matrix; Null model
 
-### Introduction
+\noindent\textbf{Introduction}
 
 \setlength{\parindent}{2em}
 
+\noindent
 To the extent that nontrophic species interactions (such as competition) affect
 community assembly, ecologists might expect to find signatures of these
 interactions in species composition data [@macarthur_population_1958;
@@ -90,9 +91,10 @@ interactions on occurrence rates [@roughgarden_competition_1983] and
 disentangling the effects of biotic versus abiotic interactions on species
 composition [@pollock_understanding_2014].
 
-### Methods
+\noindent\textbf{Methods}
 
-**Markov networks.**
+\noindent
+\textbf{Markov networks.}
 Markov networks provide a framework for translating back and forth between the
 conditional (all-else-equal) relationships among species (Figure 1C) and the
 kinds of species assemblages that these relationships produce. Here, I show how
@@ -247,7 +249,8 @@ then calculated the proportion of variance explained for different combinations
 of model type and landscape size (compared with a null model that assumed all
 interaction strengths to be zero).
 
-### Results
+\noindent
+\textbf{Results}
 
 \noindent \textbf{Three species.}
 As shown in Figure 1, the marginal relationship between the two shrub species
@@ -266,54 +269,68 @@ confidence intervals overlapped zero in most replicates).
 Despite some variability across contexts (Figure 3), the four methods that
 controlled for indirect effects (the Markov network, the generalized linear
 models, and the two partial correlation-based methods) outperformed those
-that did not.  Of these, the Markov network consistently performed the best,
-especially on the smaller landscapes [which are also the most
-representative of typical analyses in this field; @gotelli_empirical_2009].
-As shown in Appendix [[X]], the standard errors associated with the estimates
-in Figure 3 are small (less than 0.01), so these differences should not be
-attributed to sampling error.
+that did not.  Of these, the Markov network consistently performed the best.
+As anticipated by @lee_learning_2012, the Markov network produced very
+similar estimates to the generalized linear models (Figure 4A), but with
+higher accuracy---especially with smaller data sets.  As reviewed in
+@gotelli_empirical_2009, most analyses in this field in ecology involve
+fewer than 50 sites, so this is the most important regime for model
+performance. As shown in Appendix [[X]], the standard errors associated
+with the estimates in Figure 3 are small (less than 0.01), so these
+differences should not be attributed to sampling error.
 
 Of the methods that did not control for indirect effects, Figure 3 shows that
 simple correlation coefficients provided a more reliable indicator of species'
 true interaction strengths than either the joint species distribution model
-(BayesComm) or the null model (Pairs). The estimates from these
-three approaches were tightly correlated (Figure [[3B]]), suggesting that the
-null model only contains a noisy version of the same information that could be
-obtained more easily and interpretably with simple correlation coefficients.
+(BayesComm) or the null model (Pairs). The estimates from these three approaches
+were tightly correlated, after controlling for the size of the landscape,
+suggesting that the null model only contains a noisy version of the
+same information that could be obtained more easily and interpretably with
+simple correlation coefficients (Figure 4B).
 
-Finally, we can evaluate the models' statistical inferences.  Figure 4 shows,
-across a range of true interaction strengths, the probability that the null model
-or the Markov network will predict the wrong sign of the interaction with 95%
-confidence.  The null model makes such errors nearly 8 times as often as the
-Markov network, even though it only reject the null hypothesis twice as often
-overall [[Appendix]].  The Markov network's errors were also more concentrated
-around 0, so it never misclassified strong interactions like the null model did.
+Finally, we can evaluate the models' statistical inferences (focusing on the
+first two simulation types, for which the true interaction rates are easiest to
+interpret).  The Markov network's Type I error rate (defined here as its
+probability of rejecting the null hypothesis for a pair of species where
+$|\beta_{ij}|<0.1$ depended on the simulation type: 0.03 for simulations that
+matched the model's assumptions, versus 0.15 for simulations that included
+environmental heterogeneity [[Appendix]].  For the null model, these rates were
+0.31 and 0.50, respectively. Figure 4C shows, across a range of true interaction
+strengths, the probability that the null model or the Markov network will
+predict the wrong sign of the interaction with 95% confidence.  The null model
+makes such errors nearly 8 times as often as the Markov network, even though it
+only reject the null hypothesis twice as often overall [[Appendix]].  The Markov
+network's errors were also more concentrated around 0, so it never misclassified
+strong interactions like the null model did.
 
-### Discussion
+\noindent
+\textbf{Discussion}
 
+\noindent
 The results presented above show that Markov networks can reliably recover
 species' pairwise interactions from observational data, even for cases where
 environmental heterogeneity and indirect interactions cause ecologists' typical
 null modeling approaches to reliably fail. Partial covariances and generalized
 linear models can both provide computationally efficient approximations, but
-with somewhat lower accuracy. The difference in accuracy may be larger for real
-data sets than for the simulated landscapes in Figure 3, however; linear
-approximations to the Markov network make larger errors when the interaction
-matrix is structured [e.g. due to guilds or trophic levels;
+with somewhat lower accuracy, especially for typically-sized data sets with small
+numbers of sites [@gotelli_empirical_2009]. The difference in accuracy may be
+larger for real data sets than for the simulated landscapes in Figure 3,
+however; linear approximations to the Markov network make larger errors when
+the interaction matrix is structured [e.g. due to guilds or trophic levels;
 @loh_structure_2013]. Similarly, the separate generalized linear models
 for each species can severely overfit in some cases [@lee_learning_2012]. The
 full Markov network should thus be preferred to the approximations when
 it is computationally feasible.
 
-Compositional data only has enough degrees of freedom to estimate one interaction
-per species pair [@schmidt_modeling_2012], so none of these methods can identify
-the exact nature of the pairwise interactions [e.g. which species in a
-positively-associated pair is facilitating the other]. To estimate asymmetric
-interactions, such as commensalism or predation, ecologists could use time
-series, behavioral observations, manipulative experiments, or natural history.
-These other sources of information could also be used to augment the likelihood
-function with an informative prior distribution, reducing ecologists' eror and
-uncertainty.
+Compositional data only contains enough degrees of freedom to estimate one
+interaction per species pair, so none of these methods can identify the exact
+nature of the pairwise interactions [e.g. which species in a
+positively-associated pair is facilitating the other; cf
+@schmidt_modeling_2012]. To estimate asymmetric interactions, such as
+commensalism or predation, ecologists could use time series, behavioral
+observations, manipulative experiments, or natural history. These other sources
+of information could also be used to augment the likelihood function with an
+informative prior distribution, reducing ecologists' error and uncertainty.
 
 Despite their limitations, Markov networks have enormous potential to improve
 ecological understanding. In particular, they are less vulnerable than some
@@ -353,7 +370,7 @@ null model must be interpreted with care [@roughgarden_competition_1983]. Even
 in small networks with three species, it may simply not be possible to implicate
 specific ecological processes like competition by rejecting a general-purpose
 null [@gotelli_empirical_2009], especially when the test statistic is
-effectively just a correlation coefficient [[Figure 3B]]. When a non-null
+effectively just a correlation coefficient Figure 4A. When a non-null
 backdrop is not controlled for, Type I error rates can skyrocket, the apparent
 sign of the interaction can change, and null models can lead to reliably
 incorrect inferences (Figure 1, Figure 4).
@@ -412,13 +429,14 @@ each species' overall occurrence rates would increase.
 \noindent \textbf{Figure 3:} Proportion of variance in interaction
 coefficients explained by each method versus number of sampled locations.
 
-\noindent \textbf{Figure 4: A.} Inferences from the Markov network's 95%
-confidence intervals on the "no-environment" simulated landscapes, as a function
-of the "true" coefficient values. **B.** Inferences from the $Z$-statistics
-estimated by the "Pairs" software for null modeling.
+\noindent \textbf{Figure 4: A.} The Markov network's estimated interaction
+coefficients were generally very similar to the GLM estimates. **B.** The null
+model's estimates typically matched the correlation coefficient, after
+controlling for landscape size. **C.** For any given interaction strength, the
+null model was much more likely to misclassify its sign with 95% confidence than
+the Markov network was.
 
-
-**References:**
+\noindent \textbf{References:}
 
 \setlength{\parindent}{-1em}
 \setlength{\leftskip}{1em}

@@ -55,7 +55,7 @@ $endif$
 \usepackage{setspace}
 \usepackage{geometry}
 \usepackage{ifthen}
-\geometry{verbose,letterpaper,tmargin=2.54cm, bmargin=2.54cm,lmargin=2.54cm,rmargin=2.54cm}
+\geometry{verbose,letterpaper,tmargin=2.5cm, bmargin=2.5cm,lmargin=2.5cm,rmargin=2.5cm}
 $if(lang)$
 \ifxetex
   \usepackage{polyglossia}
