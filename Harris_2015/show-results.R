@@ -131,10 +131,15 @@ result_summary %>%
   summarise(round(mean(r2), 3))
 
 
+result_summary$simulation_type_long = plyr::revalue(result_summary$simulation_type,
+                                               c(no_env = "constant environment",
+                                                 env = "heterogeneous environment",
+                                                 pop = "population dynamics"))
+
 
 pdf("manuscript-materials/figures/performance.pdf", width = 7.5, height = 2.5)
 ggplot(result_summary, aes(x = n_sites, y = r2, col = method, shape = method)) + 
-  facet_grid(~simulation_type) + 
+  facet_grid(~simulation_type_long) + 
   geom_line(size = .5) + 
   geom_point(size = 2.5, fill = "white") + 
   scale_shape_manual(values = c(16, 22, 17, 23, 18, 24, 15)) +
