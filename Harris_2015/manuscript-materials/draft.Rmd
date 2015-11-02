@@ -1,4 +1,4 @@
-\chead{\ifthenelse{\value{page}=1}{}{\textit{Species interactions in Markov networks}}}
+\chead{\ifthenelse{\value{page}=1}{}{\textit{Inferring species interactions}}}
 \renewcommand{\headrulewidth}{0pt}
 
 \setlength{\parskip}{1pt}
@@ -163,7 +163,7 @@ co-occurrence.
 
 I then generated landscapes with up to 20 interacting species at 25, 200, or
 1600 sites using three increasingly complex models (50 replicates for each
-combination of size and model). As described in Appendix [[X]], I randomly drew
+combination of size and model). As described in Appendix 2, I randomly drew
 the “true” coefficient values for each replicate landscape
 so that most species pairs interacted negligibly, a few pairs interacted very
 strongly, and competition was three times more common than facilitation.
@@ -182,15 +182,15 @@ because---as with most analyses of presence-absence data for co-occurrence
 patterns---the inference procedure did not have access to any information about
 the environmental or spatial variables that helped shape the landscape [cf
 @connor_checkered_2013].  I generated the final set of landscapes by simulating
-the population dynamics of 20 interacting species, as described in Appendix [[X]].
+the population dynamics of 20 interacting species, as described in Appendix 3.
 
 \noindent \textbf{Recovering species interactions from simulated data.}
 I compared seven techniques for determining the sign and strength of the
-associations between pairs of species from simulated data (Appendix 3).
+associations between pairs of species from simulated data (Appendix 4).
 First, I used the rosalia package [@harris_rosalia_2015] to fit Markov network
 models,  as described above. For the analyses with 20 species, I added a weak
 regularizer (equivalent to a logistic prior with scale 2) to ensure that the
-model estimates were always finite [[Appendix]].
+model estimates were always finite.
 
 I also evaluated six alternative methods: five from the existing literature,
 plus a novel combination of two of these methods. The first alternative interaction
