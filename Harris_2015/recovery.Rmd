@@ -64,9 +64,8 @@ fit_all = function(identifier){
   truth = unlist(read.table(truth_filename))[pair_is_variable[upper.tri(pair_is_variable)]]
   
   splitname = strsplit(identifier, "/|-|\\.")[[1]]
-  n_spp = as.integer(splitname[[1]]) # simulated species, NOT present species
-  n_sites = as.integer(splitname[[2]])
-  rep_name = splitname[[3]]
+  n_sites = as.integer(splitname[[1]])
+  rep_name = splitname[[2]]
   
   # Species IDs
   sp1 = combn(colnames(x), 2)[1, ]
