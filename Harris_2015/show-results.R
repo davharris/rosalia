@@ -256,7 +256,7 @@ y_pairs = error_smoother(pairs_summary)
 y_markov = error_smoother(markov_summary)
 
 
-pdf("manuscript-materials/figures/error_rates.pdf", height = 9, width = 3)
+pdf("manuscript-materials/figures/error_rates.pdf", height = 8.5, width = 8.5/3)
 par(mfrow = c(3, 1))
 with(
   null_cor, 
@@ -322,12 +322,46 @@ with(markov_summary,  mean(sig_neg | sig_pos))
 
 
 # P(reject null | small interaction)
+# (approximate Type I error rates)
 markov_summary %>%
   group_by(simulation_type) %>% 
   filter(abs(truth) < .1) %>% 
-  summarize(Type_1_error_rate = round(mean(sig_neg | sig_pos), 2))
+  summarize(Type_1_error_rate = round(mean(sig_neg | sig_pos), 3))
 
 pairs_summary %>%
   group_by(simulation_type) %>% 
   filter(abs(truth) < .1) %>% 
-  summarize(Type_1_error_rate = round(mean(sig_neg | sig_pos), 2))
+  summarize(Type_1_error_rate = round(mean(sig_neg | sig_pos), 3))
+
+
+
+# Confidence interval coverage across all values
+# What's the probability that any "true" value falls inside the 95% CI?
+markov_summary %>% 
+  group_by(simulation_type) %>% 
+  summarize(round(mean(truth > lower & truth < upper), 3))
+
+
+# RMSE
+markov_summary %>% 
+  group_by(simulation_type) %>%
+  summarize(sqrt(mean((truth - estimate)^2)))
+
+
+
+# Coverage versus true beta value.  The top and bottom 0.5%
+# of the distribution have been omitted to prevent bad behavior
+# by the smoother in the tails.
+markov_summary %>%
+  filter(percent_rank(truth) > .005 & percent_rank(truth) < .995) %>%
+  mutate(covered = truth > lower & truth < upper) %>%
+  ggplot(aes(x = truth, y = as.integer(covered))) + 
+  facet_grid(~simulation_type) + 
+  geom_smooth(method = gam, formula = y ~ s(x), family = binomial) + 
+  theme_bw() + 
+  coord_cartesian(ylim = c(0, 1)) + 
+  geom_vline(xintercept = 0) + 
+  geom_hline(yintercept = 0.95, color = "red") + 
+  ylab("Coverage")
+
+

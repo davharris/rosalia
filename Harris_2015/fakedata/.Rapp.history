@@ -1,0 +1,3 @@
+load("/Users/davidjharris/projects/rosalia/Harris_2015/fakedata/20-1600-50.rds")
+z = readRDS("/Users/davidjharris/projects/rosalia/Harris_2015/fakedata/20-1600-50.rds")
+str(z)

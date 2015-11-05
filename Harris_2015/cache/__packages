@@ -1,0 +1,10 @@
+base
+dplyr
+corpcor
+rosalia
+MASS
+Matrix
+lme4
+arm
+BayesComm
+RColorBrewer
