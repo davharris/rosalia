@@ -28,7 +28,7 @@
 #PBS -l nodes=1:ppn=16
 
 #The amount of memory that your script will require. This can be just a rough guess with some buffer added on.
-#PBS -l pmem=4800mb
+#PBS -l pmem=8192mb
 
 #The length of time your script will run. again this can be a rought guess with some buffer time added.
 #PBS -l walltime=48:00:00
@@ -40,4 +40,4 @@
 module load R
 
 #The actual command to run your script like you would from the command line.
-Rscript -e "library(knitr);knit('recovery.Rmd')"
+Rscript -e "library(knitr);setwd('/home/harrisd/rosalia/Harris_2015');knit('recovery.Rmd')"
