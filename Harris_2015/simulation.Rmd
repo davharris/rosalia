@@ -180,7 +180,7 @@ for(n_sites in c(25, 200, 1600)){
         f = if(type == "abund"){function(x){log(1 + exp(x))}}else{plogis},
         rdist = if(type == "abund"){rpois}else{rbern},
         p_neg = if(type == "abund"){1}else{0.75},
-        mean_alpha = if(type == "abund"){-1}else{5}
+        mean_alpha = if(type == "abund"){5}else{-1}
       )
     }
   }
