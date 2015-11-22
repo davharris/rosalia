@@ -33,7 +33,7 @@
 \usepackage{setspace}
 \usepackage{geometry}
 \usepackage{ifthen}
-\geometry{verbose,letterpaper,tmargin=2.5cm, bmargin=2.5cm,lmargin=2.5cm,rmargin=2.5cm}
+\geometry{verbose,letterpaper,tmargin=2.54cm, bmargin=2.54cm,lmargin=2.54cm,rmargin=2.54cm}
 \ifxetex
   \usepackage[setpagesize=false, % page size defined by xetex
               unicode=false, % unicode breaks when used with xetex
@@ -115,26 +115,26 @@ one another can become lost in a web of indirect effects. For example,
 the competitive interaction between the two shrub species in Figure 1A
 is obscured by their shared tendency to occur in unshaded areas (Figure
 1B). While ecologists have long known that indirect effects can
-overwhelm direct ones at the landscape level (Dodson 1970, Levine 1976),
-the vast majority of our methods for drawing inferences from
-observational data do not control for these effects (e.g. Diamond 1975,
-Strong et al. 1984, Gotelli and Ulrich 2009, Veech 2013, Pollock et al.
-2014). To the extent that indirect interactions like those in Figure 1
-are generally important (Dodson 1970), existing methods will not provide
-much evidence regarding species interactions.
+overwhelm direct ones at the landscape level (Levine 1976), the vast
+majority of our methods for drawing inferences from observational data
+do not control for these effects (e.g. Diamond 1975, Strong et al. 1984,
+Gotelli and Ulrich 2009, Veech 2013, Pollock et al. 2014). To the extent
+that indirect interactions like those in Figure 1 are generally
+important, existing methods will not provide much evidence regarding
+species interactions.
 
 While competition doesn't reliably reduce co-occurrence rates at the
-whole-landscape level (as most methods assume), it nevertheless does
-leave a signal in the data (Figure 1C). For example, after partitioning
-the data set into shaded and unshaded sites, there will be co-occurrence
-deficits in each subset that wouldn't otherwise be apparent. More
-generally, controlling for other species in the network will often be
-important for obtaining reliable estimates of direct (conditional, or
-all-else-equal) effects. This kind of precision is difficult to obtain
-from null models, which only simulate the most extreme possible
-scenario: that \emph{all} direct and indirect interactions are exactly
-zero. Nevertheless, null models have dominated this field for more than
-three decades (Strong et al. 1984, Gotelli and Ulrich 2009).
+whole-landscape level (as most methods assume), it does still leave a
+signal in the data (Figure 1C). For example, after partitioning the data
+set into shaded and unshaded sites, there will be co-occurrence deficits
+in each subset that wouldn't otherwise be apparent. More generally,
+controlling for other species in the network will often be important for
+obtaining reliable estimates of direct (conditional, or all-else-equal)
+effects. This kind of precision is difficult to obtain from null models,
+which only test the most extreme possible hypothesis: that \emph{all}
+direct and indirect interactions are exactly zero. Nevertheless, null
+models have dominated this field for more than three decades (Strong et
+al. 1984, Gotelli and Ulrich 2009).
 
 Following Azaele et al. (2010), this paper shows that Markov networks
 (undirected graphical models also known as Markov random fields; Murphy
@@ -168,9 +168,9 @@ al. 2014).
 translating back and forth between the conditional (all-else-equal)
 relationships among species (Figure 1C) and the kinds of species
 assemblages that these relationships produce. Here, I show how a set of
-conditional relationships can be used to determine how groups of species
-can co-occur. Methods for estimating conditional relationships from data
-are discussed in the next section.
+conditional relationships can determine species composition. Methods for
+estimating conditional relationships from data are discussed in the next
+section.
 
 A Markov network defines the relative probability of observing a given
 vector of species-level presences (1s) and absences (0s), \(\vec{y}\) at
@@ -194,18 +194,17 @@ species, i.e.~the probability that they will be found together, after
 controlling for the other species in the network (Figure 2A, Figure 2B).
 For example, if \(\beta_{ij} = +2\), then each species' odds of
 occurrence would be \(e^2\) times higher when the other one is present
-(as compared with otherwise equivalent sites). Because the relative
-probability of a presence-absence vector increases when
-positively-associated species co-occur and decreases when
-negatively-associated species co-occur, the model tends---all else
-equal---to produce assemblages that have many pairs of
-positively-associated species and relatively few pairs of
-negatively-associated species (exactly as an ecologist might expect). Of
-course, if all else is \emph{not} equal (e.g.~Figure 1, where the
-presence of one competitor is associated with release from another
-competitor), then predicting species' overall co-occurrence rates can be
-more complicated, and may require summing over the different possible
-assemblages (Figure 2B).
+(as compared with otherwise equivalent sites). The relative probability
+of a presence-absence vector increases when positively-associated
+species co-occur and decreases when negatively-associated species
+co-occur. As a result, the model tends---all else equal---to produce
+assemblages where many positively-associated species pairs co-occur and
+few negatively-associated pairs do (just as an ecologist might expect).
+When all else is \emph{not} equal (e.g.~Figure 1, where the presence of
+one competitor is associated with release from another competitor), then
+predicting species' overall co-occurrence rates can be more complicated,
+and may require summing over the different possible assemblages (Figure
+2B).
 
 \noindent \textbf{Estimating $\alpha$ and $\beta$ coefficients from presence-absence data.}
 In the previous section, the values of \(\alpha\) and \(\beta\) were
@@ -214,19 +213,17 @@ assemblages. In practice, however, ecologists will often need to
 estimate the parameters from an observed co-occurrence matrix (i.e.~from
 a set of independent \(\vec{y}\) vectors indicating which species are
 present at each site on the landscape). When the number of species is
-reasonably small, one can compute exact maximum likelihood estimates for
-all of the \(\alpha\) and \(\beta\) coefficients given a
-presence-absence matrix by optimizing \(p(\vec{y}; \alpha, \beta)\).
-Fully-observed Markov networks like the ones considered here have
-unimodal likelihood surfaces (Murphy 2012), ensuring that this procedure
-will always converge on the global maximum. This maximum represents the
-unique combination of \(\alpha\) and \(\beta\) coefficients that would
-be expected to produce exactly the observed co-occurrence frequencies on
-average (i.e., maximizing the likelihood ensures that the sufficient
-statistics of the model distribution match the sufficient statistics of
-the data; Murphy 2012). I used the rosalia package (Harris 2015a) for
-the R programming language (R Core Team 2015) to optimize the Markov
-network parameters.
+reasonably small (less than about 30), one can find exact maximum
+likelihood estimates for all of the \(\alpha\) and \(\beta\)
+coefficients given a presence-absence matrix by numerically optimizing
+\(p(\vec{y}; \alpha, \beta)\). Fully-observed Markov networks like the
+ones considered here have unimodal likelihood surfaces (Murphy 2012),
+ensuring that this procedure will converge on the global maximum. I used
+the rosalia package (Harris 2015a) for the R programming language (R
+Core Team 2015) to calculate \(p(\vec{y}; \alpha, \beta)\) and its
+gradients; the package passes these functions to the ``BFGS'' method in
+R's general-purpose optimizer, which then estimates the Markov network
+parameters.
 
 \noindent \textbf{Simulated landscapes.} I simulated several sets of
 landscapes using known parameters to evaluate different statistical
@@ -285,9 +282,9 @@ non-Gaussian data, the partial correlation can be thought of as a
 computationally efficient approximation to the full Markov network model
 (Loh and Wainwright 2013). Because partial correlations are undefined
 for landscapes with perfectly-correlated species pairs, I used a
-regularized estimate based on James-Stein shrinkage, as implemented in
-the corpcor package's \texttt{pcor.shrink} function with the default
-settings (Schäfer et al. 2014).
+regularized estimate provided by the corpcor package's
+\texttt{pcor.shrink} function with the default settings (Schäfer et al.
+2014).
 
 The third alternative, generalized linear models (GLMs), also provide a
 computationally efficient approximation to the Markov network (Lee and
@@ -297,8 +294,7 @@ species on the landscape as predictors. This produced two interaction
 estimates for each species pair; one for the effect of species \(i\) on
 species \(j\) and one for the reverse. These two coefficients are not
 identifiable from the data, however (Schmidt and Murphy 2012), so I used
-their average as an overall measure of the overall relationship between
-species \(i\) and species \(j\).
+their average as an overall measure of their relationship.
 
 The next method, described in Gotelli and Ulrich (2009), involved
 simulating new landscapes from a null model that retains the row and
@@ -322,17 +318,14 @@ shrubs (Appendix 1). For the null model (Pairs), I calculated
 statistical significance using its \(Z\)-score. For the Markov network,
 I used the Hessian matrix to generate approximate confidence intervals.
 
-I then evaluated the relationship between each method's estimates and
-the ``true'' interaction strengths among all of the species pairs from
-the larger simulated landscapes. This determined which of the methods
-provide a consistent way to know how strong species interactions
-are---regardless of which species were present in a particular data set
-or how many observations were taken. To ensure that the different test
-statistics (e.g.~correlations versus \(Z\) scores) were on a common
-scale, I rescaled them using linear regression through the origin. I
-then calculated the proportion of variance explained for different
-combinations of model type and landscape size (compared with a null
-model that assumed all interaction strengths to be zero).
+For the larger landscapes, I evaluated the relationship between each
+method's estimates and the ``true'' interaction strengths. To ensure
+that the different test statistics (e.g.~correlations versus \(Z\)
+scores) were on a common scale, I rescaled them using linear regression
+through the origin. I then calculated the proportion of variance
+explained for different combinations of model type and landscape size
+(compared with a null model that assumed all interaction strengths to be
+zero).
 
 \noindent
 \textbf{Results}
@@ -358,8 +351,7 @@ contexts, the rank ordering across methods was very consistent. In
 particular, the four methods that controlled for indirect effects (the
 Markov network, the generalized linear models, and the two partial
 correlation-based methods) always matched or outperformed those that did
-not.\\
-Of these, the Markov network consistently performed the best. As
+not. The Markov network consistently performed best of all. As
 anticipated by Lee and Hastie (2012), generalized linear models closely
 approximated the Markov network estimates, especially when the data sets
 were very large {[}{[}Figure{]}{]}. As reviewed in Gotelli and Ulrich
@@ -389,7 +381,7 @@ model's assumptions, versus 0.14 for simulations that included
 environmental heterogeneity (see Appendix 5 for confidence interval
 coverage across a range of \(\beta_{ij}\) values). The null model's Type
 I error rates were {[}{[}XX{]}{]} and {[}{[}XX{]}{]} for the constant
-and heterogeneous landscapse, respectively---far higher than the nominal
+and heterogeneous landscapes, respectively---far higher than the nominal
 0.05 rate. Figure 4C shows, across a range of true interaction
 strengths, the probability that the null model or the Markov network
 will predict the wrong sign of the interaction with 95\% confidence. The
@@ -479,12 +471,12 @@ Controlling for indirect effects via simultaneous estimation of multiple
 ecological parameters seems like a much more promising approach: to the
 extent that the models' relative performance on real data sets is
 similar to the range of results shown in Figure 3, scientists in this
-field could more than double their explanatory power by switching from
-null models to Markov networks (or increase it nearly as much with
-linear or generalized linear approximations). Regardless of the methods
-ecologists ultimately choose, controlling for indirect effects could
-clearly improve our understanding of species' direct effects on one
-another and on community structure.
+field could often triple their explanatory power by switching from null
+models to Markov networks (or increase it nearly as much with linear or
+generalized linear approximations). Regardless of the methods ecologists
+ultimately choose, controlling for indirect effects could clearly
+improve our understanding of species' direct effects on one another and
+on community structure.
 
 \noindent \textbf{Acknowledgements:} This work benefited greatly from
 discussions with A. Sih, M. L. Baskett, R. McElreath, R. J. Hijmans, A.
@@ -536,7 +528,8 @@ occur more often.
 
 \textbf{Figure 3:} Proportion of variance in interaction coefficients
 explained by each method versus number of sampled locations across the
-three simulation types.
+three simulation types. For the null model (Pairs), these values include
+the removal of two outliers with \(|Z|>1000\) {[}{[}Appendix{]}{]}.
 
 \textbf{Figure 4: A.} The Markov network's estimated interaction
 coefficients were generally very similar to the GLM estimates.
@@ -573,10 +566,6 @@ history of checkerboard distributions. Ecology 94:2403--2414.
 Diamond, J. M. 1975. The island dilemma: Lessons of modern biogeographic
 studies for the design of natural reserves. Biological conservation
 7:129--146.
-
-\hyperdef{}{ref-dodsonux5fcomplementaryux5f1970}{\label{ref-dodsonux5fcomplementaryux5f1970}}
-Dodson, S. I. 1970. COMPLEMENTARY FEEDING NICHES SUSTAINED BY
-SIZE-SELECTIVE PREDATION. Limnology and Oceanography 15:131--137.
 
 \hyperdef{}{ref-faisalux5finferringux5f2010}{\label{ref-faisalux5finferringux5f2010}}
 Faisal, A., F. Dondelinger, D. Husmeier, and C. M. Beale. 2010.
