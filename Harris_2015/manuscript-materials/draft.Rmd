@@ -163,10 +163,11 @@ co-occurrence.
 
 I then generated landscapes with up to 20 interacting species at 25, 200, or
 1600 sites using three increasingly complex models (50 replicates for each
-combination of size and model). As described in Appendix 2, I randomly drew
-the “true” coefficient values for each replicate landscape
-so that most species pairs interacted negligibly, a few pairs interacted very
-strongly, and competition was more common than facilitation.
+combination of size and model; see Appendix 2 for details). I randomly drew the
+“true” coefficient magnitudes for each replicate landscape from exponential
+distributions so that most species pairs interacted negligibly but a few pairs
+interacted strongly enough that their effects could propagate indirectly to
+other species in the network.
 
 The first set of 20-species landscapes, like the landscapes with three species,
 were generated directly from a Markov network to ensure that the model could
@@ -183,7 +184,7 @@ patterns---the inference procedure did not have access to any information about
 the environmental or spatial variables that helped shape the landscape [cf
 @connor_checkered_2013].  I generated the final set of landscapes with an
 abundance-based model that included per-capita interaction rates instead of
-per-species interaction rates, as described in Appendix 3.
+per-species interaction rates.
 
 \noindent \textbf{Recovering species interactions from simulated data.}
 I compared seven techniques for determining the sign and strength of the
@@ -229,7 +230,7 @@ claim that the correlation coefficients estimated by "joint species distribution
 models" provide an accurate assessment of species’ pairwise interactions
 [@pollock_understanding_2014; see also @harris_generating_2015]. In addition to
 using the posterior mean correlation [@pollock_understanding_2014], I also used
-the posterior mean *partial* correlation, which might be able to control for
+the posterior mean *partial* correlation, which should control better for
 indirect effects.
 
 \noindent \textbf{Evaluating model performance.}
@@ -276,9 +277,9 @@ correlation-based methods) always matched or outperformed those that did not.
 Of these, the Markov network consistently performed the best. As anticipated by
 @lee_learning_2012, generalized linear models closely
 approximated the Markov network estimates, especially when the data sets were
-very large. As reviewed in @gotelli_empirical_2009, however, most analyses in
-this field involve fewer than 50 sites, so model performance on the smaller
-landscapes where the gap was larger is most important. As shown in Appendix
+very large [[Figure]]. As reviewed in @gotelli_empirical_2009, however, most analyses in
+this field of ecology involve fewer than 50 sites, so model performance on the smaller
+landscapes (where the gap was larger) is very important. As shown in Appendix
 5, the standard errors associated with the estimates in Figure 3 are small
 (less than 0.01), so the differences among methods should not be attributed to
 sampling error.
@@ -296,24 +297,26 @@ Finally, we can evaluate the models' statistical inferences (focusing on the
 first two simulation types, for which the true interaction rates are easiest to
 interpret).  The Markov network's approximate Type I error rate (defined here
 as the probability that 0 fell outside the 95% confidence interval for a pair of
-species where $|\beta_{ij}|<0.1$) depended on the simulation type: 0.03 for
-simulations that matched the model's assumptions, versus 0.15 for simulations
-that included environmental heterogeneity (Appendix 5).  Coverage was similar
-for other values of $\beta$. For the null model, these rates were 0.31 and 0.50,
-respectively---far higher than the nominal 0.05 rate. Figure 4C shows, across a
-range of true interaction strengths, the probability that the null model or the
-Markov network will predict the wrong sign of the interaction with 95%
-confidence.  The null model makes such errors nearly 8 times as often as the
-Markov network, even though it only reject the null hypothesis twice as often
-overall (Appendix 5).  The Markov network's errors were also more concentrated
-around 0, so it never misclassified strong interactions like the null model did.
+species where $|\beta_{ij}|<0.1$) depended on the simulation type: 0.02 for
+simulations that matched the model's assumptions, versus 0.14 for simulations
+that included environmental heterogeneity (see Appendix 5 for confidence
+interval coverage across a range of $\beta_{ij}$ values). The null model's
+Type I error rates were [[XX]] and [[XX]] for the constant and heterogeneous
+landscapse, respectively---far higher than the nominal 0.05 rate. Figure
+4C shows, across a range of true interaction strengths, the probability that
+the null model or the Markov network will predict the wrong sign of the
+interaction with 95% confidence.  The null model makes such errors [[XX]] times
+as often as the Markov network, even though it only reject the null hypothesis
+[[XX]] as often overall (Appendix 5).  The Markov network's errors were also
+more concentrated around 0, so it never misclassified strong interactions like
+the null model did.
 
 \noindent
 \textbf{Discussion}
 
 \noindent
 The results presented above show that Markov networks can reliably recover
-species' pairwise interactions from observational data, even for cases where
+species' pairwise interactions from species composition data, even for cases where
 environmental heterogeneity and indirect interactions cause ecologists' typical
 null modeling approaches to reliably fail. Partial covariances and generalized
 linear models can both provide computationally efficient approximations, but
@@ -438,9 +441,10 @@ interest, as calculated in the previous panel. **D.** Without competition (i.e.
 with $\beta_{12}=0$, each species would occur more often.
 
 
-**Figure 3:** Proportion of variance in interaction
-coefficients explained by each method versus number of sampled locations across
-the three simulation types.
+**Figure 3:** Proportion of variance in interaction coefficients explained by
+each method versus number of sampled locations across the three simulation
+types. For the null model (Pairs), these values include the removal of two
+outliers with $|Z|>1000$ [[Appendix]].
 
 **Figure 4: A.** The Markov network's estimated interaction
 coefficients were generally very similar to the GLM estimates. **B.** The null

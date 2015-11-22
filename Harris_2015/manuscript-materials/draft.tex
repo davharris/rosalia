@@ -173,8 +173,8 @@ can co-occur. Methods for estimating conditional relationships from data
 are discussed in the next section.
 
 A Markov network defines the relative probability of observing a given
-vector of species-level presences (1s) and absences (0s), \(\vec{y}\),
-as
+vector of species-level presences (1s) and absences (0s), \(\vec{y}\) at
+a site, as
 
 \centering
 
@@ -240,11 +240,12 @@ another, despite their frequent co-occurrence.
 
 I then generated landscapes with up to 20 interacting species at 25,
 200, or 1600 sites using three increasingly complex models (50
-replicates for each combination of size and model). As described in
-Appendix 2, I randomly drew the ``true'' coefficient values for each
-replicate landscape so that most species pairs interacted negligibly, a
-few pairs interacted very strongly, and competition was three times more
-common than facilitation.
+replicates for each combination of size and model; see Appendix 2 for
+details). I randomly drew the ``true'' coefficient magnitudes for each
+replicate landscape from exponential distributions so that most species
+pairs interacted negligibly but a few pairs interacted strongly enough
+that their effects could propagate indirectly to other species in the
+network.
 
 The first set of 20-species landscapes, like the landscapes with three
 species, were generated directly from a Markov network to ensure that
@@ -261,8 +262,8 @@ difficult because---as with most analyses of presence-absence data for
 co-occurrence patterns---the inference procedure did not have access to
 any information about the environmental or spatial variables that helped
 shape the landscape (cf Connor et al. 2013). I generated the final set
-of landscapes by simulating the population dynamics of 20 species with
-given per-capita interaction rates, as described in Appendix 3.
+of landscapes with an abundance-based model that included per-capita
+interaction rates instead of per-species interaction rates.
 
 \noindent \textbf{Recovering species interactions from simulated data.}
 I compared seven techniques for determining the sign and strength of the
@@ -311,8 +312,8 @@ recent claim that the correlation coefficients estimated by ``joint
 species distribution models'' provide an accurate assessment of species'
 pairwise interactions (Pollock et al. 2014, see also Harris 2015b). In
 addition to using the posterior mean correlation (Pollock et al. 2014),
-I also used the posterior mean \emph{partial} correlation, which might
-be able to control for indirect effects.
+I also used the posterior mean \emph{partial} correlation, which should
+control better for indirect effects.
 
 \noindent \textbf{Evaluating model performance.} For the simulated
 landscapes based on Figure 1, I assessed whether each method's test
@@ -357,15 +358,17 @@ contexts, the rank ordering across methods was very consistent. In
 particular, the four methods that controlled for indirect effects (the
 Markov network, the generalized linear models, and the two partial
 correlation-based methods) always matched or outperformed those that did
-not.\\Of these, the Markov network consistently performed the best. As
+not.\\
+Of these, the Markov network consistently performed the best. As
 anticipated by Lee and Hastie (2012), generalized linear models closely
 approximated the Markov network estimates, especially when the data sets
-were very large. As reviewed in Gotelli and Ulrich (2009), however, most
-analyses in this field involve fewer than 50 sites, so model performance
-on the smaller landscapes where the gap was larger is most important. As
-shown in Appendix 5, the standard errors associated with the estimates
-in Figure 3 are small (less than 0.01), so the differences among methods
-should not be attributed to sampling error.
+were very large {[}{[}Figure{]}{]}. As reviewed in Gotelli and Ulrich
+(2009), however, most analyses in this field of ecology involve fewer
+than 50 sites, so model performance on the smaller landscapes (where the
+gap was larger) is very important. As shown in Appendix 5, the standard
+errors associated with the estimates in Figure 3 are small (less than
+0.01), so the differences among methods should not be attributed to
+sampling error.
 
 Of the methods that did not control for indirect effects, Figure 3 shows
 that simple correlation coefficients provided a more reliable indicator
@@ -381,38 +384,40 @@ the first two simulation types, for which the true interaction rates are
 easiest to interpret). The Markov network's approximate Type I error
 rate (defined here as the probability that 0 fell outside the 95\%
 confidence interval for a pair of species where \(|\beta_{ij}|<0.1\))
-depended on the simulation type: 0.03 for simulations that matched the
-model's assumptions, versus 0.15 for simulations that included
-environmental heterogeneity (Appendix 5). Coverage was similar for other
-values of \(\beta\). For the null model, these rates were 0.31 and 0.50,
-respectively---far higher than the nominal 0.05 rate. Figure 4C shows,
-across a range of true interaction strengths, the probability that the
-null model or the Markov network will predict the wrong sign of the
-interaction with 95\% confidence. The null model makes such errors
-nearly 8 times as often as the Markov network, even though it only
-reject the null hypothesis twice as often overall (Appendix 5). The
-Markov network's errors were also more concentrated around 0, so it
-never misclassified strong interactions like the null model did.
+depended on the simulation type: 0.02 for simulations that matched the
+model's assumptions, versus 0.14 for simulations that included
+environmental heterogeneity (see Appendix 5 for confidence interval
+coverage across a range of \(\beta_{ij}\) values). The null model's Type
+I error rates were {[}{[}XX{]}{]} and {[}{[}XX{]}{]} for the constant
+and heterogeneous landscapse, respectively---far higher than the nominal
+0.05 rate. Figure 4C shows, across a range of true interaction
+strengths, the probability that the null model or the Markov network
+will predict the wrong sign of the interaction with 95\% confidence. The
+null model makes such errors {[}{[}XX{]}{]} times as often as the Markov
+network, even though it only reject the null hypothesis {[}{[}XX{]}{]}
+as often overall (Appendix 5). The Markov network's errors were also
+more concentrated around 0, so it never misclassified strong
+interactions like the null model did.
 
 \noindent
 \textbf{Discussion}
 
 \noindent
 The results presented above show that Markov networks can reliably
-recover species' pairwise interactions from observational data, even for
-cases where environmental heterogeneity and indirect interactions cause
-ecologists' typical null modeling approaches to reliably fail. Partial
-covariances and generalized linear models can both provide
-computationally efficient approximations, but with somewhat lower
-accuracy, especially for typically-sized data sets with small numbers of
-sites (Gotelli and Ulrich 2009). The difference in accuracy may be
-larger for real data sets than for the simulated landscapes in Figure 3,
-however; linear approximations to the Markov network make larger errors
-when the interaction matrix is structured (e.g.~due to guilds or trophic
-levels; Loh and Wainwright 2013). Similarly, the separate generalized
-linear models for each species can severely overfit in some cases (Lee
-and Hastie 2012). The full Markov network should thus be preferred to
-the approximations when it is computationally tractable.
+recover species' pairwise interactions from species composition data,
+even for cases where environmental heterogeneity and indirect
+interactions cause ecologists' typical null modeling approaches to
+reliably fail. Partial covariances and generalized linear models can
+both provide computationally efficient approximations, but with somewhat
+lower accuracy, especially for typically-sized data sets with small
+numbers of sites (Gotelli and Ulrich 2009). The difference in accuracy
+may be larger for real data sets than for the simulated landscapes in
+Figure 3, however; linear approximations to the Markov network make
+larger errors when the interaction matrix is structured (e.g.~due to
+guilds or trophic levels; Loh and Wainwright 2013). Similarly, the
+separate generalized linear models for each species can severely overfit
+in some cases (Lee and Hastie 2012). The full Markov network should thus
+be preferred to the approximations when it is computationally tractable.
 
 Compositional data only contains enough degrees of freedom to estimate
 one interaction per species pair (Schmidt and Murphy 2012), so none of
@@ -541,124 +546,159 @@ correlation coefficient, after controlling for landscape size.
 more likely to misclassify its sign with 95\% confidence than the Markov
 network was.
 
+\hyperdef{}{refs}{\label{refs}}
+\hyperdef{}{ref-albrechtux5fspatialux5f2001}{\label{ref-albrechtux5fspatialux5f2001}}
 Albrecht, M., and N. J. Gotelli. 2001. Spatial and temporal niche
 partitioning in grassland ants. Oecologia 126:134--141.
 
+\hyperdef{}{ref-azaeleux5finferringux5f2010}{\label{ref-azaeleux5finferringux5f2010}}
 Azaele, S., R. Muneepeerakul, A. Rinaldo, and I. Rodriguez-Iturbe. 2010.
 Inferring plant ecosystem organization from species occurrences. Journal
 of theoretical biology 262:323--329.
 
+\hyperdef{}{ref-brunoux5finclusionux5f2003}{\label{ref-brunoux5finclusionux5f2003}}
 Bruno, J. F., J. J. Stachowicz, and M. D. Bertness. 2003. Inclusion of
 facilitation into ecological theory. Trends in Ecology \& Evolution
 18:119--125.
 
+\hyperdef{}{ref-cipraux5fintroductionux5f1987}{\label{ref-cipraux5fintroductionux5f1987}}
 Cipra, B. A. 1987. An introduction to the Ising model. American
 Mathematical Monthly 94:937--959.
 
+\hyperdef{}{ref-connorux5fcheckeredux5f2013}{\label{ref-connorux5fcheckeredux5f2013}}
 Connor, E. F., M. D. Collins, and D. Simberloff. 2013. The checkered
 history of checkerboard distributions. Ecology 94:2403--2414.
 
+\hyperdef{}{ref-diamondux5fislandux5f1975}{\label{ref-diamondux5fislandux5f1975}}
 Diamond, J. M. 1975. The island dilemma: Lessons of modern biogeographic
 studies for the design of natural reserves. Biological conservation
 7:129--146.
 
+\hyperdef{}{ref-dodsonux5fcomplementaryux5f1970}{\label{ref-dodsonux5fcomplementaryux5f1970}}
 Dodson, S. I. 1970. COMPLEMENTARY FEEDING NICHES SUSTAINED BY
 SIZE-SELECTIVE PREDATION. Limnology and Oceanography 15:131--137.
 
+\hyperdef{}{ref-faisalux5finferringux5f2010}{\label{ref-faisalux5finferringux5f2010}}
 Faisal, A., F. Dondelinger, D. Husmeier, and C. M. Beale. 2010.
 Inferring species interaction networks from species abundance data: A
 comparative evaluation of various statistical and machine learning
 methods. Ecological Informatics 5:451--464.
 
+\hyperdef{}{ref-friedmanux5fsparseux5f2008}{\label{ref-friedmanux5fsparseux5f2008}}
 Friedman, J., T. Hastie, and R. Tibshirani. 2008. Sparse inverse
 covariance estimation with the graphical lasso. Biostatistics
 9:432--441.
 
+\hyperdef{}{ref-gelfandux5fmodellingux5f2005}{\label{ref-gelfandux5fmodellingux5f2005}}
 Gelfand, A. E., A. M. Schmidt, S. Wu, J. A. Silander, A. Latimer, and A.
 G. Rebelo. 2005. Modelling species diversity through species level
 hierarchical modelling. Journal of the Royal Statistical Society: Series
 C (Applied Statistics) 54:1--20.
 
+\hyperdef{}{ref-gelmanux5fweaklyux5f2008}{\label{ref-gelmanux5fweaklyux5f2008}}
 Gelman, A., A. Jakulin, M. G. Pittau, and Y.-S. Su. 2008. A Weakly
 Informative Default Prior Distribution for Logistic and Other Regression
 Models. The Annals of Applied Statistics 2:1360--1383.
 
+\hyperdef{}{ref-gilpinux5ffactorsux5f1982}{\label{ref-gilpinux5ffactorsux5f1982}}
 Gilpin, M. E., and J. M. Diamond. 1982. Factors contributing to
 non-randomness in species Co-occurrences on Islands. Oecologia
 52:75--84.
 
+\hyperdef{}{ref-goldingux5fbayescommux5f2015}{\label{ref-goldingux5fbayescommux5f2015}}
 Golding, N., and D. J. Harris. 2015. BayesComm: Bayesian Community
 Ecology Analysis.
 
+\hyperdef{}{ref-gotelliux5fempiricalux5f2009}{\label{ref-gotelliux5fempiricalux5f2009}}
 Gotelli, N. J., and W. Ulrich. 2009. The empirical Bayes approach as a
 tool to identify non-random species associations. Oecologia
 162:463--477.
 
+\hyperdef{}{ref-harrisux5frosaliaux5f2015}{\label{ref-harrisux5frosaliaux5f2015}}
 Harris, D. J. 2015a. Rosalia: Exact inference for small binary Markov
 networks. R package version 0.1.0. Zenodo.
 http://dx.doi.org/10.5281/zenodo.17808.
 
+\hyperdef{}{ref-harrisux5fgeneratingux5f2015}{\label{ref-harrisux5fgeneratingux5f2015}}
 Harris, D. J. 2015b. Generating realistic assemblages with a Joint
 Species Distribution Model. Methods in Ecology and Evolution.
 
+\hyperdef{}{ref-harrisux5foccupancyux5f2011}{\label{ref-harrisux5foccupancyux5f2011}}
 Harris, D. J., K. G. Smith, and P. J. Hanly. 2011. Occupancy is
 nine-tenths of the law: Occupancy rates determine the homogenizing and
 differentiating effects of exotic species. The American naturalist
 177:535.
 
+\hyperdef{}{ref-harrisux5fcontactux5f1974}{\label{ref-harrisux5fcontactux5f1974}}
 Harris, T. E. 1974. Contact Interactions on a Lattice. The Annals of
 Probability 2:969--988.
 
+\hyperdef{}{ref-leeux5flearningux5f2012}{\label{ref-leeux5flearningux5f2012}}
 Lee, J. D., and T. J. Hastie. 2012, May. Learning Mixed Graphical
 Models.
 
+\hyperdef{}{ref-levineux5fcompetitiveux5f1976}{\label{ref-levineux5fcompetitiveux5f1976}}
 Levine, S. H. 1976. Competitive Interactions in Ecosystems. The American
 Naturalist 110:903--910.
 
+\hyperdef{}{ref-lewinux5fsantaux5f1983}{\label{ref-lewinux5fsantaux5f1983}}
 Lewin, R. 1983. Santa Rosalia Was a Goat. Science 221:636--639.
 
+\hyperdef{}{ref-lohux5fstructureux5f2013}{\label{ref-lohux5fstructureux5f2013}}
 Loh, P.-L., and M. J. Wainwright. 2013. Structure estimation for
 discrete graphical models: Generalized covariance matrices and their
 inverses. The Annals of Statistics 41:3022--3049.
 
+\hyperdef{}{ref-macarthurux5fpopulationux5f1958}{\label{ref-macarthurux5fpopulationux5f1958}}
 MacArthur, R. H. 1958. Population ecology of some warblers of
 northeastern coniferous forests. Ecology 39:599--619.
 
+\hyperdef{}{ref-murphyux5fmachineux5f2012}{\label{ref-murphyux5fmachineux5f2012}}
 Murphy, K. P. 2012. Machine Learning: A Probabilistic Perspective. The
 MIT Press.
 
+\hyperdef{}{ref-pollockux5funderstandingux5f2014}{\label{ref-pollockux5funderstandingux5f2014}}
 Pollock, L. J., R. Tingley, W. K. Morris, N. Golding, R. B. O'Hara, K.
 M. Parris, P. A. Vesk, and M. A. McCarthy. 2014. Understanding
 co-occurrence by modelling species simultaneously with a Joint Species
 Distribution Model (JSDM). Methods in Ecology and Evolution:n/a--n/a.
 
+\hyperdef{}{ref-rux5fcoreux5fteamux5frux5f2015}{\label{ref-rux5fcoreux5fteamux5frux5f2015}}
 R Core Team. 2015. R: A Language and Environment for Statistical
 Computing. R Foundation for Statistical Computing, Vienna, Austria.
 
+\hyperdef{}{ref-roughgardenux5fcompetitionux5f1983}{\label{ref-roughgardenux5fcompetitionux5f1983}}
 Roughgarden, J. 1983. Competition and Theory in Community Ecology. The
 American Naturalist 122:583--601.
 
+\hyperdef{}{ref-schaferux5fcorpcorux5f2014}{\label{ref-schaferux5fcorpcorux5f2014}}
 Schäfer, J., R. Opgen-Rhein, V. Zuber, M. Ahdesmäki, A. P. D. Silva, and
 K. Strimmer. 2014. Corpcor: Efficient Estimation of Covariance and
 (Partial) Correlation.
 
+\hyperdef{}{ref-schmidtux5fmodelingux5f2012}{\label{ref-schmidtux5fmodelingux5f2012}}
 Schmidt, M., and K. Murphy. 2012. Modeling Discrete Interventional Data
 using Directed Cyclic Graphical Models. arXiv preprint arXiv:1205.2617.
 
+\hyperdef{}{ref-strongux5fecologicalux5f1984}{\label{ref-strongux5fecologicalux5f1984}}
 Strong, D. R., D. Simberloff, L. G. Abele, and A. B. Thistle. 1984.
 Ecological communities: Conceptual issues and the evidence. Princeton
 University Press.
 
+\hyperdef{}{ref-tjelmelandux5fmarkovux5f1998}{\label{ref-tjelmelandux5fmarkovux5f1998}}
 Tjelmeland, H., and J. Besag. 1998. Markov Random Fields with
 Higher-order Interactions. Scandinavian Journal of Statistics
 25:415--433.
 
+\hyperdef{}{ref-veechux5fprobabilisticux5f2013}{\label{ref-veechux5fprobabilisticux5f2013}}
 Veech, J. A. 2013. A probabilistic model for analysing species
 co-occurrence. Global Ecology and Biogeography 22:252--260.
 
+\hyperdef{}{ref-whittamux5fspeciesux5f1981}{\label{ref-whittamux5fspeciesux5f1981}}
 Whittam, T. S., and D. Siegel-Causey. 1981. Species Interactions and
 Community Structure in Alaskan Seabird Colonies. Ecology 62:1515--1524.
 
+\hyperdef{}{ref-xiaoux5fstrongux5f2015}{\label{ref-xiaoux5fstrongux5f2015}}
 Xiao, X., D. J. McGlinn, and E. P. White. 2015. A strong test of the
 Maximum Entropy Theory of Ecology. The American Naturalist 185:E70--E80.
 \end{flushleft}

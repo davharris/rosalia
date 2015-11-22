@@ -5,7 +5,6 @@ library(tidyr)
 
 
 x = read.csv("estimates.csv", stringsAsFactors = FALSE)
-x$dynamic_simulation = grepl("pop", x$rep_name)
 x$simulation_type = gsub("[0-9]", "", x$rep_name)
 
 
@@ -19,27 +18,27 @@ library(stringr)
 beginnings = grep("Sp1", pairs_txt) + 1
 ends = c(
   grep("^[^ ]", pairs_txt)[-1],
-  length(pairs_txt)
+  length(pairs_txt) + 1
 ) - 1
 
-file_list = readLines("manuscript-materials/fakedata_list.txt")[-1]
 partial_names = sapply(strsplit(grep("^>", pairs_txt, value = TRUE), " +"), function(x) x[[3]])
 filename_lines = grep("^>", pairs_txt)
 
-# File_list agrees with partial_names to the extent possible
-all(sapply(1:450, function(i)grepl(partial_names[i], file_list[i])))
-
-
-split_names = strsplit(file_list, "-")
+# Sort a vector of alphanumeric strings by the numeric component
+# as if they were integers.  For example, V20 is larger than V12,
+# even though V12 comes first alphabetically
+alnum_sort = function(x){
+  raw = as.integer(gsub("[[:alpha:]]", "", x))
+  x[order(raw)]
+}
 
 pairs_results = lapply(
-  1:length(file_list),
+  1:length(filename_lines),
   function(i){
     
-    message(i)
+    n_sites = as.integer(strsplit(partial_names[[i]], "-")[[1]][[1]])
+    rep_name = strsplit(partial_names[[i]], "-")[[1]][[2]]
     
-    n_sites = as.integer(split_names[[i]][[2]])
-    rep_name = split_names[[i]][[3]]
     
     # Find the line where the current data set is mentioned in
     # pairs.txt
@@ -59,11 +58,11 @@ pairs_results = lapply(
       splitted,
       function(x){
         # in the x data frame, species 1 is always a lower number than species 2
-        spp = sort(as.integer(x[3:4]))
+        spp = alnum_sort(x[3:4])
         data.frame(
-          sp1 = paste0("V", spp[1]), 
-          sp2 = paste0("V", spp[2]), 
-          z = as.numeric(x[14]),
+          sp1 = spp[1], 
+          sp2 = spp[2], 
+          z = x[14],
           stringsAsFactors = FALSE
         )
       }
@@ -71,7 +70,9 @@ pairs_results = lapply(
       bind_rows %>%
       mutate(spp = paste(sp1, sp2, sep = "-"))
     
-    n_spp = length(unique(c(x_subset$sp1, x_subset$sp2)))
+    n_spp = 20
+    
+    pairs_results$z = as.numeric(pairs_results$z)
     
     # Re-order the pairs_results to match the other methods
     m = matrix(NA, n_spp, n_spp)
@@ -79,7 +80,10 @@ pairs_results = lapply(
       paste0("V", row(m)[upper.tri(m)], "-V", col(m)[upper.tri(m)]),
       pairs_results$spp
     )
-    ordered_pairs_results = pairs_results[new_order, ]
+    ordered_pairs_results = pairs_results[na.omit(new_order), ]
+    
+    ordered_pairs_results = ordered_pairs_results %>%
+      filter(sp1 %in% c(x_subset$sp1) & sp2 %in% x_subset$sp2)
     
     x_subset$estimate = ordered_pairs_results$z
     x_subset$method = "null"
@@ -88,7 +92,7 @@ pairs_results = lapply(
   }
 ) %>% bind_rows()
 
-pairs_results
+pairs_results$estimate[pairs_results$estimate < -1000] = -50
 
 x = rbind(x, pairs_results)
 
@@ -115,6 +119,13 @@ result_summary$method = reorder(result_summary$method, -result_summary$r2)
 result_summary$simulation_type = reorder(result_summary$simulation_type, -result_summary$r2)
 
 
+result_summary = result_summary %>% 
+  group_by(method) %>% 
+  summarise(mean_r2 = round(100 * mean(r2))) %>%
+  mutate(method_r2 = paste0(method, " (0.", mean_r2, ")")) %>%
+  select(method, method_r2) %>%
+  inner_join(result_summary, "method")
+
 result_summary %>% 
   filter(simulation_type == "no_env") %>%
   group_by(method) %>% 
@@ -126,7 +137,7 @@ result_summary %>%
   summarise(round(mean(r2), 3))
 
 result_summary %>% 
-  filter(simulation_type == "pop") %>%
+  filter(simulation_type == "abund") %>%
   group_by(method) %>% 
   summarise(round(mean(r2), 3))
 
@@ -134,15 +145,17 @@ result_summary %>%
 result_summary$simulation_type_long = plyr::revalue(result_summary$simulation_type,
                                                c(no_env = "constant environment",
                                                  env = "heterogeneous environment",
-                                                 pop = "population dynamics"))
+                                                 abund = "abundance"))
 
 
-pdf("manuscript-materials/figures/performance.pdf", width = 7.5, height = 2.5)
-ggplot(result_summary, aes(x = n_sites, y = r2, col = method, shape = method)) + 
+legend_name = expression(Method~(mean~R^2))
+
+pdf("manuscript-materials/figures/performance.pdf", width = 8, height = 2.5)
+ggplot(result_summary, aes(x = n_sites, y = r2, col = method_r2, shape = method_r2)) + 
   facet_grid(~simulation_type_long) + 
   geom_line(size = .5) + 
   geom_point(size = 2.5, fill = "white") + 
-  scale_shape_manual(values = c(16, 22, 17, 23, 18, 24, 15)) +
+  scale_shape_manual(values = c(16, 22, 17, 23, 18, 24, 15), name = legend_name) +
   geom_hline(yintercept = 0, size = 1/2) +
   geom_vline(xintercept = 0, size = 1) + 
   #scale_shape_manual(values = c(21, 25, 15, 18)) + 
@@ -161,16 +174,15 @@ ggplot(result_summary, aes(x = n_sites, y = r2, col = method, shape = method)) +
   theme(strip.background = element_blank(), legend.key = element_blank()) + 
   theme(plot.margin = grid::unit(c(.01, .01, .75, .1), "lines")) + 
   theme(
-    axis.title.x = element_text(vjust = -0.2, size = 14), 
-    axis.title.y = element_text(angle = 0, hjust = -.1, size = 14)
+    axis.title.x = element_text(vjust = -0.2, size = 12), 
+    axis.title.y = element_text(angle = 0, hjust = -.1, size = 12)
   ) + 
-  scale_color_brewer(palette = "Dark2")
+  scale_color_brewer(palette = "Dark2", name = legend_name)
 dev.off()
 
 
 ####
 library(lme4)
-library(multcomp)
 
 landscape_estimates = x %>% 
   group_by(method, simulation_type) %>%
@@ -180,9 +192,9 @@ landscape_estimates = x %>%
   summarise(r2 = 1 - sum(resids^2) / sum(truth^2))
 
 
-####
-
 summary(lmer(r2 ~ method + n_sites + simulation_type + (1|rep_name), data = landscape_estimates))
+
+####
 
 pairs_summary = x[x$method == "null" & !grepl("pop", x$rep_name), ]
 markov_summary = x[x$method == "Markov network" & !grepl("pop", x$rep_name), ]
@@ -258,6 +270,7 @@ y_markov = error_smoother(markov_summary)
 
 pdf("manuscript-materials/figures/error_rates.pdf", height = 8.5, width = 8.5/3)
 par(mfrow = c(3, 1))
+
 with(
   null_cor, 
   plot(
@@ -270,9 +283,9 @@ with(
     bty = "l"
   )
 )
-mtext("A. Markov network estimates\nvs. GLM estimates", adj = 0, side = 3, font = 2, line = 1.2) 
+mtext("A. Markov network estimates\nvs. GLM estimates", adj = 0, side = 3, font = 2, line = 1.2, cex = .9) 
 abline(lm(`Markov network` ~ GLM, data = null_cor))
-text(0, 5, expression(R^2==.94))
+text(0, 5, expression(R^2==round(summary(lm(`Markov network` ~ GLM, data = null_cor))$r.squared, 2)))
 
 with(
   null_cor, 
@@ -286,9 +299,9 @@ with(
     bty = "l"
   )
 )
-mtext("B. Null model estimates vs.\nscaled correlation coefficients", adj = 0, side = 3, font = 2, line = 1.2) 
+mtext("B. Null model estimates vs.\nscaled correlation coefficients", adj = 0, side = 3, font = 2, line = 1.2, cex = .9) 
 abline(lm(null ~ I(correlation*sqrt(n_sites)), data = null_cor))
-text(10, 12, expression(R^2==.95))
+text(10, 12, expression(R^2==round(summary(lm(null ~ I(correlation*sqrt(n_sites)), data = null_cor))$r.squared, 2)))
 
 plotfun(
   truth_seq,
@@ -300,12 +313,12 @@ plotfun(
   yaxs = "i",
   col = 2,
   add = FALSE,
-  ylim = c(0, .2),
+  ylim = c(0, .4),
   lwd = 2
 )
-mtext("C. Error rate vs.\ninteraction strength", side = 3, adj = 0, font = 2, line = 1.2) 
+mtext("C. Error rate vs.\ninteraction strength", side = 3, adj = 0, font = 2, line = 1.2, cex = .9) 
 plotfun(truth_seq, y_markov, add = TRUE, lwd = 2)
-legend("topleft", lwd = 2, legend = c("Null model", "Markov network"), col = c(2, 1), bty = "n", cex = .9)
+legend("topleft", lwd = 2, legend = c("Null model", "Markov network"), col = c(2, 1), bty = "n")
 dev.off()
 
 
