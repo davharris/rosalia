@@ -221,9 +221,9 @@ ones considered here have unimodal likelihood surfaces (Murphy 2012),
 ensuring that this procedure will converge on the global maximum. I used
 the rosalia package (Harris 2015a) for the R programming language (R
 Core Team 2015) to calculate \(p(\vec{y}; \alpha, \beta)\) and its
-gradients; the package passes these functions to the ``BFGS'' method in
-R's general-purpose optimizer, which then estimates the Markov network
-parameters.
+gradients (Murphy 2012); the package passes these functions to the
+``BFGS'' method in R's general-purpose optimizer, which then estimates
+the Markov network parameters.
 
 \noindent \textbf{Simulated landscapes.} I simulated several sets of
 landscapes using known parameters to evaluate different statistical
@@ -266,9 +266,9 @@ interaction rates instead of per-species interaction rates.
 I compared seven techniques for determining the sign and strength of the
 associations between pairs of species from simulated data (Appendix 4).
 First, I used the rosalia package (Harris 2015a) to fit Markov network
-models, as described above. For the analyses with 20 species, I added a
-weak regularizer (equivalent to a logistic prior with scale 2) to ensure
-that the model estimates were always finite.
+models, as described above. For the analyses with 20 species, a weak
+regularizer (equivalent to a logistic prior with scale 2) ensured that
+the estimates were always finite.
 
 I also evaluated six alternative methods: five from the existing
 literature, plus a novel combination of two of these methods. The first
@@ -294,7 +294,7 @@ species on the landscape as predictors. This produced two interaction
 estimates for each species pair; one for the effect of species \(i\) on
 species \(j\) and one for the reverse. These two coefficients are not
 identifiable from the data, however (Schmidt and Murphy 2012), so I used
-their average as an overall measure of their relationship.
+their average as an overall measure of the pairwise relationship.
 
 The next method, described in Gotelli and Ulrich (2009), involved
 simulating new landscapes from a null model that retains the row and
@@ -353,14 +353,14 @@ Markov network, the generalized linear models, and the two partial
 correlation-based methods) always matched or outperformed those that did
 not. The Markov network consistently performed best of all. As
 anticipated by Lee and Hastie (2012), generalized linear models closely
-approximated the Markov network estimates, especially when the data sets
-were very large {[}{[}Figure{]}{]}. As reviewed in Gotelli and Ulrich
-(2009), however, most analyses in this field of ecology involve fewer
-than 50 sites, so model performance on the smaller landscapes (where the
-gap was larger) is very important. As shown in Appendix 5, the standard
-errors associated with the estimates in Figure 3 are small (less than
-0.01), so the differences among methods should not be attributed to
-sampling error.
+approximated the Markov network estimates (Figure 4A), especially when
+the data sets were very large (Figure 3). As reviewed in Gotelli and
+Ulrich (2009), however, most analyses in this field of ecology involve
+fewer than 50 sites, and the gap between the Markov network and GLMs is
+larger in this context. As shown in Appendix 5, the standard errors
+associated with the estimates in Figure 3 are small (less than 0.01), so
+the differences among methods should not be attributed to sampling
+error.
 
 Of the methods that did not control for indirect effects, Figure 3 shows
 that simple correlation coefficients provided a more reliable indicator
@@ -380,16 +380,15 @@ depended on the simulation type: 0.02 for simulations that matched the
 model's assumptions, versus 0.14 for simulations that included
 environmental heterogeneity (see Appendix 5 for confidence interval
 coverage across a range of \(\beta_{ij}\) values). The null model's Type
-I error rates were {[}{[}XX{]}{]} and {[}{[}XX{]}{]} for the constant
-and heterogeneous landscapes, respectively---far higher than the nominal
-0.05 rate. Figure 4C shows, across a range of true interaction
-strengths, the probability that the null model or the Markov network
-will predict the wrong sign of the interaction with 95\% confidence. The
-null model makes such errors {[}{[}XX{]}{]} times as often as the Markov
-network, even though it only reject the null hypothesis {[}{[}XX{]}{]}
-as often overall (Appendix 5). The Markov network's errors were also
-more concentrated around 0, so it never misclassified strong
-interactions like the null model did.
+I error rates were 0.30 and 0.50 for the constant and heterogeneous
+landscapes, respectively---far higher than the nominal 0.05 rate. Figure
+4C shows, across a range of true interaction strengths, the probability
+that the null model or the Markov network will predict the wrong sign of
+the interaction with 95\% confidence. The null model makes such errors
+more than 5 times as often as the Markov network, even though it only
+reject the null hypothesis twice as often overall (Appendix 5). The
+Markov network's errors were also more concentrated around 0, so it
+never misclassified strong interactions like the null model did.
 
 \noindent
 \textbf{Discussion}
@@ -401,8 +400,8 @@ even for cases where environmental heterogeneity and indirect
 interactions cause ecologists' typical null modeling approaches to
 reliably fail. Partial covariances and generalized linear models can
 both provide computationally efficient approximations, but with somewhat
-lower accuracy, especially for typically-sized data sets with small
-numbers of sites (Gotelli and Ulrich 2009). The difference in accuracy
+lower accuracy (especially for typically-sized data sets with small
+numbers of sites; Gotelli and Ulrich 2009). The difference in accuracy
 may be larger for real data sets than for the simulated landscapes in
 Figure 3, however; linear approximations to the Markov network make
 larger errors when the interaction matrix is structured (e.g.~due to
@@ -418,8 +417,8 @@ these methods can identify the exact nature of the pairwise interactions
 other). To estimate asymmetric interactions, such as commensalism or
 predation, ecologists could use time series, behavioral observations,
 manipulative experiments, or natural history. These other sources of
-information could also be used to augment the likelihood function with
-an informative prior distribution, reducing ecologists' error and
+information could also be used to augment the likelihood function with a
+more informative prior distribution, reducing ecologists' error and
 uncertainty relative to Figure 3's results.
 
 Despite their limitations, Markov networks have enormous potential to
@@ -489,55 +488,11 @@ Moore Foundation's Data-Driven Discovery Initiative through Grant
 GBMF4563 to E. P. White.
 
 \setlength{\parindent}{0cm}
+\setlength{\parskip}{0pt}
 
 \noindent \textbf{References:}
 
 \setlength{\parindent}{-1em} \setlength{\leftskip}{1em}
-
-\setlength{\parindent}{0cm} \setlength{\leftskip}{0cm}
-
-\textbf{Figure 1: A.} A small network of three competing species. The
-tree (top) tends not to co-occur with either of the two shrub species,
-as indicated by the strongly negative coefficient linking them. The two
-shrub species also compete with one another, but more weakly (circled
-coefficient). \textbf{B.} In spite of the competitive interactions
-between the two shrub species, their shared tendency to occur in
-locations without trees makes their occurrence vectors positively
-correlated (circled). \textbf{C.} Controlling for trees with a
-conditional (all-else-equal) approach such as a partial covariance or a
-Markov network leads to correct identification of the negative
-shrub-shrub interaction (circled).
-
-\textbf{Figure 2: A.} A small Markov network, defined by its \(\alpha\)
-and \(\beta\) values. The abiotic environment favors the occurrence of
-each species (\(\alpha >0\)), particularly species 2
-(\(\alpha_2 > \alpha_1\)). The negative \(\beta_{12}\) coefficient is
-consistent with competition between the two species. \textbf{B.} The
-coefficients determine the probabilities of all four possible
-presence-absence combinations for Species 1 and Species 2. \(\alpha_1\)
-is added to the exponent whenever Species 1 is present (\(y_1 = 1\)),
-but not when it is absent (\(y_1 = 0\)). Similarly, the exponent
-includes \(\alpha_2\) only when species \(2\) is present (\(y_2 = 1\)),
-and includes \(\beta_{12}\) only when both are present (\(y_1y_2 = 1\)).
-The normalizing constant \(Z\), ensures that the four probabilities sum
-to 1. In this case, \(Z\) is about 18.5. \textbf{C.} The expected
-frequencies of all possible co-occurrence patterns between the two
-species of interest, as calculated in the previous panel. \textbf{D.}
-Without competition (i.e.~with \(\beta_{12}=0\), each species would
-occur more often.
-
-\textbf{Figure 3:} Proportion of variance in interaction coefficients
-explained by each method versus number of sampled locations across the
-three simulation types. For the null model (Pairs), these values include
-the removal of two outliers with \(|Z|>1000\) {[}{[}Appendix{]}{]}.
-
-\textbf{Figure 4: A.} The Markov network's estimated interaction
-coefficients were generally very similar to the GLM estimates.
-\textbf{B.} The null model's estimates typically matched the (negative)
-correlation coefficient, after controlling for landscape size.
-\textbf{C.} For any given interaction strength, the null model was much
-more likely to misclassify its sign with 95\% confidence than the Markov
-network was.
 
 \hyperdef{}{refs}{\label{refs}}
 \hyperdef{}{ref-albrechtux5fspatialux5f2001}{\label{ref-albrechtux5fspatialux5f2001}}
@@ -690,6 +645,55 @@ Community Structure in Alaskan Seabird Colonies. Ecology 62:1515--1524.
 \hyperdef{}{ref-xiaoux5fstrongux5f2015}{\label{ref-xiaoux5fstrongux5f2015}}
 Xiao, X., D. J. McGlinn, and E. P. White. 2015. A strong test of the
 Maximum Entropy Theory of Ecology. The American Naturalist 185:E70--E80.
+
+\setlength{\parindent}{0cm} \setlength{\leftskip}{0cm}
+
+\noindent \textbf{Figures:}
+
+\textbf{Figure 1: A.} A small network of three competing species. The
+tree (top) tends not to co-occur with either of the two shrub species,
+as indicated by the strongly negative coefficient linking them. The two
+shrub species also compete with one another, but more weakly (circled
+coefficient). \textbf{B.} In spite of the competitive interactions
+between the two shrub species, their shared tendency to occur in
+locations without trees makes their occurrence vectors positively
+correlated (circled). \textbf{C.} Controlling for trees with a
+conditional (all-else-equal) approach such as a partial covariance or a
+Markov network leads to correct identification of the negative
+shrub-shrub interaction (circled).
+
+\textbf{Figure 2: A.} A small Markov network, defined by its \(\alpha\)
+and \(\beta\) values. The abiotic environment favors the occurrence of
+each species (\(\alpha >0\)), particularly species 2
+(\(\alpha_2 > \alpha_1\)). The negative \(\beta_{12}\) coefficient is
+consistent with competition between the two species. \textbf{B.} The
+coefficients determine the probabilities of all four possible
+presence-absence combinations for Species 1 and Species 2. \(\alpha_1\)
+is added to the exponent whenever Species 1 is present (\(y_1 = 1\)),
+but not when it is absent (\(y_1 = 0\)). Similarly, the exponent
+includes \(\alpha_2\) only when species \(2\) is present (\(y_2 = 1\)),
+and includes \(\beta_{12}\) only when both are present (\(y_1y_2 = 1\)).
+The normalizing constant \(Z\), ensures that the four probabilities sum
+to 1. In this case, \(Z\) is about 18.5. \textbf{C.} The expected
+frequencies of all possible co-occurrence patterns between the two
+species of interest, as calculated in the previous panel. \textbf{D.}
+Without competition (i.e.~with \(\beta_{12}=0\), each species would
+occur more often.
+
+\textbf{Figure 3:} Proportion of variance in interaction coefficients
+explained by each method versus number of sampled locations across the
+three simulation types. For the null model (Pairs), two outliers with
+\(|Z|>1000\) were manually adjusted to \(|Z|=50\) to mitigate their
+detrimental influence on \(R^2\) (Appendix 5).
+
+\textbf{Figure 4: A.} The Markov network's estimated interaction
+coefficients were generally very similar to the GLM estimates.
+\textbf{B.} The null model's estimates typically matched the (negative)
+correlation coefficient, after controlling for landscape size.
+\textbf{C.} For any given interaction strength, the null model was much
+more likely to misclassify its sign with 95\% confidence than the Markov
+network was.
+
 \end{flushleft}
 \end{spacing}
 

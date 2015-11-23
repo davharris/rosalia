@@ -145,8 +145,9 @@ ones considered here have unimodal likelihood surfaces [@murphy_machine_2012],
 ensuring that this procedure will converge on the global maximum. I used the
 rosalia package [@harris_rosalia_2015] for the R programming language
 [@r_core_team_r_2015] to calculate $p(\vec{y}; \alpha, \beta)$ and its
-gradients; the package passes these functions to the "BFGS" method in R's
-general-purpose optimizer, which then estimates the Markov network parameters.
+gradients [@murphy_machine_2012]; the package passes these functions to the
+"BFGS" method in R's general-purpose optimizer, which then estimates the Markov
+network parameters.
 
 \noindent \textbf{Simulated landscapes.}
 I simulated several sets of landscapes using known parameters to evaluate
@@ -187,9 +188,9 @@ per-species interaction rates.
 I compared seven techniques for determining the sign and strength of the
 associations between pairs of species from simulated data (Appendix 4).
 First, I used the rosalia package [@harris_rosalia_2015] to fit Markov network
-models, as described above. For the analyses with 20 species, I added a weak
-regularizer (equivalent to a logistic prior with scale 2) to ensure that the
-model estimates were always finite.
+models, as described above. For the analyses with 20 species, a weak regularizer
+(equivalent to a logistic prior with scale 2) ensured that the estimates were
+always finite.
 
 I also evaluated six alternative methods: five from the existing literature,
 plus a novel combination of two of these methods. The first alternative interaction
@@ -213,7 +214,7 @@ other species on the landscape as predictors. This produced two interaction
 estimates for each species pair; one for the effect of species $i$ on species
 $j$ and one for the reverse. These two coefficients are not identifiable from
 the data, however [@schmidt_modeling_2012], so I used their average as an
-overall measure of their relationship.
+overall measure of the pairwise relationship.
 
 The next method, described in @gotelli_empirical_2009, involved
 simulating new landscapes from a null model that retains the row and column
@@ -270,13 +271,13 @@ effects (the Markov network, the generalized linear models, and the two partial
 correlation-based methods) always matched or outperformed those that did not.
 The Markov network consistently performed best of all. As anticipated by
 @lee_learning_2012, generalized linear models closely
-approximated the Markov network estimates, especially when the data sets were
-very large [[Figure]]. As reviewed in @gotelli_empirical_2009, however, most analyses in
-this field of ecology involve fewer than 50 sites, so model performance on the smaller
-landscapes (where the gap was larger) is very important. As shown in Appendix
-5, the standard errors associated with the estimates in Figure 3 are small
-(less than 0.01), so the differences among methods should not be attributed to
-sampling error.
+approximated the Markov network estimates (Figure 4A), especially when the data
+sets were very large (Figure 3). As reviewed in @gotelli_empirical_2009,
+however, most analyses in this field of ecology involve fewer than 50 sites,
+and the gap between the Markov network and GLMs is larger in this context. As
+shown in Appendix 5, the standard errors associated with the estimates in Figure
+3 are small (less than 0.01), so the differences among methods should not be
+attributed to sampling error.
 
 Of the methods that did not control for indirect effects, Figure 3 shows that
 simple correlation coefficients provided a more reliable indicator of species'
@@ -295,13 +296,13 @@ species where $|\beta_{ij}|<0.1$) depended on the simulation type: 0.02 for
 simulations that matched the model's assumptions, versus 0.14 for simulations
 that included environmental heterogeneity (see Appendix 5 for confidence
 interval coverage across a range of $\beta_{ij}$ values). The null model's
-Type I error rates were [[XX]] and [[XX]] for the constant and heterogeneous
+Type I error rates were 0.30 and 0.50 for the constant and heterogeneous
 landscapes, respectively---far higher than the nominal 0.05 rate. Figure
 4C shows, across a range of true interaction strengths, the probability that
 the null model or the Markov network will predict the wrong sign of the
-interaction with 95% confidence.  The null model makes such errors [[XX]] times
+interaction with 95% confidence.  The null model makes such errors more than 5 times
 as often as the Markov network, even though it only reject the null hypothesis
-[[XX]] as often overall (Appendix 5).  The Markov network's errors were also
+twice as often overall (Appendix 5).  The Markov network's errors were also
 more concentrated around 0, so it never misclassified strong interactions like
 the null model did.
 
@@ -314,8 +315,8 @@ species' pairwise interactions from species composition data, even for cases whe
 environmental heterogeneity and indirect interactions cause ecologists' typical
 null modeling approaches to reliably fail. Partial covariances and generalized
 linear models can both provide computationally efficient approximations, but
-with somewhat lower accuracy, especially for typically-sized data sets with small
-numbers of sites [@gotelli_empirical_2009]. The difference in accuracy may be
+with somewhat lower accuracy [especially for typically-sized data sets with small
+numbers of sites; @gotelli_empirical_2009]. The difference in accuracy may be
 larger for real data sets than for the simulated landscapes in Figure 3,
 however; linear approximations to the Markov network make larger errors when
 the interaction matrix is structured [e.g. due to guilds or trophic levels;
@@ -331,7 +332,7 @@ in a positively-associated pair is facilitating the other). To estimate
 asymmetric interactions, such as commensalism or predation, ecologists could use
 time series, behavioral observations, manipulative experiments, or natural
 history. These other sources of information could also be used to augment the
-likelihood function with an informative prior distribution, reducing ecologists'
+likelihood function with a more informative prior distribution, reducing ecologists'
 error and uncertainty relative to Figure 3's results.
 
 Despite their limitations, Markov networks have enormous potential to improve
@@ -402,13 +403,15 @@ GBMF4563 to E. P. White.
 
 \setlength{\parindent}{-1em}
 \setlength{\leftskip}{1em}
-
+\setlength{\parskip}{0pt}
 
 
 <!--references go here-->
 
 \setlength{\parindent}{0cm}
 \setlength{\leftskip}{0cm}
+
+\noindent \textbf{Figures:}
 
 **Figure 1: A.** A small network of three competing species.
 The tree (top) tends not to co-occur with either of the two shrub species, as
@@ -440,8 +443,9 @@ with $\beta_{12}=0$, each species would occur more often.
 
 **Figure 3:** Proportion of variance in interaction coefficients explained by
 each method versus number of sampled locations across the three simulation
-types. For the null model (Pairs), these values include the removal of two
-outliers with $|Z|>1000$ [[Appendix]].
+types. For the null model (Pairs), two outliers with $|Z|>1000$ were manually
+adjusted to $|Z|=50$ to mitigate their detrimental influence on $R^2$ (Appendix
+5).
 
 **Figure 4: A.** The Markov network's estimated interaction
 coefficients were generally very similar to the GLM estimates. **B.** The null
