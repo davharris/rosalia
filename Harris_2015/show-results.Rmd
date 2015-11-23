@@ -1,14 +1,25 @@
+# Appendix 5: results
+
+```{r, message = FALSE}
 library(dplyr)
 library(mgcv)
 library(ggplot2)
 library(tidyr)
+library(knitr)
+library(lme4)
+```
 
 
+## Import the results from Appendix 4:
+
+```{r, cache = TRUE}
 x = read.csv("estimates.csv", stringsAsFactors = FALSE)
 x$simulation_type = gsub("[0-9]", "", x$rep_name)
+```
 
+## Import the results from the *Pairs* software:
 
-######## Pairs ########
+```{r, cache = TRUE}
 
 pairs_txt = readLines("fakedata/matrices/Pairs.txt")
 library(stringr)
@@ -92,17 +103,17 @@ pairs_results = lapply(
   }
 ) %>% bind_rows()
 
+# Manually adjust the Z values less than -1000 so that these outliers
+# won't completely dominate the analyses below
 pairs_results$estimate[pairs_results$estimate < -1000] = -50
 
 x = rbind(x, pairs_results)
 
+```
 
-#####
+## Calculate model performance:
 
-
-
-x = x[!is.na(x$estimate), ]
-
+```{r, cache = TRUE}
 resids = function(data){
   resid(lm(truth ~ estimate + 0, data = data))
 }
@@ -126,27 +137,49 @@ result_summary = result_summary %>%
   select(method, method_r2) %>%
   inner_join(result_summary, "method")
 
+result_summary$simulation_type_long = plyr::revalue(
+  result_summary$simulation_type,
+  c(no_env = "constant environment",
+    env = "heterogeneous environment",
+    abund = "abundance")
+)
+
+result_summary$method_r2 = reorder(result_summary$method_r2, -result_summary$r2)
+```
+
+#### Model performance with no environmental variation:
+
+```{r}
 result_summary %>% 
   filter(simulation_type == "no_env") %>%
   group_by(method) %>% 
-  summarise(round(mean(r2), 3))
+  summarise(mean(r2)) %>% 
+  kable(digits = 3)
+```
 
+#### Model performance with environmental heterogeneity:
+
+```{r}
 result_summary %>% 
   filter(simulation_type == "env") %>%
   group_by(method) %>% 
-  summarise(round(mean(r2), 3))
+  summarise(mean(r2)) %>% 
+  kable(digits = 3)
+```
 
+#### Model performance with per-capita species interactions: 
+
+```{r}
 result_summary %>% 
   filter(simulation_type == "abund") %>%
   group_by(method) %>% 
-  summarise(round(mean(r2), 3))
+  summarise(mean(r2)) %>% 
+  kable(digits = 3)
+```
 
+## Plot the R-squared results (Figure 3)
 
-result_summary$simulation_type_long = plyr::revalue(result_summary$simulation_type,
-                                               c(no_env = "constant environment",
-                                                 env = "heterogeneous environment",
-                                                 abund = "abundance"))
-
+```{r}
 
 legend_name = expression(Method~(mean~R^2))
 
@@ -179,11 +212,15 @@ ggplot(result_summary, aes(x = n_sites, y = r2, col = method_r2, shape = method_
   ) + 
   scale_color_brewer(palette = "Dark2", name = legend_name)
 dev.off()
+```
 
+## Estimate R-squared uncertainty:
 
-####
-library(lme4)
+Fit a linear mixed model describing R-squared as a function of method, landscape
+size, and simulation type.  Note the small standard errors associated with the
+effect of estimation method.  
 
+```{r, cache = TRUE}
 landscape_estimates = x %>% 
   group_by(method, simulation_type) %>%
   do(data.frame(., resids = resids(.))) %>%
@@ -193,8 +230,11 @@ landscape_estimates = x %>%
 
 
 summary(lmer(r2 ~ method + n_sites + simulation_type + (1|rep_name), data = landscape_estimates))
+```
 
-####
+## Summarize the inferential results of the Markov network and the null model:
+
+```{r, cache = TRUE}
 
 pairs_summary = x[x$method == "null" & !grepl("pop", x$rep_name), ]
 markov_summary = x[x$method == "Markov network" & !grepl("pop", x$rep_name), ]
@@ -209,20 +249,15 @@ pairs_summary$sig_neg = pairs_summary$estimate > qnorm(.975)
 # below zero
 markov_summary$sig_pos = markov_summary$lower > 0
 markov_summary$sig_neg = markov_summary$upper < 0
+```
+
+## Create Figure 4:
+
+```{r, cache = TRUE}
 
 
-# Compare 
-null_cor = x %>%
-  dplyr::select(-lower, -upper, -X) %>%
-  spread(method, estimate) %>%
-  na.omit()
-
-# R-squared
-round(summary(lm(null ~ I(correlation*sqrt(n_sites)), data = null_cor))$r.squared, 2)
-
-
-
-
+# Function for smoothing the error rates with a generalized additive model
+# and plotting the results
 my_geom_smooth = function(data, color, ...){
   geom_smooth(
     data = data,
@@ -267,12 +302,24 @@ error_smoother = function(data){
 y_pairs = error_smoother(pairs_summary)
 y_markov = error_smoother(markov_summary)
 
-
 pdf("manuscript-materials/figures/error_rates.pdf", height = 8.5, width = 8.5/3)
 par(mfrow = c(3, 1))
 
+# Compare estimates
+spread_estimates = x %>%
+  dplyr::select(-lower, -upper, -X) %>%
+  spread(method, estimate) %>%
+  na.omit()
+
+# R-squared for null versus correlation
+round(summary(lm(null ~ I(correlation*sqrt(n_sites)), data = spread_estimates))$r.squared, 2)
+
+# R-squared for glm markov network versus glm
+round(summary(lm(`Markov network` ~ GLM, data = spread_estimates))$r.squared, 2)
+
+
 with(
-  null_cor, 
+  spread_estimates, 
   plot(
     `Markov network`, 
     GLM, 
@@ -284,11 +331,11 @@ with(
   )
 )
 mtext("A. Markov network estimates\nvs. GLM estimates", adj = 0, side = 3, font = 2, line = 1.2, cex = .9) 
-abline(lm(`Markov network` ~ GLM, data = null_cor))
-text(0, 5, expression(R^2==round(summary(lm(`Markov network` ~ GLM, data = null_cor))$r.squared, 2)))
+abline(lm(`Markov network` ~ GLM, data = spread_estimates))
+text(0, 5, expression(R^2==0.94))
 
 with(
-  null_cor, 
+  spread_estimates, 
   plot(
     correlation * sqrt(n_sites), 
     null, 
@@ -300,8 +347,8 @@ with(
   )
 )
 mtext("B. Null model estimates vs.\nscaled correlation coefficients", adj = 0, side = 3, font = 2, line = 1.2, cex = .9) 
-abline(lm(null ~ I(correlation*sqrt(n_sites)), data = null_cor))
-text(10, 12, expression(R^2==round(summary(lm(null ~ I(correlation*sqrt(n_sites)), data = null_cor))$r.squared, 2)))
+abline(lm(null ~ I(correlation*sqrt(n_sites)), data = spread_estimates))
+text(10, 12, expression(R^2==0.95))
 
 plotfun(
   truth_seq,
@@ -320,31 +367,39 @@ mtext("C. Error rate vs.\ninteraction strength", side = 3, adj = 0, font = 2, li
 plotfun(truth_seq, y_markov, add = TRUE, lwd = 2)
 legend("topleft", lwd = 2, legend = c("Null model", "Markov network"), col = c(2, 1), bty = "n")
 dev.off()
+```
 
+## Summarize inferential statistics:
 
-
+```{r}
 # P(Pairs confidently wrong)
 with(pairs_summary,  mean((sig_neg & truth > 0) | (sig_pos & truth < 0)))
 # P(Markov network confidently wrong)
 with(markov_summary, mean((sig_neg & truth > 0) | (sig_pos & truth < 0)))
 
 
-# P(reject null)
+# P(Pairs rejects null)
 with(pairs_summary,  mean(sig_neg | sig_pos))
+
+# P(Markov network rejects null)
 with(markov_summary,  mean(sig_neg | sig_pos))
 
 
-# P(reject null | small interaction)
+# P(reject null | small interaction) for Makrov network
 # (approximate Type I error rates)
 markov_summary %>%
   group_by(simulation_type) %>% 
   filter(abs(truth) < .1) %>% 
-  summarize(Type_1_error_rate = round(mean(sig_neg | sig_pos), 3))
+  summarize(Type_1_error_rate = mean(sig_neg | sig_pos)) %>%
+  kable(digits = 3)
 
+# P(reject null | small interaction) for Pairs
+# (approximate Type I error rates)
 pairs_summary %>%
   group_by(simulation_type) %>% 
   filter(abs(truth) < .1) %>% 
-  summarize(Type_1_error_rate = round(mean(sig_neg | sig_pos), 3))
+  summarize(Type_1_error_rate = mean(sig_neg | sig_pos)) %>%
+  kable(digits = 3)
 
 
 
@@ -352,16 +407,23 @@ pairs_summary %>%
 # What's the probability that any "true" value falls inside the 95% CI?
 markov_summary %>% 
   group_by(simulation_type) %>% 
-  summarize(round(mean(truth > lower & truth < upper), 3))
+  summarize(mean(truth > lower & truth < upper)) %>%
+  kable(digits = 3)
+```
 
+## Plot root mean square error versus "true" beta
 
-# RMSE
-markov_summary %>% 
-  group_by(simulation_type) %>%
-  summarize(sqrt(mean((truth - estimate)^2)))
+Exclude the "abundance" simulations because the interpretation of $\beta$ is different.
 
+```{r, cache = TRUE}
+rmses = markov_summary %>% filter(simulation_type != "abund") %>% mutate(rmse = sqrt((truth - estimate)^2))
 
+ggplot(rmses, aes(x = truth, y = rmse)) + geom_point(alpha = .2, size = 1) + geom_smooth() + theme_bw() + coord_cartesian(ylim = c(0, max(rmses$rmse)))
+```
 
+## Plot confidence interval coverage versus true $\beta$ value
+
+```{r, cache = TRUE}
 # Coverage versus true beta value.  The top and bottom 0.5%
 # of the distribution have been omitted to prevent bad behavior
 # by the smoother in the tails.
@@ -378,3 +440,4 @@ markov_summary %>%
   ylab("Coverage")
 
 
+```
