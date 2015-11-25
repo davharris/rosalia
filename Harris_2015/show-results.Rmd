@@ -41,7 +41,10 @@ ends = c(
   length(pairs_txt) + 1
 ) - 1
 
-partial_names = sapply(strsplit(grep("^>", pairs_txt, value = TRUE), " +"), function(x) x[[3]])
+partial_names = sapply(
+  strsplit(grep("^>", pairs_txt, value = TRUE), " +"), 
+  function(x) x[[3]]
+)
 filename_lines = grep("^>", pairs_txt)
 
 # Sort a vector of alphanumeric strings by the numeric component
@@ -238,7 +241,12 @@ landscape_estimates = x %>%
   summarise(r2 = 1 - sum(resids^2) / sum(truth^2))
 
 
-summary(lmer(r2 ~ method + n_sites + simulation_type + (1|rep_name), data = landscape_estimates))
+summary(
+  lmer(
+    r2 ~ method + n_sites + simulation_type + (1|rep_name), 
+    data = landscape_estimates
+  )
+)
 ```
 
 ## Summarize the inferential results of the Markov network and the null model:
@@ -339,7 +347,8 @@ with(
     bty = "l"
   )
 )
-mtext("A. Markov network estimates\nvs. GLM estimates", adj = 0, side = 3, font = 2, line = 1.2, cex = .9) 
+mtext("A. Markov network estimates\nvs. GLM estimates", adj = 0, side = 3, 
+      font = 2, line = 1.2, cex = .9) 
 abline(lm(`Markov network` ~ GLM, data = spread_estimates))
 text(0, 5, expression(R^2==0.94))
 
@@ -355,7 +364,8 @@ with(
     bty = "l"
   )
 )
-mtext("B. Null model estimates vs.\nscaled correlation coefficients", adj = 0, side = 3, font = 2, line = 1.2, cex = .9) 
+mtext("B. Null model estimates vs.\nscaled correlation coefficients", 
+      adj = 0, side = 3, font = 2, line = 1.2, cex = .9) 
 abline(lm(null ~ I(correlation*sqrt(n_sites)), data = spread_estimates))
 text(10, 12, expression(R^2==0.95))
 
@@ -372,9 +382,11 @@ plotfun(
   ylim = c(0, .4),
   lwd = 2
 )
-mtext("C. Error rate vs.\ninteraction strength", side = 3, adj = 0, font = 2, line = 1.2, cex = .9) 
+mtext("C. Error rate vs.\ninteraction strength", side = 3, adj = 0, 
+      font = 2, line = 1.2, cex = .9) 
 plotfun(truth_seq, y_markov, add = TRUE, lwd = 2)
-legend("topleft", lwd = 2, legend = c("Null model", "Markov network"), col = c(2, 1), bty = "n")
+legend("topleft", lwd = 2, legend = c("Null model", "Markov network"), 
+       col = c(2, 1), bty = "n")
 dev.off()
 ```
 
@@ -425,9 +437,15 @@ markov_summary %>%
 ```{r, cache = TRUE}
 # Exclude the "abundance" simulations because the interpretation of $\beta$ 
 # is different
-rmses = markov_summary %>% filter(simulation_type != "abund") %>% mutate(rmse = sqrt((truth - estimate)^2))
+rmses = markov_summary %>% 
+  filter(simulation_type != "abund") %>% 
+  mutate(rmse = sqrt((truth - estimate)^2))
 
-ggplot(rmses, aes(x = truth, y = rmse)) + geom_point(alpha = .2, size = 1) + geom_smooth() + theme_bw() + coord_cartesian(ylim = c(0, max(rmses$rmse)))
+ggplot(rmses, aes(x = truth, y = rmse)) + 
+  geom_point(alpha = .2, size = 1) + 
+  geom_smooth() + 
+  theme_bw() + 
+  coord_cartesian(ylim = c(0, max(rmses$rmse)))
 ```
 
 ## Plot confidence interval coverage versus true $\beta$ value

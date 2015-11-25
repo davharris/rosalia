@@ -87,7 +87,8 @@ fit_all = function(identifier){
   
   
   ######## Markov network ########
-  rosie = rosalia(x, maxit = 200, trace = 0, prior = make_logistic_prior(scale = 2), hessian = TRUE)
+  rosie = rosalia(x, maxit = 200, trace = 0, 
+                  prior = make_logistic_prior(scale = 2), hessian = TRUE)
   
   rosie_point = rosie$beta[upper.tri(rosie$beta)]
   rosie_se = sqrt(diag(solve(rosie$opt$hessian)))[-(1:sum(species_is_variable))]
@@ -186,14 +187,15 @@ fit_all = function(identifier){
 
 Run the above function on all the files:
 
-```{r, cache = FALSE, eval = FALSE}
+```{r, cache = FALSE, eval = TRUE}
 
 # Find all the csv files in the fakedata/matrices folder,
 # then drop .csv
 identifiers = dir("fakedata/matrices", pattern = "\\.csv$") %>%
   gsub("\\.csv$", "", .)
 
-mclapply(identifiers, fit_all, mc.cores = mc.cores, mc.preschedule = FALSE, mc.silent = TRUE) %>% 
+mclapply(identifiers, fit_all, mc.cores = mc.cores, 
+         mc.preschedule = FALSE, mc.silent = TRUE) %>% 
   bind_rows() %>% 
   write.csv(file = "estimates.csv")
 ```

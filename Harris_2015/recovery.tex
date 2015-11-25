@@ -218,7 +218,8 @@ A function to import the data file and run each method on it:
   
   
   \NormalTok{######## Markov network ########}
-  \NormalTok{rosie =}\StringTok{ }\KeywordTok{rosalia}\NormalTok{(x, }\DataTypeTok{maxit =} \DecValTok{200}\NormalTok{, }\DataTypeTok{trace =} \DecValTok{0}\NormalTok{, }\DataTypeTok{prior =} \KeywordTok{make_logistic_prior}\NormalTok{(}\DataTypeTok{scale =} \DecValTok{2}\NormalTok{), }\DataTypeTok{hessian =} \OtherTok{TRUE}\NormalTok{)}
+  \NormalTok{rosie =}\StringTok{ }\KeywordTok{rosalia}\NormalTok{(x, }\DataTypeTok{maxit =} \DecValTok{200}\NormalTok{, }\DataTypeTok{trace =} \DecValTok{0}\NormalTok{, }
+                  \DataTypeTok{prior =} \KeywordTok{make_logistic_prior}\NormalTok{(}\DataTypeTok{scale =} \DecValTok{2}\NormalTok{), }\DataTypeTok{hessian =} \OtherTok{TRUE}\NormalTok{)}
   
   \NormalTok{rosie_point =}\StringTok{ }\NormalTok{rosie$beta[}\KeywordTok{upper.tri}\NormalTok{(rosie$beta)]}
   \NormalTok{rosie_se =}\StringTok{ }\KeywordTok{sqrt}\NormalTok{(}\KeywordTok{diag}\NormalTok{(}\KeywordTok{solve}\NormalTok{(rosie$opt$hessian)))[-(}\DecValTok{1}\NormalTok{:}\KeywordTok{sum}\NormalTok{(species_is_variable))]}
@@ -325,7 +326,8 @@ Run the above function on all the files:
 \NormalTok{identifiers =}\StringTok{ }\KeywordTok{dir}\NormalTok{(}\StringTok{"fakedata/matrices"}\NormalTok{, }\DataTypeTok{pattern =} \StringTok{"}\CharTok{\textbackslash{}\textbackslash{}}\StringTok{.csv$"}\NormalTok{) %>%}
 \StringTok{  }\KeywordTok{gsub}\NormalTok{(}\StringTok{"}\CharTok{\textbackslash{}\textbackslash{}}\StringTok{.csv$"}\NormalTok{, }\StringTok{""}\NormalTok{, .)}
 
-\KeywordTok{mclapply}\NormalTok{(identifiers, fit_all, }\DataTypeTok{mc.cores =} \NormalTok{mc.cores, }\DataTypeTok{mc.preschedule =} \OtherTok{FALSE}\NormalTok{, }\DataTypeTok{mc.silent =} \OtherTok{TRUE}\NormalTok{) %>%}\StringTok{ }
+\KeywordTok{mclapply}\NormalTok{(identifiers, fit_all, }\DataTypeTok{mc.cores =} \NormalTok{mc.cores, }
+         \DataTypeTok{mc.preschedule =} \OtherTok{FALSE}\NormalTok{, }\DataTypeTok{mc.silent =} \OtherTok{TRUE}\NormalTok{) %>%}\StringTok{ }
 \StringTok{  }\KeywordTok{bind_rows}\NormalTok{() %>%}\StringTok{ }
 \StringTok{  }\KeywordTok{write.csv}\NormalTok{(}\DataTypeTok{file =} \StringTok{"estimates.csv"}\NormalTok{)}
 \end{Highlighting}

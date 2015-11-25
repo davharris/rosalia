@@ -175,7 +175,10 @@ software:}{Import the results from the Pairs software:}}\label{import-the-result
   \KeywordTok{length}\NormalTok{(pairs_txt) +}\StringTok{ }\DecValTok{1}
 \NormalTok{) -}\StringTok{ }\DecValTok{1}
 
-\NormalTok{partial_names =}\StringTok{ }\KeywordTok{sapply}\NormalTok{(}\KeywordTok{strsplit}\NormalTok{(}\KeywordTok{grep}\NormalTok{(}\StringTok{"^>"}\NormalTok{, pairs_txt, }\DataTypeTok{value =} \OtherTok{TRUE}\NormalTok{), }\StringTok{" +"}\NormalTok{), function(x) x[[}\DecValTok{3}\NormalTok{]])}
+\NormalTok{partial_names =}\StringTok{ }\KeywordTok{sapply}\NormalTok{(}
+  \KeywordTok{strsplit}\NormalTok{(}\KeywordTok{grep}\NormalTok{(}\StringTok{"^>"}\NormalTok{, pairs_txt, }\DataTypeTok{value =} \OtherTok{TRUE}\NormalTok{), }\StringTok{" +"}\NormalTok{), }
+  \NormalTok{function(x) x[[}\DecValTok{3}\NormalTok{]]}
+\NormalTok{)}
 \NormalTok{filename_lines =}\StringTok{ }\KeywordTok{grep}\NormalTok{(}\StringTok{"^>"}\NormalTok{, pairs_txt)}
 
 \CommentTok{# Sort a vector of alphanumeric strings by the numeric component}
@@ -438,7 +441,12 @@ associated with the effect of estimation method.
 \StringTok{  }\KeywordTok{summarise}\NormalTok{(}\DataTypeTok{r2 =} \DecValTok{1} \NormalTok{-}\StringTok{ }\KeywordTok{sum}\NormalTok{(resids^}\DecValTok{2}\NormalTok{) /}\StringTok{ }\KeywordTok{sum}\NormalTok{(truth^}\DecValTok{2}\NormalTok{))}
 
 
-\KeywordTok{summary}\NormalTok{(}\KeywordTok{lmer}\NormalTok{(r2 ~}\StringTok{ }\NormalTok{method +}\StringTok{ }\NormalTok{n_sites +}\StringTok{ }\NormalTok{simulation_type +}\StringTok{ }\NormalTok{(}\DecValTok{1}\NormalTok{|rep_name), }\DataTypeTok{data =} \NormalTok{landscape_estimates))}
+\KeywordTok{summary}\NormalTok{(}
+  \KeywordTok{lmer}\NormalTok{(}
+    \NormalTok{r2 ~}\StringTok{ }\NormalTok{method +}\StringTok{ }\NormalTok{n_sites +}\StringTok{ }\NormalTok{simulation_type +}\StringTok{ }\NormalTok{(}\DecValTok{1}\NormalTok{|rep_name), }
+    \DataTypeTok{data =} \NormalTok{landscape_estimates}
+  \NormalTok{)}
+\NormalTok{)}
 \end{Highlighting}
 \end{Shaded}
 
@@ -600,7 +608,8 @@ model:}\label{summarize-the-inferential-results-of-the-markov-network-and-the-nu
     \DataTypeTok{bty =} \StringTok{"l"}
   \NormalTok{)}
 \NormalTok{)}
-\KeywordTok{mtext}\NormalTok{(}\StringTok{"A. Markov network estimates}\CharTok{\textbackslash{}n}\StringTok{vs. GLM estimates"}\NormalTok{, }\DataTypeTok{adj =} \DecValTok{0}\NormalTok{, }\DataTypeTok{side =} \DecValTok{3}\NormalTok{, }\DataTypeTok{font =} \DecValTok{2}\NormalTok{, }\DataTypeTok{line =} \FloatTok{1.2}\NormalTok{, }\DataTypeTok{cex =} \NormalTok{.}\DecValTok{9}\NormalTok{) }
+\KeywordTok{mtext}\NormalTok{(}\StringTok{"A. Markov network estimates}\CharTok{\textbackslash{}n}\StringTok{vs. GLM estimates"}\NormalTok{, }\DataTypeTok{adj =} \DecValTok{0}\NormalTok{, }\DataTypeTok{side =} \DecValTok{3}\NormalTok{, }
+      \DataTypeTok{font =} \DecValTok{2}\NormalTok{, }\DataTypeTok{line =} \FloatTok{1.2}\NormalTok{, }\DataTypeTok{cex =} \NormalTok{.}\DecValTok{9}\NormalTok{) }
 \KeywordTok{abline}\NormalTok{(}\KeywordTok{lm}\NormalTok{(}\StringTok{`}\DataTypeTok{Markov network}\StringTok{`} \NormalTok{~}\StringTok{ }\NormalTok{GLM, }\DataTypeTok{data =} \NormalTok{spread_estimates))}
 \KeywordTok{text}\NormalTok{(}\DecValTok{0}\NormalTok{, }\DecValTok{5}\NormalTok{, }\KeywordTok{expression}\NormalTok{(R^}\DecValTok{2}\NormalTok{==}\FloatTok{0.94}\NormalTok{))}
 
@@ -616,7 +625,8 @@ model:}\label{summarize-the-inferential-results-of-the-markov-network-and-the-nu
     \DataTypeTok{bty =} \StringTok{"l"}
   \NormalTok{)}
 \NormalTok{)}
-\KeywordTok{mtext}\NormalTok{(}\StringTok{"B. Null model estimates vs.}\CharTok{\textbackslash{}n}\StringTok{scaled correlation coefficients"}\NormalTok{, }\DataTypeTok{adj =} \DecValTok{0}\NormalTok{, }\DataTypeTok{side =} \DecValTok{3}\NormalTok{, }\DataTypeTok{font =} \DecValTok{2}\NormalTok{, }\DataTypeTok{line =} \FloatTok{1.2}\NormalTok{, }\DataTypeTok{cex =} \NormalTok{.}\DecValTok{9}\NormalTok{) }
+\KeywordTok{mtext}\NormalTok{(}\StringTok{"B. Null model estimates vs.}\CharTok{\textbackslash{}n}\StringTok{scaled correlation coefficients"}\NormalTok{, }
+      \DataTypeTok{adj =} \DecValTok{0}\NormalTok{, }\DataTypeTok{side =} \DecValTok{3}\NormalTok{, }\DataTypeTok{font =} \DecValTok{2}\NormalTok{, }\DataTypeTok{line =} \FloatTok{1.2}\NormalTok{, }\DataTypeTok{cex =} \NormalTok{.}\DecValTok{9}\NormalTok{) }
 \KeywordTok{abline}\NormalTok{(}\KeywordTok{lm}\NormalTok{(null ~}\StringTok{ }\KeywordTok{I}\NormalTok{(correlation*}\KeywordTok{sqrt}\NormalTok{(n_sites)), }\DataTypeTok{data =} \NormalTok{spread_estimates))}
 \KeywordTok{text}\NormalTok{(}\DecValTok{10}\NormalTok{, }\DecValTok{12}\NormalTok{, }\KeywordTok{expression}\NormalTok{(R^}\DecValTok{2}\NormalTok{==}\FloatTok{0.95}\NormalTok{))}
 
@@ -633,9 +643,11 @@ model:}\label{summarize-the-inferential-results-of-the-markov-network-and-the-nu
   \DataTypeTok{ylim =} \KeywordTok{c}\NormalTok{(}\DecValTok{0}\NormalTok{, .}\DecValTok{4}\NormalTok{),}
   \DataTypeTok{lwd =} \DecValTok{2}
 \NormalTok{)}
-\KeywordTok{mtext}\NormalTok{(}\StringTok{"C. Error rate vs.}\CharTok{\textbackslash{}n}\StringTok{interaction strength"}\NormalTok{, }\DataTypeTok{side =} \DecValTok{3}\NormalTok{, }\DataTypeTok{adj =} \DecValTok{0}\NormalTok{, }\DataTypeTok{font =} \DecValTok{2}\NormalTok{, }\DataTypeTok{line =} \FloatTok{1.2}\NormalTok{, }\DataTypeTok{cex =} \NormalTok{.}\DecValTok{9}\NormalTok{) }
+\KeywordTok{mtext}\NormalTok{(}\StringTok{"C. Error rate vs.}\CharTok{\textbackslash{}n}\StringTok{interaction strength"}\NormalTok{, }\DataTypeTok{side =} \DecValTok{3}\NormalTok{, }\DataTypeTok{adj =} \DecValTok{0}\NormalTok{, }
+      \DataTypeTok{font =} \DecValTok{2}\NormalTok{, }\DataTypeTok{line =} \FloatTok{1.2}\NormalTok{, }\DataTypeTok{cex =} \NormalTok{.}\DecValTok{9}\NormalTok{) }
 \KeywordTok{plotfun}\NormalTok{(truth_seq, y_markov, }\DataTypeTok{add =} \OtherTok{TRUE}\NormalTok{, }\DataTypeTok{lwd =} \DecValTok{2}\NormalTok{)}
-\KeywordTok{legend}\NormalTok{(}\StringTok{"topleft"}\NormalTok{, }\DataTypeTok{lwd =} \DecValTok{2}\NormalTok{, }\DataTypeTok{legend =} \KeywordTok{c}\NormalTok{(}\StringTok{"Null model"}\NormalTok{, }\StringTok{"Markov network"}\NormalTok{), }\DataTypeTok{col =} \KeywordTok{c}\NormalTok{(}\DecValTok{2}\NormalTok{, }\DecValTok{1}\NormalTok{), }\DataTypeTok{bty =} \StringTok{"n"}\NormalTok{)}
+\KeywordTok{legend}\NormalTok{(}\StringTok{"topleft"}\NormalTok{, }\DataTypeTok{lwd =} \DecValTok{2}\NormalTok{, }\DataTypeTok{legend =} \KeywordTok{c}\NormalTok{(}\StringTok{"Null model"}\NormalTok{, }\StringTok{"Markov network"}\NormalTok{), }
+       \DataTypeTok{col =} \KeywordTok{c}\NormalTok{(}\DecValTok{2}\NormalTok{, }\DecValTok{1}\NormalTok{), }\DataTypeTok{bty =} \StringTok{"n"}\NormalTok{)}
 \KeywordTok{dev.off}\NormalTok{()}
 \end{Highlighting}
 \end{Shaded}
@@ -768,9 +780,15 @@ beta}{Plot root mean square error versus true beta}}\label{plot-root-mean-square
 \begin{Highlighting}[]
 \CommentTok{# Exclude the "abundance" simulations because the interpretation of $\textbackslash{}beta$ }
 \CommentTok{# is different}
-\NormalTok{rmses =}\StringTok{ }\NormalTok{markov_summary %>%}\StringTok{ }\KeywordTok{filter}\NormalTok{(simulation_type !=}\StringTok{ "abund"}\NormalTok{) %>%}\StringTok{ }\KeywordTok{mutate}\NormalTok{(}\DataTypeTok{rmse =} \KeywordTok{sqrt}\NormalTok{((truth -}\StringTok{ }\NormalTok{estimate)^}\DecValTok{2}\NormalTok{))}
+\NormalTok{rmses =}\StringTok{ }\NormalTok{markov_summary %>%}\StringTok{ }
+\StringTok{  }\KeywordTok{filter}\NormalTok{(simulation_type !=}\StringTok{ "abund"}\NormalTok{) %>%}\StringTok{ }
+\StringTok{  }\KeywordTok{mutate}\NormalTok{(}\DataTypeTok{rmse =} \KeywordTok{sqrt}\NormalTok{((truth -}\StringTok{ }\NormalTok{estimate)^}\DecValTok{2}\NormalTok{))}
 
-\KeywordTok{ggplot}\NormalTok{(rmses, }\KeywordTok{aes}\NormalTok{(}\DataTypeTok{x =} \NormalTok{truth, }\DataTypeTok{y =} \NormalTok{rmse)) +}\StringTok{ }\KeywordTok{geom_point}\NormalTok{(}\DataTypeTok{alpha =} \NormalTok{.}\DecValTok{2}\NormalTok{, }\DataTypeTok{size =} \DecValTok{1}\NormalTok{) +}\StringTok{ }\KeywordTok{geom_smooth}\NormalTok{() +}\StringTok{ }\KeywordTok{theme_bw}\NormalTok{() +}\StringTok{ }\KeywordTok{coord_cartesian}\NormalTok{(}\DataTypeTok{ylim =} \KeywordTok{c}\NormalTok{(}\DecValTok{0}\NormalTok{, }\KeywordTok{max}\NormalTok{(rmses$rmse)))}
+\KeywordTok{ggplot}\NormalTok{(rmses, }\KeywordTok{aes}\NormalTok{(}\DataTypeTok{x =} \NormalTok{truth, }\DataTypeTok{y =} \NormalTok{rmse)) +}\StringTok{ }
+\StringTok{  }\KeywordTok{geom_point}\NormalTok{(}\DataTypeTok{alpha =} \NormalTok{.}\DecValTok{2}\NormalTok{, }\DataTypeTok{size =} \DecValTok{1}\NormalTok{) +}\StringTok{ }
+\StringTok{  }\KeywordTok{geom_smooth}\NormalTok{() +}\StringTok{ }
+\StringTok{  }\KeywordTok{theme_bw}\NormalTok{() +}\StringTok{ }
+\StringTok{  }\KeywordTok{coord_cartesian}\NormalTok{(}\DataTypeTok{ylim =} \KeywordTok{c}\NormalTok{(}\DecValTok{0}\NormalTok{, }\KeywordTok{max}\NormalTok{(rmses$rmse)))}
 \end{Highlighting}
 \end{Shaded}
 
