@@ -264,7 +264,7 @@ interaction rates instead of per-species interaction rates.
 
 \noindent \textbf{Recovering species interactions from simulated data.}
 I compared seven techniques for determining the sign and strength of the
-associations between pairs of species from simulated data (Appendix 3).
+associations between pairs of species from simulated data (Appendix 4).
 First, I used the rosalia package (Harris 2015a) to fit Markov network
 models, as described above. For the analyses with 20 species, a weak
 regularizer (equivalent to a logistic prior with scale 2) ensured that
@@ -357,7 +357,7 @@ approximated the Markov network estimates (Figure 4A), especially when
 the data sets were very large (Figure 3). As reviewed in Gotelli and
 Ulrich (2009), however, most analyses in this field of ecology involve
 fewer than 50 sites, and the gap between the Markov network and GLMs is
-larger in this context. As shown in Appendix 4, the standard errors
+larger in this context. As shown in Appendix 5, the standard errors
 associated with the estimates in Figure 3 are small (less than 0.01), so
 the differences among methods should not be attributed to sampling
 error.
@@ -378,7 +378,7 @@ rate (defined here as the probability that 0 fell outside the 95\%
 confidence interval for a pair of species where \(|\beta_{ij}|<0.1\))
 depended on the simulation type: 0.02 for simulations that matched the
 model's assumptions, versus 0.14 for simulations that included
-environmental heterogeneity (see Appendix 4 for confidence interval
+environmental heterogeneity (see Appendix 5 for confidence interval
 coverage across a range of \(\beta_{ij}\) values). The null model's Type
 I error rates were 0.30 and 0.50 for the constant and heterogeneous
 landscapes, respectively---far higher than the nominal 0.05 rate. Figure
@@ -386,7 +386,7 @@ landscapes, respectively---far higher than the nominal 0.05 rate. Figure
 that the null model or the Markov network will predict the wrong sign of
 the interaction with 95\% confidence. The null model makes such errors
 more than 5 times as often as the Markov network, even though it only
-reject the null hypothesis twice as often overall (Appendix 4). The
+reject the null hypothesis twice as often overall (Appendix 5). The
 Markov network's errors were also more concentrated around 0, so it
 never misclassified strong interactions like the null model did.
 
