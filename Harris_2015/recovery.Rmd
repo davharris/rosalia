@@ -3,7 +3,7 @@ output:
   pdf_document:
     keep_tex: true
 title: "Appendix 3: Estimating species interactions"
-subtitle: \"Estimating species interactions from observational data with Markov networks\"
+subtitle: "Inferring species interactions from co-occurrence data with Markov networks"
 author: David J. Harris
 fontsize: 11pt
 ---
@@ -11,28 +11,7 @@ fontsize: 11pt
 This document describes how the different models were fit to the simulated data 
 from Appendix 2 and how each model's performance was evaluated.[^1]
 
-[^1]: The PDF version of this document has been manually altered to omit 150
-lines of output from the `corpcor` package of the form "`## Estimating optimal shrinkage intensity lambda (correlation matrix): 0.0326`"
-
-
-Initialization:
-
-```{r, cache = FALSE, message = FALSE, eval = TRUE}
-
-mc.cores = 2
-
-library(dplyr)        # For manipulating data structures
-library(corpcor)      # For regularized partial covariances
-library(rosalia)      # For Markov networks
-library(arm)          # For regularized logistic regression
-library(BayesComm)    # For joint species distribution modeling
-library(parallel)     # for mclapply
-set.seed(1)
-```
-
-
-Load in the results from the `pairs` program, run outside of R with
-the following options:
+Note that the `pairs` program was run separately (outside of R) with the following options:
 
   * Batch mode
   * Sequential swap ("s")
@@ -42,6 +21,26 @@ the following options:
   * Default iterations (100)
   * Maximum of 20 species
 
+
+
+[^1]: The PDF version of this document has been manually altered to omit 150
+lines of output from the `corpcor` package of the form "`## Estimating optimal shrinkage intensity lambda (correlation matrix): 0.0326`"
+
+
+Initialization:
+
+```{r, cache = FALSE, message = FALSE, eval = TRUE}
+
+mc.cores = 8
+
+library(dplyr)        # For manipulating data structures
+library(corpcor)      # For regularized partial covariances
+library(rosalia)      # For Markov networks
+library(arm)          # For regularized logistic regression
+library(BayesComm)    # For joint species distribution modeling
+library(parallel)     # for mclapply
+set.seed(1)
+```
 
 A function to import the data file and run each method on it: 
 
@@ -187,7 +186,7 @@ fit_all = function(identifier){
 
 Run the above function on all the files:
 
-```{r, cache = FALSE, eval = TRUE}
+```{r, cache = FALSE, eval = FALSE}
 
 # Find all the csv files in the fakedata/matrices folder,
 # then drop .csv

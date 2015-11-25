@@ -1,4 +1,13 @@
-# Appendix 5: results
+---
+output: 
+  pdf_document:
+    keep_tex: true
+title: "Appendix 4: Results"
+subtitle: "Inferring species interactions from co-occurrence data with Markov networks"
+author: David J. Harris
+fontsize: 11pt
+---
+
 
 ```{r, message = FALSE}
 library(dplyr)
@@ -413,9 +422,9 @@ markov_summary %>%
 
 ## Plot root mean square error versus "true" beta
 
-Exclude the "abundance" simulations because the interpretation of $\beta$ is different.
-
 ```{r, cache = TRUE}
+# Exclude the "abundance" simulations because the interpretation of $\beta$ 
+# is different
 rmses = markov_summary %>% filter(simulation_type != "abund") %>% mutate(rmse = sqrt((truth - estimate)^2))
 
 ggplot(rmses, aes(x = truth, y = rmse)) + geom_point(alpha = .2, size = 1) + geom_smooth() + theme_bw() + coord_cartesian(ylim = c(0, max(rmses$rmse)))

@@ -1,6 +1,6 @@
 > Dear Dr. de Valpine,
 
-> [[stuff]]
+> Thank you for your insightful and thorough comments.  I have addressed each of them below.
 
 > Sincerely,
 
@@ -26,11 +26,11 @@ I suggest instead staying closer to the statistical models and including some ad
 
 Note that often violations of assumptions do not create bias in parameter estimates (although sometimes they do) but rather incorrect assessments of uncertainty (inaccurate confidence intervals and Type I error rates in hypothesis tests). You have referred in multiple places to having applied a bootstrap as well as calculating Wald intervals, but it appears to me you have reported almost no results about validity of confidence intervals or hypothesis tests from those (there are a few results for the 3-species case). It would be important to do so.
 
-* I now report approximate Type I error rates and the coverage of the model's 95% confidence intervals.  The 95% confidence intervals have about 98% coverage when the data was generated from an unmodified Markov network, and about 86% coverage in the presence of environmental heterogeneity (lines 201-206 and Appendix 5). These coverage values aren't perfect, but they are reasonable, and they provide far better inferences than ecologists' current methods (lines 206-213; Figure 4C).
+* I now report approximate Type I error rates and the coverage of the model's 95% confidence intervals.  The 95% confidence intervals have about 98% coverage when the data was generated from an unmodified Markov network, and about 86% coverage in the presence of environmental heterogeneity (lines 201-206 and Appendix 4). These coverage values aren't perfect, but they are reasonable, and they provide far better inferences than ecologists' current methods (lines 206-213; Figure 4C).
 
 It appears to me that you did not understand my point that you are presenting results that are integrated over parameter distributions, which appears still to be the case. What I meant is the following. Often one would want to see how a statistical method performs as a function of specific parameter values. For example, one might vary the value of an interaction coefficient (beta) from negative (competition) to zero to positive (mutualism) and run a set of simulations for each value of beta. This would allow evaluation of statistical power and accuracy of confidence intervals and Type I error rate as well as RMSE, all as a function of true parameter values. It would also allow assessment of whether the method works better for some parameter scenarios than others, which is not uncommon. Instead you are drawing parameters from distributions and then presenting performance assessments in aggregate from those results, such as the average R-squared over all cases of a given network size. Generally, and clearly in your case, such metrics can be written as expectations (integrations) over the distribution of parameters you sampled from. You are right there is nothing Bayesian about it, but I pointed out a Bayesian may feel justified in doing it because many Bayesian results take the same format. It is a question of presenting aggregated versus disaggregated results. Unfortunately, presenting only aggregated results leaves the reader unable to dig deeper into the disaggregated results. The analogy to sampling from an archipelago is lovely but irrelevant. It appears to me that since you have all the simulations at hand, and since you can place more detailed results in the supplement, you should do so. I leave it to you to decide how to do that.
 
-* Showing the results' dependence on the value of beta is a great idea, and I have added several analyses along these lines in Figure 4C and Appendix 5.  In particular, I now show how CI coverage, RMSE, and the probability that the model will predict the wrong sign for an interaction vary as a function of beta (in addition to global estimates of R-squared and Type I error rates).  If you think that readers would benefit from even more disaggregation, I could include a data file containing the seven models' estimates for all the species pairs across all 450 simulated landscapes as a sixth Appendix.
+* Showing the results' dependence on the value of beta is a great idea, and I have added several analyses along these lines in Figure 4C and Appendix 4.  In particular, I now show how CI coverage, RMSE, and the probability that the model will predict the wrong sign for an interaction vary as a function of beta (in addition to global estimates of R-squared and Type I error rates).  If you think that readers would benefit from even more disaggregation, I could include a data file containing the seven models' estimates for all the species pairs across all 450 simulated landscapes as a fifth Appendix.
 
 > Beyond these steps, I've considered several other options for further exploration of the parameter space, but none of them would be very useful given the large number of parameters in these models (20 alphas and 190 betas). Systematically varying one of the beta coefficients while holding the other 209 parameters constant at arbitrary values would not convincingly yield generalizable insights, as different lines through the 210-dimensional space could produce different results.
 
@@ -88,7 +88,7 @@ It's too bad we are in this unusual situation that your effort to respond to a r
 
 2 Include meaningful results about accuracy of uncertainties. These should be at your fingertips since you can calculate confidence intervals for every simulation.
 
-* As described above, I now estimate the coverage of the confidence intervals, and (Appendix 5) show how coverage varies as a function of the "true" parameter value.
+* As described above, I now estimate the coverage of the confidence intervals, and (Appendix 4) show how coverage varies as a function of the "true" parameter value.
 
 3 Provide some disaggregated results.
 

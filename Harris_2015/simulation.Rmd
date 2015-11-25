@@ -1,5 +1,12 @@
-# Analyses for Figure 3
-  
+---
+output: pdf_document
+title: "Appendix 2: Simulating 20-species landscapes"
+subtitle: "Inferring species interactions from co-occurrence data with Markov networks"
+author: David J. Harris
+fontsize: 11pt
+---
+
+
 ## Simulating landscapes from known coefficients
   
 The following function draws random coefficients for a Markov network of a pre-specified size.
@@ -33,7 +40,7 @@ make_coefficients = function(n_spp, p_neg, mean_alpha){
 
 
 I used the following R function to generate "true" parameters with the method above, 
-simulate a presence-absence landscape based on those parameters using Markov chain Monte Carlo, and save the results to a "fakedata" folder.
+then simulate a presence-absence landscape based on those parameters using Markov chain Monte Carlo, and finally save the results to a "fakedata" folder.
 
 I used Gibbs sampling as my Markov chain Monte Carlo transition operator.
 In each round of Gibbs sampling, I cycled through all the species, randomly
@@ -161,7 +168,7 @@ rbern = function(n, prob){
 }
 ```
 
-
+Loop to simulate and save all the landscapes:
 
 ```{r}
 set.seed(1)
