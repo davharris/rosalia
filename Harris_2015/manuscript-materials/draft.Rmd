@@ -129,7 +129,6 @@ competitor is associated with release from another competitor), then predicting
 species' overall co-occurrence rates would require normalizing the relative 
 probabilities of possible $\vec{y}$ vectors so that they sum to one (Figure 2B). 
 
-
 \noindent \textbf{Estimating $\alpha$ and $\beta$ coefficients from presence-absence data.}
 In the previous section, the values of $\alpha$ and $\beta$ were known and the
 goal was to make predictions about possible species assemblages. In
@@ -342,9 +341,9 @@ the question of how competition should affect a species' overall prevalence,
 which has important implications for community-level modeling
 [@strong_ecological_1984]. Specifically, Equation 1 can be used to calculate the
 expected prevalence of a species in the absence of biotic influences as
-$e^\alpha/(e^{0} + e^\alpha)$. Competition's effect on prevalence can then be
+$e^{\alpha_i}/(e^{0} + e^{\alpha_i})$. Competition's effect on prevalence can then be
 estimated by comparing this value with the observed prevalence (e.g. comparing
-Figure 2D with Figure 2C). This novel quantitative result conflicts with most of
+Figure 2D with Figure 2C). This novel quantitative result undermines most of
 our null models, which unreasonably assume that prevalence would be the exactly
 same in the absence of competition as it is in the observed data
 [@roughgarden_competition_1983].
@@ -356,12 +355,11 @@ ecologists to take advantage of into a vast set of existing discoveries and
 techniques for dealing with indirect effects, stability, and alternative stable
 states. Numerous extensions to the basic network are possible as well. For
 example, the states of the interaction network can be modeled as a function of
-the local abiotic environment [@lee_learning_2012], which would help incorporate
-networks of biotic interactions into species distribution models
-[@pollock_understanding_2014] and lead to a better understanding of the
-interplay between biotic and abiotic effects on community structure.
-Alternatively, models could allow one species to alter the relationship between
-two other species [@tjelmeland_markov_1998; cf @bruno_inclusion_2003].
+the local abiotic environment [@lee_learning_2012; @harris_estimating_2016], 
+which would lead to a better understanding of the interplay between biotic and 
+abiotic effects on community structure. Alternatively, models could allow one 
+species to alter the relationship between two other species 
+[@tjelmeland_markov_1998; @whittam_species_1981; cf @bruno_inclusion_2003].
 
 Finally, the results presented here have important implications for
 ecologists' continued use of null models for studying species interactions. Null
