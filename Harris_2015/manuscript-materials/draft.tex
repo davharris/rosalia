@@ -211,12 +211,18 @@ present at each site on the landscape). When Equation 1 can be
 normalized, one can find exact maximum likelihood estimates for
 \(\alpha\) and \(\beta\) using numerical optimization. Fully-observed
 networks like the ones considered here have unimodal likelihood surfaces
-(Murphy 2012), so these estimates will represent the global optimum. I
-used the rosalia package (Harris 2015a) for the R programming language
-(R Core Team 2015) to calculate \(p(\vec{y}; \alpha, \beta)\) and its
-gradients (Murphy 2012); the package passes these functions to the
-``BFGS'' method in R's general-purpose optimizer, which then estimates
-the Markov network parameters.
+(Murphy 2012), so these estimates will represent the global optimum.
+
+When the number of species is larger than about 30, noralizing Equation
+1 can become intractable, and researchers will either need to
+approximate it (Lee and Hastie 2012) or approximate its gradient
+({\textbf{???}}). Such approximations are beyond the scope of this
+paper, however. For the analyses presented here, I used the rosalia
+package (Harris 2015a) for the R programming language (R Core Team 2015)
+to calculate \(p(\vec{y}; \alpha, \beta)\) and its gradients exactly
+(Murphy 2012); the package passes these functions to the ``BFGS'' method
+in R's general-purpose optimizer, which finds values for \(\alpha\) and
+\(\beta\).
 
 \noindent \textbf{Simulated landscapes.} I simulated several sets of
 landscapes using known parameters to evaluate different statistical
@@ -226,7 +232,7 @@ generated a landscape with 100 sites by sampling from a probability
 distribution defined by the figure's interaction coefficients (Appendix
 1). Each of the methods described below was then evaluated on its
 ability to correctly infer that the two shrub species competed with one
-another, despite their frequent co-occurrence.
+another, despite their frequent co-occurrence in unshaded areas.
 
 I then simulated landscapes with up to 20 interacting species at 25,
 200, or 1600 sites using three increasingly complex models (50
@@ -432,7 +438,7 @@ prevalence of a species in the absence of biotic influences as
 \(e^{\alpha_i}/(e^{0} + e^{\alpha_i})\). Competition's effect on
 prevalence can then be estimated by comparing this value with the
 observed prevalence (e.g.~comparing Figure 2D with Figure 2C). This
-novel quantitative result conflicts with most of our null models, which
+novel quantitative result undermines most of our null models, which
 unreasonably assume that prevalence would be the exactly same in the
 absence of competition as it is in the observed data (Roughgarden 1983).
 

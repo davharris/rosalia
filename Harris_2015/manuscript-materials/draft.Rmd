@@ -114,7 +114,7 @@ species. In this model, $\alpha_{i}$ is an intercept term determining the amount
 that the presence of species $i$ contributes to the log-probability of
 $\vec{y}$; it directly controls the prevalence of species $i$. Similarly,
 $\beta_{ij}$ is the amount that the co-occurrence of species $i$ and species $j$
-contributes to the log-probability; it controls the conditional relationship
+contributes to the log-probability; it determines the conditional relationship
 between two species, i.e. the probability that they will be found together,
 after controlling for the other species in the network (Figure 2A, Figure 2B).
 For example, if $\beta_{ij} = +2$, then each species' odds of occurrence would be
@@ -136,13 +136,18 @@ practice, however, ecologists will often need to estimate the parameters from
 an observed co-occurrence matrix (i.e. from a set of independent $\vec{y}$ vectors
 indicating which species are present at each site on the landscape). When
 Equation 1 can be normalized, one can find exact maximum likelihood estimates for
-$\alpha$ and $\beta$ using numerical optimization. Fully-observed networks like the 
-ones considered here have unimodal likelihood surfaces [@murphy_machine_2012], so 
-these estimates will represent the global optimum. I used the rosalia package 
-[@harris_rosalia_2015] for the R programming language [@r_core_team_r_2015] to 
-calculate $p(\vec{y}; \alpha, \beta)$ and its gradients [@murphy_machine_2012]; 
-the package passes these functions to the "BFGS" method in R's general-purpose 
-optimizer, which then estimates the Markov network parameters.
+$\alpha$ and $\beta$ using numerical optimization. Fully-observed networks like 
+the ones considered here have unimodal likelihood surfaces 
+[@murphy_machine_2012], so these estimates will represent the global optimum. 
+
+When the number of species is larger than about 30, noralizing Equation 1 
+can become intractable, and researchers will either need to approximate it [@lee_learning_2012] or approximate its gradient [@harris_estimating_2016] if
+they want to fit a Markov network model. For the analyses presented here, I used 
+the rosalia package [@harris_rosalia_2015] for the R programming language
+[@r_core_team_r_2015] to calculate $p(\vec{y}; \alpha, \beta)$ and its gradients
+exactly [@murphy_machine_2012]; the package passes these functions to the "BFGS" 
+method in R's general-purpose optimizer, which finds values for $\alpha$ and 
+$\beta$.
 
 \noindent \textbf{Simulated landscapes.}
 I simulated several sets of landscapes using known parameters to evaluate
@@ -152,7 +157,7 @@ generated a landscape with 100 sites by sampling from a probability distribution
 defined by the figure's interaction coefficients (Appendix 1). Each of the
 methods described below was then evaluated on its ability to correctly infer
 that the two shrub species competed with one another, despite their frequent
-co-occurrence.
+co-occurrence in unshaded areas.
 
 I then simulated landscapes with up to 20 interacting species at 25, 200, or
 1600 sites using three increasingly complex models (50 replicates for each
