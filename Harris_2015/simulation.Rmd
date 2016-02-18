@@ -11,6 +11,16 @@ fontsize: 11pt
   
 The following function draws random coefficients for a Markov network of a pre-specified size.
 
+The $alpha$ coefficients controlling species' intercepts were drawn from 
+Gaussian distributions with unit variance and a mean given by `mean_alpha`.
+In the R code at the end of this document, `mean_alpha` was defined as $-1$ for presence-absence simulations and $5$ for the abundance simulations. 
+
+The $\beta$ coefficients' magnitudes were drawn from an exponential 
+distribution with rate parameter equal to 1.  The sign of each coefficient was
+randomly sampled, based on the value of `p_neg`, defined below. as 0.75 (75%
+negative) for the presence-absence simulations and 1.0 (100% negative) for the
+simulations that included abundance.
+
 ```{r, cache=TRUE}
 make_coefficients = function(n_spp, p_neg, mean_alpha){
   # Exponential distribution has lots of mass near 0 but has
@@ -39,21 +49,47 @@ make_coefficients = function(n_spp, p_neg, mean_alpha){
 ```
 
 
-I used the following R function to generate "true" parameters with the method above, 
-then simulate a presence-absence landscape based on those parameters using Markov chain Monte Carlo, and finally save the results to a "fakedata" folder.
-
+The following function calls the function above to generate "true" parameters, 
+then uses them to simulate a landscape with Markov chain Monte Carlo, and 
+finally saves the results to a "fakedata" folder.
 I used Gibbs sampling as my Markov chain Monte Carlo transition operator.
 In each round of Gibbs sampling, I cycled through all the species, randomly
-updating each one's presence/absence vector in response to its conditional
-occurrence probability:
+updating each one's binary presence/absence vector with random samples from
+a Bernoulli distribution whose conditional probability was defined by 
 
 $$p(y_i) = \mathrm{logistic}(\alpha_i + \sum_j\beta_{ij}y_j),$$
 
-where the logistic function is $\frac{1}{1+e^{-x}}$.
+where the logistic function is $\frac{1}{1+e^{-x}}$. For efficiency, 
+$\sum_j\beta_{ij}y_j$ is calculated with matrix multiplication in the code
+below.
 
-For the abundance-based simulations, abundance was simulated with a Poisson
-distribution with rate parameter given by 
-$\mathrm{log}(1 + exp(\alpha_i + \sum_j\beta_{ij}y_j))$.
+For simulations that included environmental heterogeneity, $\alpha_i$ varied 
+from site to site as follows: 
+
+* `n_env` environmental variables were simulated for each site; these were
+drawn from zero-mean Gaussians with standard deviation given by `sd`. In the 
+R code at the end of this document, both `n_env` and `sd` were set to 2, 
+corresponding to an environment with two important axes of variation and 
+had a standard deviation of two.
+
+* The local value of $\alpha_i$ for species $i$ is given by the species-level
+$\alpha$ defined by the `make_coefficients` function, plus a linear combination
+of the environmental variables. For efficiency, this linear combination is 
+calculated with matrix multiplication. The weights associated with this linear 
+combination (`alpha_env`) are drawn from a Gaussian distribution with zero mean 
+and unit variance.
+
+For the abundance-based simulations, each species' conditional abundance was
+simulated with a Poisson distribution instead of a Bernoulli distribution. The
+rate parameter of this distribution was given by 
+$\mathrm{log}(1 + exp(\alpha_i + \sum_j\beta_{ij}y_j))$. (The more conventional 
+exponential inverse link was not used because preliminary experiments showed that
+it led to very large abundances that prevented the Gibbs sampler from mixing 
+effectively.)
+
+Each simulated landscape was saved after the Gibbs sampler had updated the 
+value of each species `n_gibbs` times; see the end of this document for the
+value used.
 
 ```{r, cache = TRUE}
 simulate_data = function(n_spp, n_sites, rep_name, n_gibbs, n_env, sd, f, rdist, p_neg, mean_alpha){
@@ -100,7 +136,7 @@ simulate_data = function(n_spp, n_sites, rep_name, n_gibbs, n_env, sd, f, rdist,
   
   # Landscape starts as if betas were all zero. Each species' occurrence probability
   # or abundance depends on its alpha value and on the environment (assuming alpha_env 
-  # is not zero).
+  # is not set to zero).
   x = matrix(
     f(rep(1, n_sites) %*% t(alpha) + env %*% alpha_env), 
     nrow = n_sites, 
@@ -112,7 +148,7 @@ simulate_data = function(n_spp, n_sites, rep_name, n_gibbs, n_env, sd, f, rdist,
     
     # Each round of Gibbs sampling updates one species (column) across all sites
     # according to its conditional probability (i.e. conditional on environment
-    # and the other species that are present).
+    # and the other species that are present). 
     for(j in 1:n_spp){
       x[,j] = rdist(
         nrow(x),
@@ -168,7 +204,8 @@ rbern = function(n, prob){
 }
 ```
 
-Loop to simulate and save all the landscapes:
+Loop to simulate and save 50 landscapes for each combination of simulation type
+and landscape size.
 
 ```{r}
 set.seed(1)

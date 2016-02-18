@@ -48,8 +48,8 @@ partial_names = sapply(
 filename_lines = grep("^>", pairs_txt)
 
 # Sort a vector of alphanumeric strings by the numeric component
-# as if they were integers.  For example, V20 is larger than V12,
-# even though V12 comes first alphabetically
+# as if they were integers.  For example, V20 should be larger 
+# than V12, even though V12 comes first alphabetically
 alnum_sort = function(x){
   raw = as.integer(gsub("[[:alpha:]]", "", x))
   x[order(raw)]
@@ -73,8 +73,10 @@ pairs_results = lapply(
     # Split the chunk on whitespace.
     splitted = strsplit(pairs_txt[beginnings[chunk]:ends[chunk]], " +")
     
-    # Pull out the corresponding chunk of the "x" data frame, based on n_sites and rep_name
-    x_subset = x[x$n_sites == n_sites & x$rep_name == rep_name & x$method == "correlation", ]
+    # Pull out the corresponding chunk of the "x" data frame, based on n_sites 
+    # and rep_name
+    is_correct_sim = x$n_sites == n_sites & x$rep_name == rep_name
+    x_subset = x[is_correct_sim & x$method == "correlation", ]
     
     # Pull out the species numbers and their Z-scores, then join to x_subset
     pairs_results = lapply(
@@ -123,7 +125,11 @@ x = rbind(x, pairs_results)
 
 ```
 
-## Calculate model performance:
+## Calculate model performance (R-squared):
+
+For each combination of `method` and `simulation_type`, fit a linear model.
+Then, for each combination of `method`, `simulation_type`, and `n_sites`,
+report the proportion of variance explained by the corresponding linear model.
 
 ```{r, cache = TRUE}
 resids = function(data){
@@ -137,11 +143,15 @@ result_summary = x %>%
   group_by(method, simulation_type, n_sites) %>%
   summarise(r2 = 1 - sum(resids^2) / sum(truth^2))
 
+# Set the ordering of the data frame based on R-squared
 result_summary$method = reorder(result_summary$method, -result_summary$r2)
+result_summary$simulation_type = reorder(
+  result_summary$simulation_type, 
+  -result_summary$r2
+)
 
-result_summary$simulation_type = reorder(result_summary$simulation_type, -result_summary$r2)
-
-
+# Add a column that includes method name and its mean R-squared,
+# for plotting purposes below
 result_summary = result_summary %>% 
   group_by(method) %>% 
   summarise(mean_r2 = round(100 * mean(r2))) %>%
@@ -149,6 +159,7 @@ result_summary = result_summary %>%
   select(method, method_r2) %>%
   inner_join(result_summary, "method")
 
+# Rename the simulation types for clearer graph labels
 result_summary$simulation_type_long = plyr::revalue(
   result_summary$simulation_type,
   c(no_env = "constant environment",
@@ -159,37 +170,19 @@ result_summary$simulation_type_long = plyr::revalue(
 result_summary$method_r2 = reorder(result_summary$method_r2, -result_summary$r2)
 ```
 
-#### Model performance with no environmental variation:
+#### Calculate average R-squared across methods and simulation types
+
 
 ```{r}
 result_summary %>% 
-  filter(simulation_type == "no_env") %>%
-  group_by(method) %>% 
+  group_by(method, simulation_type) %>% 
   summarise(mean(r2)) %>% 
+  spread(simulation_type, `mean(r2)`) %>%
   kable(digits = 3)
 ```
 
-#### Model performance with environmental heterogeneity:
 
-```{r}
-result_summary %>% 
-  filter(simulation_type == "env") %>%
-  group_by(method) %>% 
-  summarise(mean(r2)) %>% 
-  kable(digits = 3)
-```
-
-#### Model performance with per-capita species interactions: 
-
-```{r}
-result_summary %>% 
-  filter(simulation_type == "abund") %>%
-  group_by(method) %>% 
-  summarise(mean(r2)) %>% 
-  kable(digits = 3)
-```
-
-## Plot the R-squared results (Figure 3)
+## Save the finer-grained R-squared results as Figure 3
 
 ```{r}
 
@@ -203,7 +196,6 @@ ggplot(result_summary, aes(x = n_sites, y = r2, col = method_r2, shape = method_
   scale_shape_manual(values = c(16, 22, 17, 23, 18, 24, 15), name = legend_name) +
   geom_hline(yintercept = 0, size = 1/2) +
   geom_vline(xintercept = 0, size = 1) + 
-  #scale_shape_manual(values = c(21, 25, 15, 18)) + 
   coord_cartesian(ylim = c(-.01, 0.76)) + 
   ylab(expression(R^2)) + 
   xlab("Number of sites (log scale)") + 
@@ -245,11 +237,16 @@ summary(
   lmer(
     r2 ~ method + n_sites + simulation_type + (1|rep_name), 
     data = landscape_estimates
-  )
+  ),
+  correlation = FALSE
 )
 ```
 
-## Summarize the inferential results of the Markov network and the null model:
+## Identify statistical significance for the Markov network and Pairs
+
+For Pairs, compare the Z-scores with Gaussian quantiles for 95% coverage;
+for the Markov network, use the approximate confidence intervals estimated in
+Appendix 3.
 
 ```{r, cache = TRUE}
 
@@ -258,7 +255,8 @@ markov_summary = x[x$method == "Markov network" & !grepl("pop", x$rep_name), ]
 
 
 # Pairs's Z score is based on C-scores, which are positive when species are 
-# disaggregated.  So significantly positive interactions == negative estimates
+# disaggregated.  So significantly negative scores imply positive interactions
+# and vice versa
 pairs_summary$sig_pos = pairs_summary$estimate < qnorm(.025)
 pairs_summary$sig_neg = pairs_summary$estimate > qnorm(.975)
 
@@ -266,32 +264,19 @@ pairs_summary$sig_neg = pairs_summary$estimate > qnorm(.975)
 # below zero
 markov_summary$sig_pos = markov_summary$lower > 0
 markov_summary$sig_neg = markov_summary$upper < 0
+
+confidently_right = function(data){
+  (data$sig_pos & data$truth > 0) | (data$sig_neg & data$truth < 0)
+}
+
+confidently_wrong = function(data){
+  (data$sig_pos & data$truth < 0) | (data$sig_neg & data$truth > 0)
+}
 ```
 
 ## Create Figure 4:
 
 ```{r, cache = TRUE}
-
-
-# Function for smoothing the error rates with a generalized additive model
-# and plotting the results
-my_geom_smooth = function(data, color, ...){
-  geom_smooth(
-    data = data,
-    aes(
-      x = truth, 
-      y = as.integer((sig_neg & truth > 0) | (sig_pos & truth < 0)),
-      color = color
-    ),
-    method = gam, 
-    family = binomial, 
-    formula = y ~ s(x),
-    se = FALSE,
-    n = 1024,
-    ...
-  )
-}
-
 
 truth_seq = seq(min(markov_summary$truth), max(markov_summary$truth), length = 1000)
 
@@ -304,10 +289,10 @@ plotfun = function(..., add){
 }
 
 
-error_smoother = function(data){
+error_smoother = function(data, f){
   predict(
     gam(
-      I((sig_neg & truth > 0) | (sig_pos & truth < 0)) ~ s(truth),
+      f(data) ~ s(truth),
       data = data,
       family = binomial
     ),
@@ -316,8 +301,26 @@ error_smoother = function(data){
   )
 }
 
-y_pairs = error_smoother(pairs_summary)
-y_markov = error_smoother(markov_summary)
+
+p_right_pairs = error_smoother(pairs_summary, confidently_right)
+p_wrong_pairs = error_smoother(pairs_summary, confidently_wrong)
+
+p_right_markov = error_smoother(markov_summary, confidently_right)
+p_wrong_markov = error_smoother(markov_summary, confidently_wrong)
+
+
+par(mfrow = c(1, 2))
+plot(truth_seq, p_right_pairs + p_wrong_pairs, type = "l", ylim = c(0, 1), yaxs = "i")
+lines(truth_seq, p_right_markov + p_wrong_markov, col = 2)
+abline(h = 0.05)
+
+
+plot(truth_seq, p_wrong_pairs, type = "l", ylim = c(0, 1), yaxs = "i")
+lines(truth_seq, p_wrong_markov, col = 2)
+par(mfrow = c(1, 1))
+
+
+y_markov = error_smoother(markov_summary, confidently_wrong)
 
 pdf("manuscript-materials/figures/error_rates.pdf", height = 8.5, width = 8.5/3)
 par(mfrow = c(3, 1))
@@ -459,7 +462,7 @@ markov_summary %>%
   mutate(covered = truth > lower & truth < upper) %>%
   ggplot(aes(x = truth, y = as.integer(covered))) + 
   facet_grid(~simulation_type) + 
-  geom_smooth(method = gam, formula = y ~ s(x), family = binomial) + 
+  geom_smooth(method = gam, formula = y ~ s(x), method.args = list(family = "binomial")) + 
   theme_bw() + 
   coord_cartesian(ylim = c(0, 1)) + 
   geom_vline(xintercept = 0) + 

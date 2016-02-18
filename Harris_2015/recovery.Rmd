@@ -22,11 +22,6 @@ Note that the `pairs` program was run separately (outside of R) with the followi
   * Maximum of 20 species
 
 
-
-[^1]: The PDF version of this document has been manually altered to omit 150
-lines of output from the `corpcor` package of the form "`## Estimating optimal shrinkage intensity lambda (correlation matrix): 0.0326`"
-
-
 Initialization:
 
 ```{r, cache = FALSE, message = FALSE, eval = TRUE}
@@ -44,7 +39,7 @@ set.seed(1)
 
 A function to import the data file and run each method on it: 
 
-```{r, cache = FALSE, eval = TRUE}
+```{r, cache = FALSE, eval = FALSE}
 fit_all = function(identifier){
   ######## Import ########
   
@@ -187,7 +182,7 @@ fit_all = function(identifier){
 
 Run the above function on all the files:
 
-```{r, cache = FALSE, eval = TRUE}
+```{r, cache = FALSE, eval = FALSE}
 
 # Find all the csv files in the fakedata/matrices folder,
 # then drop .csv
@@ -198,4 +193,60 @@ mclapply(identifiers, fit_all, mc.cores = mc.cores,
          mc.preschedule = FALSE, mc.silent = TRUE) %>% 
   bind_rows() %>% 
   write.csv(file = "estimates.csv")
+```
+
+
+### Logistic prior used for the Markov network
+
+From the R help file for the logistic distribution: 
+
+>The Logistic distribution with location = m and scale = s has... density
+
+>> f(x) = 1/s exp((x-m)/s) (1 + exp((x-m)/s))^-2.
+
+> It is a long-tailed distribution with mean m and variance $\pi$^2 /3 s^2.
+
+As noted in the main text, I used location zero and scale 2 (plotted in
+red below). The "true" parameter distribution for $\beta$ is drawn in black,
+for reference.  These distributions have different means and the prior is
+substantially wider than the distribution of true parameters (mean absolute
+deviation from zero about `r round(mean(abs(rlogis(1E7, scale = 2))), 1)`
+times larger).
+
+```{r}
+curve(ifelse(x < 0, .75 * dexp(abs(x)), .25 * dexp(x)), from = -15, to = 15,
+      n = 1000, ylab = "Density")
+curve(dlogis(x, location = 0, scale = 2), add = TRUE, col = "red")
+```
+
+The log of this density was added to the log-likelihood to calculate an
+un-normalized log-posterior, which is optimized by the `optim` function in the
+`stats` package.
+
+This prior distribution is "weakly informative" in the sense of Gelman et al.
+(2008. Annals of Applied Statistics, "A weakly informative default prior 
+distribution for logistic and other regression models"), as shown below:
+the logistic regularizer pulls the estimated values toward zero less strongly
+than Gelman et al.'s weakly-informative Cauchy prior does.
+
+```{r}
+x = as.matrix(
+  read.csv("fakedata/matrices/25-no_env1.csv")[,-1]
+)
+
+# Don't estimate parameters for species that were never observed
+x = x[ , colMeans(x) != 0]
+
+
+# Estimate parameters using a weakly informative logistic prior
+logistic_fit = rosalia(x, prior = make_logistic_prior(scale = 2),
+                             trace = FALSE)
+
+# Estimate parameters using Gelman et al.'s weakly informative Cauchy prior
+cauchy_fit = rosalia(x, prior = make_cauchy_prior(scale = 2.5),
+                           trace = FALSE)
+
+
+plot(logistic_fit$beta, cauchy_fit$beta)
+abline(0,1, h = 0, v = 0, col = "darkgray")
 ```

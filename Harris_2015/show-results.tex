@@ -207,8 +207,10 @@ software:}{Import the results from the Pairs software:}}\label{import-the-result
     \CommentTok{# Split the chunk on whitespace.}
     \NormalTok{splitted =}\StringTok{ }\KeywordTok{strsplit}\NormalTok{(pairs_txt[beginnings[chunk]:ends[chunk]], }\StringTok{" +"}\NormalTok{)}
     
-    \CommentTok{# Pull out the corresponding chunk of the "x" data frame, based on n_sites and rep_name}
-    \NormalTok{x_subset =}\StringTok{ }\NormalTok{x[x$n_sites ==}\StringTok{ }\NormalTok{n_sites &}\StringTok{ }\NormalTok{x$rep_name ==}\StringTok{ }\NormalTok{rep_name &}\StringTok{ }\NormalTok{x$method ==}\StringTok{ "correlation"}\NormalTok{, ]}
+    \CommentTok{# Pull out the corresponding chunk of the "x" data frame, based on n_sites }
+    \CommentTok{# and rep_name}
+    \NormalTok{is_correct_sim =}\StringTok{ }\NormalTok{x$n_sites ==}\StringTok{ }\NormalTok{n_sites &}\StringTok{ }\NormalTok{x$rep_name ==}\StringTok{ }\NormalTok{rep_name}
+    \NormalTok{x_subset =}\StringTok{ }\NormalTok{x[is_correct_sim &}\StringTok{ }\NormalTok{x$method ==}\StringTok{ "correlation"}\NormalTok{, ]}
     
     \CommentTok{# Pull out the species numbers and their Z-scores, then join to x_subset}
     \NormalTok{pairs_results =}\StringTok{ }\KeywordTok{lapply}\NormalTok{(}
@@ -275,7 +277,10 @@ performance:}\label{calculate-model-performance}
 
 \NormalTok{result_summary$method =}\StringTok{ }\KeywordTok{reorder}\NormalTok{(result_summary$method, -result_summary$r2)}
 
-\NormalTok{result_summary$simulation_type =}\StringTok{ }\KeywordTok{reorder}\NormalTok{(result_summary$simulation_type, -result_summary$r2)}
+\NormalTok{result_summary$simulation_type =}\StringTok{ }\KeywordTok{reorder}\NormalTok{(}
+  \NormalTok{result_summary$simulation_type, }
+  \NormalTok{-result_summary$r2}
+\NormalTok{)}
 
 
 \NormalTok{result_summary =}\StringTok{ }\NormalTok{result_summary %>%}\StringTok{ }
@@ -296,92 +301,36 @@ performance:}\label{calculate-model-performance}
 \end{Highlighting}
 \end{Shaded}
 
-\paragraph{Model performance with no environmental
-variation:}\label{model-performance-with-no-environmental-variation}
+\paragraph{Calculate average R-squared across methods and simulation
+types}\label{calculate-average-r-squared-across-methods-and-simulation-types}
 
 \begin{Shaded}
 \begin{Highlighting}[]
 \NormalTok{result_summary %>%}\StringTok{ }
-\StringTok{  }\KeywordTok{filter}\NormalTok{(simulation_type ==}\StringTok{ "no_env"}\NormalTok{) %>%}
-\StringTok{  }\KeywordTok{group_by}\NormalTok{(method) %>%}\StringTok{ }
+\StringTok{  }\KeywordTok{group_by}\NormalTok{(method, simulation_type) %>%}\StringTok{ }
 \StringTok{  }\KeywordTok{summarise}\NormalTok{(}\KeywordTok{mean}\NormalTok{(r2)) %>%}\StringTok{ }
+\StringTok{  }\KeywordTok{spread}\NormalTok{(simulation_type, }\StringTok{`}\DataTypeTok{mean(r2)}\StringTok{`}\NormalTok{) %>%}
 \StringTok{  }\KeywordTok{kable}\NormalTok{(}\DataTypeTok{digits =} \DecValTok{3}\NormalTok{)}
 \end{Highlighting}
 \end{Shaded}
 
-\begin{longtable}[c]{@{}lr@{}}
+\begin{longtable}[c]{@{}lrrr@{}}
 \toprule
-method & mean(r2)\tabularnewline
+method & no\_env & env & abund\tabularnewline
 \midrule
 \endhead
-Markov network & 0.525\tabularnewline
-GLM & 0.472\tabularnewline
-partial correlation & 0.403\tabularnewline
-partial BayesComm & 0.394\tabularnewline
-correlation & 0.291\tabularnewline
-null & 0.227\tabularnewline
-BayesComm & 0.206\tabularnewline
+Markov network & 0.525 & 0.451 & 0.384\tabularnewline
+GLM & 0.472 & 0.405 & 0.283\tabularnewline
+partial correlation & 0.403 & 0.322 & 0.200\tabularnewline
+partial BayesComm & 0.394 & 0.302 & 0.166\tabularnewline
+correlation & 0.291 & 0.183 & 0.117\tabularnewline
+null & 0.227 & 0.125 & 0.075\tabularnewline
+BayesComm & 0.206 & 0.110 & 0.060\tabularnewline
 \bottomrule
 \end{longtable}
 
-\paragraph{Model performance with environmental
-heterogeneity:}\label{model-performance-with-environmental-heterogeneity}
-
-\begin{Shaded}
-\begin{Highlighting}[]
-\NormalTok{result_summary %>%}\StringTok{ }
-\StringTok{  }\KeywordTok{filter}\NormalTok{(simulation_type ==}\StringTok{ "env"}\NormalTok{) %>%}
-\StringTok{  }\KeywordTok{group_by}\NormalTok{(method) %>%}\StringTok{ }
-\StringTok{  }\KeywordTok{summarise}\NormalTok{(}\KeywordTok{mean}\NormalTok{(r2)) %>%}\StringTok{ }
-\StringTok{  }\KeywordTok{kable}\NormalTok{(}\DataTypeTok{digits =} \DecValTok{3}\NormalTok{)}
-\end{Highlighting}
-\end{Shaded}
-
-\begin{longtable}[c]{@{}lr@{}}
-\toprule
-method & mean(r2)\tabularnewline
-\midrule
-\endhead
-Markov network & 0.451\tabularnewline
-GLM & 0.405\tabularnewline
-partial correlation & 0.322\tabularnewline
-partial BayesComm & 0.302\tabularnewline
-correlation & 0.183\tabularnewline
-null & 0.125\tabularnewline
-BayesComm & 0.110\tabularnewline
-\bottomrule
-\end{longtable}
-
-\paragraph{Model performance with per-capita species
-interactions:}\label{model-performance-with-per-capita-species-interactions}
-
-\begin{Shaded}
-\begin{Highlighting}[]
-\NormalTok{result_summary %>%}\StringTok{ }
-\StringTok{  }\KeywordTok{filter}\NormalTok{(simulation_type ==}\StringTok{ "abund"}\NormalTok{) %>%}
-\StringTok{  }\KeywordTok{group_by}\NormalTok{(method) %>%}\StringTok{ }
-\StringTok{  }\KeywordTok{summarise}\NormalTok{(}\KeywordTok{mean}\NormalTok{(r2)) %>%}\StringTok{ }
-\StringTok{  }\KeywordTok{kable}\NormalTok{(}\DataTypeTok{digits =} \DecValTok{3}\NormalTok{)}
-\end{Highlighting}
-\end{Shaded}
-
-\begin{longtable}[c]{@{}lr@{}}
-\toprule
-method & mean(r2)\tabularnewline
-\midrule
-\endhead
-Markov network & 0.384\tabularnewline
-GLM & 0.283\tabularnewline
-partial correlation & 0.200\tabularnewline
-partial BayesComm & 0.166\tabularnewline
-correlation & 0.117\tabularnewline
-null & 0.075\tabularnewline
-BayesComm & 0.060\tabularnewline
-\bottomrule
-\end{longtable}
-
-\subsection{Plot the R-squared results (Figure
-3)}\label{plot-the-r-squared-results-figure-3}
+\subsection{Save the R-squared results as Figure
+3}\label{save-the-r-squared-results-as-figure-3}
 
 \begin{Shaded}
 \begin{Highlighting}[]
@@ -493,9 +442,8 @@ associated with the effect of estimation method.
 ## smltn_typn_ -0.515  0.000  0.000  0.000  0.000  0.000  0.000  0.000  0.500
 \end{verbatim}
 
-\subsection{Summarize the inferential results of the Markov network and
-the null
-model:}\label{summarize-the-inferential-results-of-the-markov-network-and-the-null-model}
+\subsection{Identify statistical significance for the Markov network and
+Pairs}\label{identify-statistical-significance-for-the-markov-network-and-pairs}
 
 \begin{Shaded}
 \begin{Highlighting}[]
@@ -792,11 +740,7 @@ beta}{Plot root mean square error versus true beta}}\label{plot-root-mean-square
 \end{Highlighting}
 \end{Shaded}
 
-\begin{verbatim}
-## geom_smooth: method="auto" and size of largest group is >=1000, so using gam with formula: y ~ s(x, bs = "cs"). Use 'method = x' to change the smoothing method.
-\end{verbatim}
-
-\includegraphics{show-results_files/figure-latex/unnamed-chunk-13-1.pdf}
+\includegraphics{show-results_files/figure-latex/unnamed-chunk-11-1.pdf}
 
 \subsection{\texorpdfstring{Plot confidence interval coverage versus
 true \(\beta\)
@@ -812,7 +756,7 @@ value}{Plot confidence interval coverage versus true \textbackslash{}beta value}
 \StringTok{  }\KeywordTok{mutate}\NormalTok{(}\DataTypeTok{covered =} \NormalTok{truth >}\StringTok{ }\NormalTok{lower &}\StringTok{ }\NormalTok{truth <}\StringTok{ }\NormalTok{upper) %>%}
 \StringTok{  }\KeywordTok{ggplot}\NormalTok{(}\KeywordTok{aes}\NormalTok{(}\DataTypeTok{x =} \NormalTok{truth, }\DataTypeTok{y =} \KeywordTok{as.integer}\NormalTok{(covered))) +}\StringTok{ }
 \StringTok{  }\KeywordTok{facet_grid}\NormalTok{(~simulation_type) +}\StringTok{ }
-\StringTok{  }\KeywordTok{geom_smooth}\NormalTok{(}\DataTypeTok{method =} \NormalTok{gam, }\DataTypeTok{formula =} \NormalTok{y ~}\StringTok{ }\KeywordTok{s}\NormalTok{(x), }\DataTypeTok{family =} \NormalTok{binomial) +}\StringTok{ }
+\StringTok{  }\KeywordTok{geom_smooth}\NormalTok{(}\DataTypeTok{method =} \NormalTok{gam, }\DataTypeTok{formula =} \NormalTok{y ~}\StringTok{ }\KeywordTok{s}\NormalTok{(x), }\DataTypeTok{method.args =} \KeywordTok{list}\NormalTok{(}\DataTypeTok{family =} \StringTok{"binomial"}\NormalTok{)) +}\StringTok{ }
 \StringTok{  }\KeywordTok{theme_bw}\NormalTok{() +}\StringTok{ }
 \StringTok{  }\KeywordTok{coord_cartesian}\NormalTok{(}\DataTypeTok{ylim =} \KeywordTok{c}\NormalTok{(}\DecValTok{0}\NormalTok{, }\DecValTok{1}\NormalTok{)) +}\StringTok{ }
 \StringTok{  }\KeywordTok{geom_vline}\NormalTok{(}\DataTypeTok{xintercept =} \DecValTok{0}\NormalTok{) +}\StringTok{ }
@@ -821,6 +765,6 @@ value}{Plot confidence interval coverage versus true \textbackslash{}beta value}
 \end{Highlighting}
 \end{Shaded}
 
-\includegraphics{show-results_files/figure-latex/unnamed-chunk-14-1.pdf}
+\includegraphics{show-results_files/figure-latex/unnamed-chunk-12-1.pdf}
 
 \end{document}

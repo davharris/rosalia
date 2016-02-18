@@ -81,6 +81,15 @@
 \newcommand{\AlertTok}[1]{\textcolor[rgb]{0.94,0.16,0.16}{{#1}}}
 \newcommand{\ErrorTok}[1]{\textcolor[rgb]{0.64,0.00,0.00}{\textbf{{#1}}}}
 \newcommand{\NormalTok}[1]{{#1}}
+\usepackage{graphicx,grffile}
+\makeatletter
+\def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
+\def\maxheight{\ifdim\Gin@nat@height>\textheight\textheight\else\Gin@nat@height\fi}
+\makeatother
+% Scale images if necessary, so that they will not overflow the page
+% margins by default, and it is still possible to overwrite the defaults
+% using explicit options in \includegraphics[width, height, ...]{}
+\setkeys{Gin}{width=\maxwidth,height=\maxheight,keepaspectratio}
 \setlength{\parindent}{0pt}
 \setlength{\parskip}{6pt plus 2pt minus 1pt}
 \setlength{\emergencystretch}{3em}  % prevent overfull lines
@@ -130,10 +139,7 @@ networks}
 
 This document describes how the different models were fit to the
 simulated data from Appendix 2 and how each model's performance was
-evaluated.\footnote{The PDF version of this document has been manually
-  altered to omit 150 lines of output from the \texttt{corpcor} package
-  of the form
-  ``\texttt{\#\#\ Estimating\ optimal\ shrinkage\ intensity\ lambda\ (correlation\ matrix):\ 0.0326}''}
+evaluated.{[}\^{}1{]}
 
 Note that the \texttt{pairs} program was run separately (outside of R)
 with the following options:
@@ -332,5 +338,79 @@ Run the above function on all the files:
 \StringTok{  }\KeywordTok{write.csv}\NormalTok{(}\DataTypeTok{file =} \StringTok{"estimates.csv"}\NormalTok{)}
 \end{Highlighting}
 \end{Shaded}
+
+\subsubsection{Logistic prior used for the Markov
+network}\label{logistic-prior-used-for-the-markov-network}
+
+From the R help file for the logistic distribution:
+
+\begin{quote}
+The Logistic distribution with location = m and scale = s has\ldots{}
+density
+\end{quote}
+
+\begin{quote}
+\begin{quote}
+f(x) = 1/s exp((x-m)/s) (1 + exp((x-m)/s))\^{}-2.
+\end{quote}
+\end{quote}
+
+\begin{quote}
+It is a long-tailed distribution with mean m and variance \(\pi\)\^{}2
+/3 s\^{}2.
+\end{quote}
+
+As noted in the main text, I used location zero and scale 2 (plotted in
+red below). The ``true'' parameter distribution for \(\beta\) is drawn
+in black, for reference. These distributions have different means and
+the prior is substantially wider than the distribution of true
+parameters (mean absolute deviation from zero about 2.8 times larger).
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{curve}\NormalTok{(}\KeywordTok{ifelse}\NormalTok{(x <}\StringTok{ }\DecValTok{0}\NormalTok{, .}\DecValTok{75} \NormalTok{*}\StringTok{ }\KeywordTok{dexp}\NormalTok{(}\KeywordTok{abs}\NormalTok{(x)), .}\DecValTok{25} \NormalTok{*}\StringTok{ }\KeywordTok{dexp}\NormalTok{(x)), }\DataTypeTok{from =} \NormalTok{-}\DecValTok{15}\NormalTok{, }\DataTypeTok{to =} \DecValTok{15}\NormalTok{,}
+      \DataTypeTok{n =} \DecValTok{1000}\NormalTok{, }\DataTypeTok{ylab =} \StringTok{"Density"}\NormalTok{)}
+\KeywordTok{curve}\NormalTok{(}\KeywordTok{dlogis}\NormalTok{(x, }\DataTypeTok{location =} \DecValTok{0}\NormalTok{, }\DataTypeTok{scale =} \DecValTok{2}\NormalTok{), }\DataTypeTok{add =} \OtherTok{TRUE}\NormalTok{, }\DataTypeTok{col =} \StringTok{"red"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{recovery_files/figure-latex/unnamed-chunk-4-1.pdf}
+
+The log of this density was added to the log-likelihood to calculate an
+un-normalized log-posterior, which is optimized by the \texttt{optim}
+function in the \texttt{stats} package.
+
+This prior distribution is ``weakly informative'' in the sense of Gelman
+et al. (2008. Annals of Applied Statistics, ``A weakly informative
+default prior distribution for logistic and other regression models''),
+as shown below: the logistic regularizer pulls the estimated values
+toward zero less strongly than Gelman et al.'s weakly-informative Cauchy
+prior does.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{x =}\StringTok{ }\KeywordTok{as.matrix}\NormalTok{(}
+  \KeywordTok{read.csv}\NormalTok{(}\StringTok{"fakedata/matrices/25-no_env1.csv"}\NormalTok{)[,-}\DecValTok{1}\NormalTok{]}
+\NormalTok{)}
+
+\CommentTok{# Don't estimate parameters for species that were never observed}
+\NormalTok{x =}\StringTok{ }\NormalTok{x[ , }\KeywordTok{colMeans}\NormalTok{(x) !=}\StringTok{ }\DecValTok{0}\NormalTok{]}
+
+
+\CommentTok{# Estimate parameters using a weakly informative logistic prior}
+\NormalTok{logistic_fit =}\StringTok{ }\KeywordTok{rosalia}\NormalTok{(x, }\DataTypeTok{prior =} \KeywordTok{make_logistic_prior}\NormalTok{(}\DataTypeTok{scale =} \DecValTok{2}\NormalTok{),}
+                             \DataTypeTok{trace =} \OtherTok{FALSE}\NormalTok{)}
+
+\CommentTok{# Estimate parameters using Gelman et al.'s weakly informative Cauchy prior}
+\NormalTok{cauchy_fit =}\StringTok{ }\KeywordTok{rosalia}\NormalTok{(x, }\DataTypeTok{prior =} \KeywordTok{make_cauchy_prior}\NormalTok{(}\DataTypeTok{scale =} \FloatTok{2.5}\NormalTok{),}
+                           \DataTypeTok{trace =} \OtherTok{FALSE}\NormalTok{)}
+
+
+\KeywordTok{plot}\NormalTok{(logistic_fit$beta, cauchy_fit$beta)}
+\KeywordTok{abline}\NormalTok{(}\DecValTok{0}\NormalTok{,}\DecValTok{1}\NormalTok{, }\DataTypeTok{h =} \DecValTok{0}\NormalTok{, }\DataTypeTok{v =} \DecValTok{0}\NormalTok{, }\DataTypeTok{col =} \StringTok{"darkgray"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{recovery_files/figure-latex/unnamed-chunk-5-1.pdf}
 
 \end{document}
