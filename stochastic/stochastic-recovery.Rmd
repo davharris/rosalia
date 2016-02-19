@@ -3,7 +3,7 @@ output: pdf_document
 ---
 # Estimating pairwise interactions by stochastic maximum likelihood
 
-```{r,cache = TRUE}
+```{r}
 library(rosalia)
 library(mistnet)
 
@@ -16,7 +16,7 @@ rbern = function(p){rbinom(length(p), size = 1, prob = p)}
 ```
 
 
-```{r,cache = TRUE}
+```{r}
 set.seed(1)
 n_spp = 250     # number of species
 n_loc = 2500    # number of locations
@@ -62,7 +62,7 @@ true_alpha_species = rnorm(n_spp, 2)
 true_alpha = true_env %*% true_alpha_env %plus% true_alpha_species
 ```
 
-```{r,, cache = TRUE}
+```{r}
 # Initialize the `y` matrix.
 # This will hold the "observed" presence-absence data
 y = matrix(0.5, nrow = n_loc, ncol = n_spp)
@@ -78,14 +78,14 @@ for(i in 1:n_gibbs){
 }
 ```
 
-```{r,cache = TRUE}
+```{r}
 # Calculate sufficient statistics of the data
 y_stats = crossprod(y)
 y_env_stats = t(true_env) %*% y
 ```
 
 
-```{r,cache = TRUE}
+```{r}
 # Initialize the simulated landscape for stochastic approximation
 y_sim = matrix(0.5, nrow = nrow(y), ncol = ncol(y))
 
@@ -115,7 +115,7 @@ beta = delta_beta = matrix(0, nrow = n_spp, ncol = n_spp)
 alpha = matrix(0, nrow = n_spp, ncol = n_spp) 
 ```
 
-```{r,cache = TRUE}
+```{r}
 # Very weak priors on alpha terms, somewhat stronger on beta terms
 alpha_env_prior = rosalia::make_logistic_prior(scale = 2)$log_grad 
 alpha_species_prior = rosalia::make_logistic_prior(scale = 2)$log_grad
@@ -123,7 +123,7 @@ beta_prior = rosalia::make_logistic_prior(scale = 0.5)$log_grad
 ```
 
 
-```{r,cache = TRUE}
+```{r}
 initial_learning_rate = 1 # step size at start of optimization
 maxit = 50000             # Number of rounds of optimization
 start_time = as.integer(Sys.time())
@@ -199,7 +199,7 @@ for(i in 1:maxit){
 }
 ```
 
-```{r,cache = TRUE}
+```{r}
 library(cowplot)
 library(ggplot2)
 out = plot_grid(
@@ -242,7 +242,7 @@ save_plot(
 
 ## Small landscape
 
-```{r,cache = TRUE}
+```{r}
 small_n_spp = 20
 small_n_loc = 500
 small_true_beta = true_beta[1:small_n_spp, 1:small_n_spp]
@@ -258,7 +258,7 @@ for(i in 1:n_gibbs){
 
 ```
 
-```{r,cache = TRUE}
+```{r}
 exact_time = system.time({
   exact = rosalia(small_y, 
                   prior = make_logistic_prior(scale = 1), maxit = 500)
@@ -268,7 +268,7 @@ mle_beta = exact$beta
 ```
 
 
-```{r,cache = TRUE}
+```{r}
 maxit_small = 50000
 start_time_small = as.numeric(Sys.time())
 
@@ -342,7 +342,7 @@ for(i in 1:maxit_small){
 
 ## Plotting results
 
-```{r,cache = TRUE}
+```{r}
 pdf("stochastic/convergence.pdf", width = 10, height = 7)
 par(mfrow = c(1, 2), las = 1)
 
