@@ -13,7 +13,8 @@ The following function draws random coefficients for a Markov network of a pre-s
 
 The $alpha$ coefficients controlling species' intercepts were drawn from 
 Gaussian distributions with unit variance and a mean given by `mean_alpha`.
-In the R code at the end of this document, `mean_alpha` was defined as $-1$ for presence-absence simulations and $5$ for the abundance simulations. 
+In the R code at the end of this document, `mean_alpha` was defined as $-1$ 
+for presence-absence simulations and $5$ for the abundance simulations. 
 
 The $\beta$ coefficients' magnitudes were drawn from an exponential 
 distribution with rate parameter equal to 1.  The sign of each coefficient was
@@ -25,7 +26,7 @@ simulations that included abundance.
 make_coefficients = function(n_spp, p_neg, mean_alpha){
   # Exponential distribution has lots of mass near 0 but has
   # a long tail.
-  true_beta_magnitudes = rexp(choose(n_spp, 2))
+  true_beta_magnitudes = rexp(choose(n_spp, 2), rate = 1)
   
   # Multiply some proportion of the interactions
   # by -1

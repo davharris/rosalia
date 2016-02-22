@@ -25,10 +25,10 @@ landscapes with known interactions, I evaluated Markov networks and six existing
 approaches. The Markov networks consistently outperformed other methods, 
 correctly isolating direct interactions between species pairs even when indirect
 interactions or abiotic factors largely overpowered them. Two computationally 
-efficient approximations, based on controlling for indirect effects with linear 
-or generalized linear models, also performed well. Null models showed no 
-evidence of being able to control for indirect effects, and reliably yielded 
-incorrect inferences when such effects were present.
+efficient approximations, based on controlling for indirect effects with partial
+correlations or generalized linear models, also performed well. Null models 
+showed no evidence of being able to control for indirect effects, and reliably 
+yielded incorrect inferences when such effects were present.
 
 **Key words:** Ecological interactions; Occurrence data; Species associations;
 Markov network; Markov random field; Ising model; Biogeography;
@@ -176,9 +176,9 @@ factors, which were drawn from independent Gaussians for each site. Once the
 local $\alpha$ values were calculated, independent Gibbs samplers determined 
 the species composition for each site based on Equation 1.
 
-In the third set of landscapes, I simulated each species' abundance (instead of
-just their presence/absence), and interactions between species occurred on a 
-per-capita basis. To avoid runaway mutualisms leading to infinite abundance,
+In the final set of landscapes, I simulated each species' abundance (instead of
+just their presence/absence); here, interactions between species occurred on a 
+per-capita basis. To prevent runaway mutualisms leading to infinite abundance,
 all interaction coefficients were negative in these simulations. Good 
 performance on these landscapes would indicate some robustness to the
 mechanistic details of species interactions.
@@ -248,9 +248,8 @@ strengths to be zero).
 For the null model and the Markov network, the probability of rejecting the
 null hypothesis of zero interaction was estimated across a range of "true"
 interaction strengths using a generalized additive model with binomial responses
-(reject versus not; Appendix 4). The Type I error rate was defined as this
-model's estimated probability of rejecting the null hypothesis when the "true"
-interaction was zero.
+(reject versus not; Appendix 4). The probability of rejection when the "true"
+value of $\beta$ was zero was defined as the Type I error rate.
 
 \noindent
 \textbf{Results}
@@ -295,18 +294,18 @@ size; Figure 4B); much of the remaining variance is due to sampling error.
 Finally, we can evaluate the models' statistical inferences (focusing on the
 first two simulation types, where the interaction coefficients are easiest to
 interpret).  The Markov network's Type I error rate depended on the 
-simulation type: [[0.02]] for simulations that matched the model's assumptions,
-versus [[0.14]] for simulations that included environmental heterogeneity (see 
+simulation type: 0.02 for simulations that matched the model's assumptions,
+versus 0.14 for simulations that included environmental heterogeneity (see 
 Appendix 4 for confidence interval coverage across a range of $\beta_{ij}$ 
-values). The null model's Type I error rates were [[0.30]] and [[0.50]] for the
+values). The null model's Type I error rates were 0.31 and 0.53 for the
 constant and heterogeneous landscapes, respectively---far higher than the 
 nominal 0.05 rate. Figure 4C shows, across a range of true interaction 
 strengths, the probability that the null model or the Markov network will 
 predict the wrong sign of the interaction with 95% confidence.  The null model 
-makes such errors more than [[5]] times as often as the Markov network, even
-though it only rejects the null hypothesis [[twice]] as often overall (Appendix
+makes such errors more than 5 times as often as the Markov network, even
+though it only rejects the null hypothesis twice as often overall (Appendix
 4). The Markov network's errors were also more concentrated around 0, so it 
-never misclassified strong interactions like the null model did.
+never misclassified strong interactions like the null model did (Figure 4C).
 
 \noindent
 \textbf{Discussion}

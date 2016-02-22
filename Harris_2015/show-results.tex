@@ -138,9 +138,12 @@ networks}
 \begin{document}
 \maketitle
 
+\section{A: Import packages and data}\label{a-import-packages-and-data}
+
 \begin{Shaded}
 \begin{Highlighting}[]
 \KeywordTok{library}\NormalTok{(dplyr)}
+\KeywordTok{library}\NormalTok{(magrittr)}
 \KeywordTok{library}\NormalTok{(mgcv)}
 \KeywordTok{library}\NormalTok{(ggplot2)}
 \KeywordTok{library}\NormalTok{(tidyr)}
@@ -150,7 +153,7 @@ networks}
 \end{Shaded}
 
 \subsection{Import the results from Appendix
-4:}\label{import-the-results-from-appendix-4}
+3:}\label{import-the-results-from-appendix-3}
 
 \begin{Shaded}
 \begin{Highlighting}[]
@@ -182,8 +185,8 @@ software:}{Import the results from the Pairs software:}}\label{import-the-result
 \NormalTok{filename_lines =}\StringTok{ }\KeywordTok{grep}\NormalTok{(}\StringTok{"^>"}\NormalTok{, pairs_txt)}
 
 \CommentTok{# Sort a vector of alphanumeric strings by the numeric component}
-\CommentTok{# as if they were integers.  For example, V20 is larger than V12,}
-\CommentTok{# even though V12 comes first alphabetically}
+\CommentTok{# as if they were integers.  For example, V20 should be larger }
+\CommentTok{# than V12, even though V12 comes first alphabetically}
 \NormalTok{alnum_sort =}\StringTok{ }\NormalTok{function(x)\{}
   \NormalTok{raw =}\StringTok{ }\KeywordTok{as.integer}\NormalTok{(}\KeywordTok{gsub}\NormalTok{(}\StringTok{"[[:alpha:]]"}\NormalTok{, }\StringTok{""}\NormalTok{, x))}
   \NormalTok{x[}\KeywordTok{order}\NormalTok{(raw)]}
@@ -259,8 +262,15 @@ software:}{Import the results from the Pairs software:}}\label{import-the-result
 \end{Highlighting}
 \end{Shaded}
 
-\subsection{Calculate model
-performance:}\label{calculate-model-performance}
+\section{B: Compare model estimates}\label{b-compare-model-estimates}
+
+\subsection{Calculate model performance
+(R-squared):}\label{calculate-model-performance-r-squared}
+
+For each combination of \texttt{method} and \texttt{simulation\_type},
+fit a linear model. Then, for each combination of \texttt{method},
+\texttt{simulation\_type}, and \texttt{n\_sites}, report the proportion
+of variance explained by the corresponding linear model.
 
 \begin{Shaded}
 \begin{Highlighting}[]
@@ -275,14 +285,15 @@ performance:}\label{calculate-model-performance}
 \StringTok{  }\KeywordTok{group_by}\NormalTok{(method, simulation_type, n_sites) %>%}
 \StringTok{  }\KeywordTok{summarise}\NormalTok{(}\DataTypeTok{r2 =} \DecValTok{1} \NormalTok{-}\StringTok{ }\KeywordTok{sum}\NormalTok{(resids^}\DecValTok{2}\NormalTok{) /}\StringTok{ }\KeywordTok{sum}\NormalTok{(truth^}\DecValTok{2}\NormalTok{))}
 
+\CommentTok{# Set the ordering of the data frame based on R-squared}
 \NormalTok{result_summary$method =}\StringTok{ }\KeywordTok{reorder}\NormalTok{(result_summary$method, -result_summary$r2)}
-
 \NormalTok{result_summary$simulation_type =}\StringTok{ }\KeywordTok{reorder}\NormalTok{(}
   \NormalTok{result_summary$simulation_type, }
   \NormalTok{-result_summary$r2}
 \NormalTok{)}
 
-
+\CommentTok{# Add a column that includes method name and its mean R-squared,}
+\CommentTok{# for plotting purposes below}
 \NormalTok{result_summary =}\StringTok{ }\NormalTok{result_summary %>%}\StringTok{ }
 \StringTok{  }\KeywordTok{group_by}\NormalTok{(method) %>%}\StringTok{ }
 \StringTok{  }\KeywordTok{summarise}\NormalTok{(}\DataTypeTok{mean_r2 =} \KeywordTok{round}\NormalTok{(}\DecValTok{100} \NormalTok{*}\StringTok{ }\KeywordTok{mean}\NormalTok{(r2))) %>%}
@@ -290,6 +301,7 @@ performance:}\label{calculate-model-performance}
 \StringTok{  }\KeywordTok{select}\NormalTok{(method, method_r2) %>%}
 \StringTok{  }\KeywordTok{inner_join}\NormalTok{(result_summary, }\StringTok{"method"}\NormalTok{)}
 
+\CommentTok{# Rename the simulation types for clearer graph labels}
 \NormalTok{result_summary$simulation_type_long =}\StringTok{ }\NormalTok{plyr::}\KeywordTok{revalue}\NormalTok{(}
   \NormalTok{result_summary$simulation_type,}
   \KeywordTok{c}\NormalTok{(}\DataTypeTok{no_env =} \StringTok{"constant environment"}\NormalTok{,}
@@ -301,8 +313,8 @@ performance:}\label{calculate-model-performance}
 \end{Highlighting}
 \end{Shaded}
 
-\paragraph{Calculate average R-squared across methods and simulation
-types}\label{calculate-average-r-squared-across-methods-and-simulation-types}
+\paragraph{Average the R-squared values across methods and simulation
+types}\label{average-the-r-squared-values-across-methods-and-simulation-types}
 
 \begin{Shaded}
 \begin{Highlighting}[]
@@ -329,8 +341,8 @@ BayesComm & 0.206 & 0.110 & 0.060\tabularnewline
 \bottomrule
 \end{longtable}
 
-\subsection{Save the R-squared results as Figure
-3}\label{save-the-r-squared-results-as-figure-3}
+\subsection{Save the finer-grained R-squared results as Figure
+3}\label{save-the-finer-grained-r-squared-results-as-figure-3}
 
 \begin{Shaded}
 \begin{Highlighting}[]
@@ -344,7 +356,6 @@ BayesComm & 0.206 & 0.110 & 0.060\tabularnewline
 \StringTok{  }\KeywordTok{scale_shape_manual}\NormalTok{(}\DataTypeTok{values =} \KeywordTok{c}\NormalTok{(}\DecValTok{16}\NormalTok{, }\DecValTok{22}\NormalTok{, }\DecValTok{17}\NormalTok{, }\DecValTok{23}\NormalTok{, }\DecValTok{18}\NormalTok{, }\DecValTok{24}\NormalTok{, }\DecValTok{15}\NormalTok{), }\DataTypeTok{name =} \NormalTok{legend_name) +}
 \StringTok{  }\KeywordTok{geom_hline}\NormalTok{(}\DataTypeTok{yintercept =} \DecValTok{0}\NormalTok{, }\DataTypeTok{size =} \DecValTok{1}\NormalTok{/}\DecValTok{2}\NormalTok{) +}
 \StringTok{  }\KeywordTok{geom_vline}\NormalTok{(}\DataTypeTok{xintercept =} \DecValTok{0}\NormalTok{, }\DataTypeTok{size =} \DecValTok{1}\NormalTok{) +}\StringTok{ }
-\StringTok{  }\CommentTok{#scale_shape_manual(values = c(21, 25, 15, 18)) + }
 \StringTok{  }\KeywordTok{coord_cartesian}\NormalTok{(}\DataTypeTok{ylim =} \KeywordTok{c}\NormalTok{(-.}\DecValTok{01}\NormalTok{, }\FloatTok{0.76}\NormalTok{)) +}\StringTok{ }
 \StringTok{  }\KeywordTok{ylab}\NormalTok{(}\KeywordTok{expression}\NormalTok{(R^}\DecValTok{2}\NormalTok{)) +}\StringTok{ }
 \StringTok{  }\KeywordTok{xlab}\NormalTok{(}\StringTok{"Number of sites (log scale)"}\NormalTok{) +}\StringTok{ }
@@ -373,8 +384,8 @@ BayesComm & 0.206 & 0.110 & 0.060\tabularnewline
 ##   2
 \end{verbatim}
 
-\subsection{Estimate R-squared
-uncertainty:}\label{estimate-r-squared-uncertainty}
+\subsection{Estimate uncertainty in mean
+R-squared:}\label{estimate-uncertainty-in-mean-r-squared}
 
 Fit a linear mixed model describing R-squared as a function of method,
 landscape size, and simulation type. Note the small standard errors
@@ -394,7 +405,8 @@ associated with the effect of estimation method.
   \KeywordTok{lmer}\NormalTok{(}
     \NormalTok{r2 ~}\StringTok{ }\NormalTok{method +}\StringTok{ }\NormalTok{n_sites +}\StringTok{ }\NormalTok{simulation_type +}\StringTok{ }\NormalTok{(}\DecValTok{1}\NormalTok{|rep_name), }
     \DataTypeTok{data =} \NormalTok{landscape_estimates}
-  \NormalTok{)}
+  \NormalTok{),}
+  \DataTypeTok{correlation =} \OtherTok{FALSE}
 \NormalTok{)}
 \end{Highlighting}
 \end{Shaded}
@@ -428,22 +440,49 @@ associated with the effect of estimation method.
 ## n_sites                    1.050e-04  2.690e-06   39.04
 ## simulation_typeenv         8.853e-02  7.402e-03   11.96
 ## simulation_typeno_env      1.795e-01  7.402e-03   24.25
-## 
-## Correlation of Fixed Effects:
-##             (Intr) mthdcr mthGLM mthdMn mthdnl mtBysC mthdpc n_sits smltn_
-## methdcrrltn -0.494                                                        
-## methodGLM   -0.494  0.500                                                 
-## mthdMrkvntw -0.494  0.500  0.500                                          
-## methodnull  -0.494  0.500  0.500  0.500                                   
-## mthdprtBysC -0.494  0.500  0.500  0.500  0.500                            
-## mthdprtlcrr -0.494  0.500  0.500  0.500  0.500  0.500                     
-## n_sites     -0.228  0.000  0.000  0.000  0.000  0.000  0.000              
-## smltn_typnv -0.515  0.000  0.000  0.000  0.000  0.000  0.000  0.000       
-## smltn_typn_ -0.515  0.000  0.000  0.000  0.000  0.000  0.000  0.000  0.500
 \end{verbatim}
+
+\subsection{\texorpdfstring{Plot estimates versus ``true'' values across
+methods and lanscape
+sizes}{Plot estimates versus true values across methods and lanscape sizes}}\label{plot-estimates-versus-true-values-across-methods-and-lanscape-sizes}
+
+The gray line indicates the 1:1 line, where models recover an unbiased
+estimate of the ``true'' \(\beta\) coefficients. The GLM and Markov
+network methods estimate the coefficients on the original scale, and
+approach unbiasedness as the number of sites increases. The four methods
+based on (partial) correlations are constrained to return values between
+-1 and 1, and do not return values on the original scale. The covariance
+and partial covariance (which are not scaled in this way) may avoid this
+problem in future analyses (Loh and Wainwright 2013; see main text for
+full citation).
+
+Note that the null model (Pairs) is not included in these graphs, as its
+test statistic depends strongly on the size of the landscape and fills a
+range that would not fit on these graphs.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{ggplot}\NormalTok{(}\KeywordTok{filter}\NormalTok{(x, simulation_type ==}\StringTok{ "no_env"}\NormalTok{, method !=}\StringTok{ "null"}\NormalTok{),}
+       \KeywordTok{aes}\NormalTok{(}\DataTypeTok{x =} \NormalTok{truth, }\DataTypeTok{y =} \NormalTok{estimate, }\DataTypeTok{color =} \KeywordTok{factor}\NormalTok{(n_sites))) +}\StringTok{ }
+\StringTok{  }\KeywordTok{facet_wrap}\NormalTok{(~method) +}
+\StringTok{  }\KeywordTok{geom_point}\NormalTok{(}\DataTypeTok{alpha =} \FloatTok{0.01}\NormalTok{) +}
+\StringTok{  }\KeywordTok{geom_abline}\NormalTok{(}\DataTypeTok{intercept =} \DecValTok{0}\NormalTok{, }\DataTypeTok{slope =} \DecValTok{1}\NormalTok{, }\DataTypeTok{size =} \DecValTok{2}\NormalTok{, }\DataTypeTok{col =} \StringTok{"darkgray"}\NormalTok{) +}\StringTok{ }
+\StringTok{  }\KeywordTok{geom_smooth}\NormalTok{(}\DataTypeTok{method =} \StringTok{"lm"}\NormalTok{, }\DataTypeTok{fullrange =} \OtherTok{FALSE}\NormalTok{) +}\StringTok{ }
+\StringTok{  }\KeywordTok{coord_equal}\NormalTok{() +}\StringTok{ }
+\StringTok{  }\KeywordTok{scale_color_discrete}\NormalTok{(}\DataTypeTok{name =} \StringTok{"n_sites"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{show-results_files/figure-latex/unnamed-chunk-8-1.png}
+
+\section{C: Inferential statistics}\label{c-inferential-statistics}
 
 \subsection{Identify statistical significance for the Markov network and
 Pairs}\label{identify-statistical-significance-for-the-markov-network-and-pairs}
+
+For Pairs, compare the Z-scores with Gaussian quantiles for 95\%
+coverage; for the Markov network, use the approximate confidence
+intervals estimated in Appendix 3.
 
 \begin{Shaded}
 \begin{Highlighting}[]
@@ -452,7 +491,8 @@ Pairs}\label{identify-statistical-significance-for-the-markov-network-and-pairs}
 
 
 \CommentTok{# Pairs's Z score is based on C-scores, which are positive when species are }
-\CommentTok{# disaggregated.  So significantly positive interactions == negative estimates}
+\CommentTok{# disaggregated.  So significantly negative scores imply positive interactions}
+\CommentTok{# and vice versa}
 \NormalTok{pairs_summary$sig_pos =}\StringTok{ }\NormalTok{pairs_summary$estimate <}\StringTok{ }\KeywordTok{qnorm}\NormalTok{(.}\DecValTok{025}\NormalTok{)}
 \NormalTok{pairs_summary$sig_neg =}\StringTok{ }\NormalTok{pairs_summary$estimate >}\StringTok{ }\KeywordTok{qnorm}\NormalTok{(.}\DecValTok{975}\NormalTok{)}
 
@@ -463,58 +503,51 @@ Pairs}\label{identify-statistical-significance-for-the-markov-network-and-pairs}
 \end{Highlighting}
 \end{Shaded}
 
-\subsection{Create Figure 4:}\label{create-figure-4}
+The \texttt{error\_smoother} is a function that fits a generalized
+additive model to estimate the probability that a model estimate will
+match some criterion (e.g. statistical significance) for some parameter
+as a function of that parameter's ``true'' value. This function is used
+in Figure 4C and in calculating Type I error rates below.
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\CommentTok{# Function for smoothing the error rates with a generalized additive model}
-\CommentTok{# and plotting the results}
-\NormalTok{my_geom_smooth =}\StringTok{ }\NormalTok{function(data, color, ...)\{}
-  \KeywordTok{geom_smooth}\NormalTok{(}
-    \DataTypeTok{data =} \NormalTok{data,}
-    \KeywordTok{aes}\NormalTok{(}
-      \DataTypeTok{x =} \NormalTok{truth, }
-      \DataTypeTok{y =} \KeywordTok{as.integer}\NormalTok{((sig_neg &}\StringTok{ }\NormalTok{truth >}\StringTok{ }\DecValTok{0}\NormalTok{) |}\StringTok{ }\NormalTok{(sig_pos &}\StringTok{ }\NormalTok{truth <}\StringTok{ }\DecValTok{0}\NormalTok{)),}
-      \DataTypeTok{color =} \NormalTok{color}
-    \NormalTok{),}
-    \DataTypeTok{method =} \NormalTok{gam, }
-    \DataTypeTok{family =} \NormalTok{binomial, }
-    \DataTypeTok{formula =} \NormalTok{y ~}\StringTok{ }\KeywordTok{s}\NormalTok{(x),}
-    \DataTypeTok{se =} \OtherTok{FALSE}\NormalTok{,}
-    \DataTypeTok{n =} \DecValTok{1024}\NormalTok{,}
-    \NormalTok{...}
-  \NormalTok{)}
-\NormalTok{\}}
-
-
 \NormalTok{truth_seq =}\StringTok{ }\KeywordTok{seq}\NormalTok{(}\KeywordTok{min}\NormalTok{(markov_summary$truth), }\KeywordTok{max}\NormalTok{(markov_summary$truth), }\DataTypeTok{length =} \DecValTok{1000}\NormalTok{)}
 
-\NormalTok{plotfun =}\StringTok{ }\NormalTok{function(..., add)\{}
-  \NormalTok{if(add)\{}
-    \KeywordTok{lines}\NormalTok{(...)}
-  \NormalTok{\}else\{}
-    \KeywordTok{plot}\NormalTok{(...)}
-  \NormalTok{\}}
-\NormalTok{\}}
-
-
-\NormalTok{error_smoother =}\StringTok{ }\NormalTok{function(data)\{}
+\NormalTok{error_smoother =}\StringTok{ }\NormalTok{function(data, f, }\DataTypeTok{values =} \NormalTok{truth_seq)\{}
   \KeywordTok{predict}\NormalTok{(}
     \KeywordTok{gam}\NormalTok{(}
-      \KeywordTok{I}\NormalTok{((sig_neg &}\StringTok{ }\NormalTok{truth >}\StringTok{ }\DecValTok{0}\NormalTok{) |}\StringTok{ }\NormalTok{(sig_pos &}\StringTok{ }\NormalTok{truth <}\StringTok{ }\DecValTok{0}\NormalTok{)) ~}\StringTok{ }\KeywordTok{s}\NormalTok{(truth),}
+      \KeywordTok{f}\NormalTok{(data) ~}\StringTok{ }\KeywordTok{s}\NormalTok{(truth),}
       \DataTypeTok{data =} \NormalTok{data,}
       \DataTypeTok{family =} \NormalTok{binomial}
     \NormalTok{),}
-    \KeywordTok{data.frame}\NormalTok{(}\DataTypeTok{truth =} \NormalTok{truth_seq),}
+    \KeywordTok{data.frame}\NormalTok{(}\DataTypeTok{truth =} \NormalTok{values),}
     \DataTypeTok{type =} \StringTok{"response"}
   \NormalTok{)}
 \NormalTok{\}}
+\end{Highlighting}
+\end{Shaded}
 
-\NormalTok{y_pairs =}\StringTok{ }\KeywordTok{error_smoother}\NormalTok{(pairs_summary)}
-\NormalTok{y_markov =}\StringTok{ }\KeywordTok{error_smoother}\NormalTok{(markov_summary)}
+\subsection{Create Figure 4}\label{create-figure-4}
 
+Panels A and B plot the point estimates or test statistics for different
+models against one another.
+
+Panel C shows the probability of rejecting the null hypothesis (of no
+interaction between two species) in the opposite direction of the true
+value (see main text).
+
+\begin{Shaded}
+\begin{Highlighting}[]
 \KeywordTok{pdf}\NormalTok{(}\StringTok{"manuscript-materials/figures/error_rates.pdf"}\NormalTok{, }\DataTypeTok{height =} \FloatTok{8.5}\NormalTok{, }\DataTypeTok{width =} \FloatTok{8.5}\NormalTok{/}\DecValTok{3}\NormalTok{)}
 \KeywordTok{par}\NormalTok{(}\DataTypeTok{mfrow =} \KeywordTok{c}\NormalTok{(}\DecValTok{3}\NormalTok{, }\DecValTok{1}\NormalTok{))}
+
+\CommentTok{# Calculate p(confidently wrong) for each model as a function of}
+\CommentTok{# the true values}
+\NormalTok{confidently_wrong =}\StringTok{ }\NormalTok{function(data)\{}
+  \NormalTok{(data$sig_pos &}\StringTok{ }\NormalTok{data$truth <}\StringTok{ }\DecValTok{0}\NormalTok{) |}\StringTok{ }\NormalTok{(data$sig_neg &}\StringTok{ }\NormalTok{data$truth >}\StringTok{ }\DecValTok{0}\NormalTok{)}
+\NormalTok{\}}
+\NormalTok{y_markov =}\StringTok{ }\KeywordTok{error_smoother}\NormalTok{(markov_summary, confidently_wrong)}
+\NormalTok{y_pairs =}\StringTok{ }\KeywordTok{error_smoother}\NormalTok{(pairs_summary, confidently_wrong)}
 
 \CommentTok{# Compare estimates}
 \NormalTok{spread_estimates =}\StringTok{ }\NormalTok{x %>%}
@@ -523,7 +556,10 @@ Pairs}\label{identify-statistical-significance-for-the-markov-network-and-pairs}
 \StringTok{  }\KeywordTok{na.omit}\NormalTok{()}
 
 \CommentTok{# R-squared for null versus correlation}
-\KeywordTok{round}\NormalTok{(}\KeywordTok{summary}\NormalTok{(}\KeywordTok{lm}\NormalTok{(null ~}\StringTok{ }\KeywordTok{I}\NormalTok{(correlation*}\KeywordTok{sqrt}\NormalTok{(n_sites)), }\DataTypeTok{data =} \NormalTok{spread_estimates))$r.squared, }\DecValTok{2}\NormalTok{)}
+\KeywordTok{round}\NormalTok{(}
+  \KeywordTok{summary}\NormalTok{(}\KeywordTok{lm}\NormalTok{(null ~}\StringTok{ }\KeywordTok{I}\NormalTok{(correlation*}\KeywordTok{sqrt}\NormalTok{(n_sites)), }\DataTypeTok{data =} \NormalTok{spread_estimates))$r.squared, }
+  \DecValTok{2}
+\NormalTok{)}
 \end{Highlighting}
 \end{Shaded}
 
@@ -578,7 +614,7 @@ Pairs}\label{identify-statistical-significance-for-the-markov-network-and-pairs}
 \KeywordTok{abline}\NormalTok{(}\KeywordTok{lm}\NormalTok{(null ~}\StringTok{ }\KeywordTok{I}\NormalTok{(correlation*}\KeywordTok{sqrt}\NormalTok{(n_sites)), }\DataTypeTok{data =} \NormalTok{spread_estimates))}
 \KeywordTok{text}\NormalTok{(}\DecValTok{10}\NormalTok{, }\DecValTok{12}\NormalTok{, }\KeywordTok{expression}\NormalTok{(R^}\DecValTok{2}\NormalTok{==}\FloatTok{0.95}\NormalTok{))}
 
-\KeywordTok{plotfun}\NormalTok{(}
+\KeywordTok{plot}\NormalTok{(}
   \NormalTok{truth_seq,}
   \NormalTok{y_pairs,}
   \DataTypeTok{type =} \StringTok{"l"}\NormalTok{,}
@@ -587,13 +623,12 @@ Pairs}\label{identify-statistical-significance-for-the-markov-network-and-pairs}
   \DataTypeTok{bty =} \StringTok{"l"}\NormalTok{,}
   \DataTypeTok{yaxs =} \StringTok{"i"}\NormalTok{,}
   \DataTypeTok{col =} \DecValTok{2}\NormalTok{,}
-  \DataTypeTok{add =} \OtherTok{FALSE}\NormalTok{,}
   \DataTypeTok{ylim =} \KeywordTok{c}\NormalTok{(}\DecValTok{0}\NormalTok{, .}\DecValTok{4}\NormalTok{),}
   \DataTypeTok{lwd =} \DecValTok{2}
 \NormalTok{)}
 \KeywordTok{mtext}\NormalTok{(}\StringTok{"C. Error rate vs.}\CharTok{\textbackslash{}n}\StringTok{interaction strength"}\NormalTok{, }\DataTypeTok{side =} \DecValTok{3}\NormalTok{, }\DataTypeTok{adj =} \DecValTok{0}\NormalTok{, }
       \DataTypeTok{font =} \DecValTok{2}\NormalTok{, }\DataTypeTok{line =} \FloatTok{1.2}\NormalTok{, }\DataTypeTok{cex =} \NormalTok{.}\DecValTok{9}\NormalTok{) }
-\KeywordTok{plotfun}\NormalTok{(truth_seq, y_markov, }\DataTypeTok{add =} \OtherTok{TRUE}\NormalTok{, }\DataTypeTok{lwd =} \DecValTok{2}\NormalTok{)}
+\KeywordTok{lines}\NormalTok{(truth_seq, y_markov, }\DataTypeTok{lwd =} \DecValTok{2}\NormalTok{)}
 \KeywordTok{legend}\NormalTok{(}\StringTok{"topleft"}\NormalTok{, }\DataTypeTok{lwd =} \DecValTok{2}\NormalTok{, }\DataTypeTok{legend =} \KeywordTok{c}\NormalTok{(}\StringTok{"Null model"}\NormalTok{, }\StringTok{"Markov network"}\NormalTok{), }
        \DataTypeTok{col =} \KeywordTok{c}\NormalTok{(}\DecValTok{2}\NormalTok{, }\DecValTok{1}\NormalTok{), }\DataTypeTok{bty =} \StringTok{"n"}\NormalTok{)}
 \KeywordTok{dev.off}\NormalTok{()}
@@ -608,9 +643,10 @@ Pairs}\label{identify-statistical-significance-for-the-markov-network-and-pairs}
 \subsection{Summarize inferential
 statistics:}\label{summarize-inferential-statistics}
 
+\paragraph{P(Pairs confidently wrong):}\label{ppairs-confidently-wrong}
+
 \begin{Shaded}
 \begin{Highlighting}[]
-\CommentTok{# P(Pairs confidently wrong)}
 \KeywordTok{with}\NormalTok{(pairs_summary,  }\KeywordTok{mean}\NormalTok{((sig_neg &}\StringTok{ }\NormalTok{truth >}\StringTok{ }\DecValTok{0}\NormalTok{) |}\StringTok{ }\NormalTok{(sig_pos &}\StringTok{ }\NormalTok{truth <}\StringTok{ }\DecValTok{0}\NormalTok{)))}
 \end{Highlighting}
 \end{Shaded}
@@ -619,9 +655,11 @@ statistics:}\label{summarize-inferential-statistics}
 ## [1] 0.1533758
 \end{verbatim}
 
+\paragraph{P(Markov network confidently
+wrong)}\label{pmarkov-network-confidently-wrong}
+
 \begin{Shaded}
 \begin{Highlighting}[]
-\CommentTok{# P(Markov network confidently wrong)}
 \KeywordTok{with}\NormalTok{(markov_summary, }\KeywordTok{mean}\NormalTok{((sig_neg &}\StringTok{ }\NormalTok{truth >}\StringTok{ }\DecValTok{0}\NormalTok{) |}\StringTok{ }\NormalTok{(sig_pos &}\StringTok{ }\NormalTok{truth <}\StringTok{ }\DecValTok{0}\NormalTok{)))}
 \end{Highlighting}
 \end{Shaded}
@@ -630,9 +668,10 @@ statistics:}\label{summarize-inferential-statistics}
 ## [1] 0.02861541
 \end{verbatim}
 
+\paragraph{P(Pairs rejects null)}\label{ppairs-rejects-null}
+
 \begin{Shaded}
 \begin{Highlighting}[]
-\CommentTok{# P(Pairs rejects null)}
 \KeywordTok{with}\NormalTok{(pairs_summary,  }\KeywordTok{mean}\NormalTok{(sig_neg |}\StringTok{ }\NormalTok{sig_pos))}
 \end{Highlighting}
 \end{Shaded}
@@ -641,9 +680,11 @@ statistics:}\label{summarize-inferential-statistics}
 ## [1] 0.4520535
 \end{verbatim}
 
+\paragraph{P(Markov network rejects
+null)}\label{pmarkov-network-rejects-null}
+
 \begin{Shaded}
 \begin{Highlighting}[]
-\CommentTok{# P(Markov network rejects null)}
 \KeywordTok{with}\NormalTok{(markov_summary,  }\KeywordTok{mean}\NormalTok{(sig_neg |}\StringTok{ }\NormalTok{sig_pos))}
 \end{Highlighting}
 \end{Shaded}
@@ -652,119 +693,98 @@ statistics:}\label{summarize-inferential-statistics}
 ## [1] 0.2116561
 \end{verbatim}
 
-\begin{Shaded}
-\begin{Highlighting}[]
-\CommentTok{# P(reject null | small interaction) for Makrov network}
-\CommentTok{# (approximate Type I error rates)}
-\NormalTok{markov_summary %>%}
-\StringTok{  }\KeywordTok{group_by}\NormalTok{(simulation_type) %>%}\StringTok{ }
-\StringTok{  }\KeywordTok{filter}\NormalTok{(}\KeywordTok{abs}\NormalTok{(truth) <}\StringTok{ }\NormalTok{.}\DecValTok{1}\NormalTok{) %>%}\StringTok{ }
-\StringTok{  }\KeywordTok{summarize}\NormalTok{(}\DataTypeTok{Type_1_error_rate =} \KeywordTok{mean}\NormalTok{(sig_neg |}\StringTok{ }\NormalTok{sig_pos)) %>%}
-\StringTok{  }\KeywordTok{kable}\NormalTok{(}\DataTypeTok{digits =} \DecValTok{3}\NormalTok{)}
-\end{Highlighting}
-\end{Shaded}
+\subsection{Type I error rates:}\label{type-i-error-rates}
 
-\begin{longtable}[c]{@{}lr@{}}
-\toprule
-simulation\_type & Type\_1\_error\_rate\tabularnewline
-\midrule
-\endhead
-abund & 0.220\tabularnewline
-env & 0.136\tabularnewline
-no\_env & 0.019\tabularnewline
-\bottomrule
-\end{longtable}
+Type I error rates (probability of rejecting the null hypothesis given a
+``true'' interaction strength of zero, according to the spline model
+defined by \texttt{error\_smoother} above). The smoother focuses on the
+64\% of the data points whose ``true'' values fall between -1 and 1,
+because its estimates near 0 are more accurate when they aren't affected
+by distant data points.
+
+\paragraph{Markov network Type I error
+rates}\label{markov-network-type-i-error-rates}
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\CommentTok{# P(reject null | small interaction) for Pairs}
-\CommentTok{# (approximate Type I error rates)}
-\NormalTok{pairs_summary %>%}
-\StringTok{  }\KeywordTok{group_by}\NormalTok{(simulation_type) %>%}\StringTok{ }
-\StringTok{  }\KeywordTok{filter}\NormalTok{(}\KeywordTok{abs}\NormalTok{(truth) <}\StringTok{ }\NormalTok{.}\DecValTok{1}\NormalTok{) %>%}\StringTok{ }
-\StringTok{  }\KeywordTok{summarize}\NormalTok{(}\DataTypeTok{Type_1_error_rate =} \KeywordTok{mean}\NormalTok{(sig_neg |}\StringTok{ }\NormalTok{sig_pos)) %>%}
-\StringTok{  }\KeywordTok{kable}\NormalTok{(}\DataTypeTok{digits =} \DecValTok{3}\NormalTok{)}
-\end{Highlighting}
-\end{Shaded}
-
-\begin{longtable}[c]{@{}lr@{}}
-\toprule
-simulation\_type & Type\_1\_error\_rate\tabularnewline
-\midrule
-\endhead
-abund & 0.575\tabularnewline
-env & 0.501\tabularnewline
-no\_env & 0.297\tabularnewline
-\bottomrule
-\end{longtable}
-
-\begin{Shaded}
-\begin{Highlighting}[]
-\CommentTok{# Confidence interval coverage across all values}
-\CommentTok{# What's the probability that any "true" value falls inside the 95% CI?}
 \NormalTok{markov_summary %>%}\StringTok{ }
+\StringTok{  }\KeywordTok{filter}\NormalTok{(}\KeywordTok{abs}\NormalTok{(truth) <}\StringTok{ }\DecValTok{1}\NormalTok{) %>%}\StringTok{ }
 \StringTok{  }\KeywordTok{group_by}\NormalTok{(simulation_type) %>%}\StringTok{ }
-\StringTok{  }\KeywordTok{summarize}\NormalTok{(}\KeywordTok{mean}\NormalTok{(truth >}\StringTok{ }\NormalTok{lower &}\StringTok{ }\NormalTok{truth <}\StringTok{ }\NormalTok{upper)) %>%}
+\StringTok{  }\KeywordTok{do}\NormalTok{(}\KeywordTok{data.frame}\NormalTok{(}
+    \StringTok{`}\DataTypeTok{Type I error rate}\StringTok{`} \NormalTok{=}\StringTok{ }
+\StringTok{      }\KeywordTok{error_smoother}\NormalTok{(., function(x)\{x$sig_pos |}\StringTok{ }\NormalTok{x$sig_neg\}, }\DataTypeTok{values =} \DecValTok{0}\NormalTok{)}
+  \NormalTok{)) %>%}
 \StringTok{  }\KeywordTok{kable}\NormalTok{(}\DataTypeTok{digits =} \DecValTok{3}\NormalTok{)}
 \end{Highlighting}
 \end{Shaded}
 
 \begin{longtable}[c]{@{}lr@{}}
 \toprule
-simulation\_type & mean(truth \textgreater{} lower \& truth \textless{}
-upper)\tabularnewline
+simulation\_type & Type.I.error.rate\tabularnewline
 \midrule
 \endhead
-abund & 0.868\tabularnewline
-env & 0.857\tabularnewline
-no\_env & 0.975\tabularnewline
+abund & 0.258\tabularnewline
+env & 0.142\tabularnewline
+no\_env & 0.024\tabularnewline
 \bottomrule
 \end{longtable}
 
-\subsection{\texorpdfstring{Plot root mean square error versus ``true''
-beta}{Plot root mean square error versus true beta}}\label{plot-root-mean-square-error-versus-true-beta}
+\paragraph{Null model Type I error
+rates}\label{null-model-type-i-error-rates}
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\CommentTok{# Exclude the "abundance" simulations because the interpretation of $\textbackslash{}beta$ }
-\CommentTok{# is different}
-\NormalTok{rmses =}\StringTok{ }\NormalTok{markov_summary %>%}\StringTok{ }
-\StringTok{  }\KeywordTok{filter}\NormalTok{(simulation_type !=}\StringTok{ "abund"}\NormalTok{) %>%}\StringTok{ }
-\StringTok{  }\KeywordTok{mutate}\NormalTok{(}\DataTypeTok{rmse =} \KeywordTok{sqrt}\NormalTok{((truth -}\StringTok{ }\NormalTok{estimate)^}\DecValTok{2}\NormalTok{))}
-
-\KeywordTok{ggplot}\NormalTok{(rmses, }\KeywordTok{aes}\NormalTok{(}\DataTypeTok{x =} \NormalTok{truth, }\DataTypeTok{y =} \NormalTok{rmse)) +}\StringTok{ }
-\StringTok{  }\KeywordTok{geom_point}\NormalTok{(}\DataTypeTok{alpha =} \NormalTok{.}\DecValTok{2}\NormalTok{, }\DataTypeTok{size =} \DecValTok{1}\NormalTok{) +}\StringTok{ }
-\StringTok{  }\KeywordTok{geom_smooth}\NormalTok{() +}\StringTok{ }
-\StringTok{  }\KeywordTok{theme_bw}\NormalTok{() +}\StringTok{ }
-\StringTok{  }\KeywordTok{coord_cartesian}\NormalTok{(}\DataTypeTok{ylim =} \KeywordTok{c}\NormalTok{(}\DecValTok{0}\NormalTok{, }\KeywordTok{max}\NormalTok{(rmses$rmse)))}
+\NormalTok{pairs_summary %>%}\StringTok{ }
+\StringTok{  }\KeywordTok{filter}\NormalTok{(}\KeywordTok{abs}\NormalTok{(truth) <}\StringTok{ }\DecValTok{1}\NormalTok{) %>%}\StringTok{ }
+\StringTok{  }\KeywordTok{group_by}\NormalTok{(simulation_type) %>%}\StringTok{ }
+\StringTok{  }\KeywordTok{do}\NormalTok{(}\KeywordTok{data.frame}\NormalTok{(}
+    \StringTok{`}\DataTypeTok{Type I error rate}\StringTok{`} \NormalTok{=}\StringTok{ }
+\StringTok{      }\KeywordTok{error_smoother}\NormalTok{(., function(x)\{x$sig_pos |}\StringTok{ }\NormalTok{x$sig_neg\}, }\DataTypeTok{values =} \DecValTok{0}\NormalTok{)}
+  \NormalTok{)) %>%}
+\StringTok{  }\KeywordTok{kable}\NormalTok{(}\DataTypeTok{digits =} \DecValTok{3}\NormalTok{)}
 \end{Highlighting}
 \end{Shaded}
 
-\includegraphics{show-results_files/figure-latex/unnamed-chunk-11-1.pdf}
+\begin{longtable}[c]{@{}lr@{}}
+\toprule
+simulation\_type & Type.I.error.rate\tabularnewline
+\midrule
+\endhead
+abund & 0.597\tabularnewline
+env & 0.530\tabularnewline
+no\_env & 0.308\tabularnewline
+\bottomrule
+\end{longtable}
 
-\subsection{\texorpdfstring{Plot confidence interval coverage versus
-true \(\beta\)
-value}{Plot confidence interval coverage versus true \textbackslash{}beta value}}\label{plot-confidence-interval-coverage-versus-true-beta-value}
+\subsection{\texorpdfstring{Plot Markov network confidence interval
+coverage versus true \(\beta\)
+value}{Plot Markov network confidence interval coverage versus true \textbackslash{}beta value}}\label{plot-markov-network-confidence-interval-coverage-versus-true-beta-value}
+
+The top and bottom 0.5\% of the distribution have been omitted to
+prevent bad behavior by the smoother in the tails. The horizontal red
+line shows the nominal 95\% coverage rate and the black vertical line
+marks where the ``true'' value of \(\beta\) was zero. The Type I error
+rates calculated above for the Markov network closely match (one minus)
+the values of these curves at zero.
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\CommentTok{# Coverage versus true beta value.  The top and bottom 0.5%}
-\CommentTok{# of the distribution have been omitted to prevent bad behavior}
-\CommentTok{# by the smoother in the tails.}
-\NormalTok{markov_summary %>%}
+\NormalTok{coverage_data =}\StringTok{ }\NormalTok{markov_summary %>%}
 \StringTok{  }\KeywordTok{filter}\NormalTok{(}\KeywordTok{percent_rank}\NormalTok{(truth) >}\StringTok{ }\NormalTok{.}\DecValTok{005} \NormalTok{&}\StringTok{ }\KeywordTok{percent_rank}\NormalTok{(truth) <}\StringTok{ }\NormalTok{.}\DecValTok{995}\NormalTok{) %>%}
 \StringTok{  }\KeywordTok{mutate}\NormalTok{(}\DataTypeTok{covered =} \NormalTok{truth >}\StringTok{ }\NormalTok{lower &}\StringTok{ }\NormalTok{truth <}\StringTok{ }\NormalTok{upper) %>%}
-\StringTok{  }\KeywordTok{ggplot}\NormalTok{(}\KeywordTok{aes}\NormalTok{(}\DataTypeTok{x =} \NormalTok{truth, }\DataTypeTok{y =} \KeywordTok{as.integer}\NormalTok{(covered))) +}\StringTok{ }
+\StringTok{  }\KeywordTok{mutate}\NormalTok{(}\DataTypeTok{simulation_type =} \KeywordTok{factor}\NormalTok{(simulation_type, }\KeywordTok{c}\NormalTok{(}\StringTok{"no_env"}\NormalTok{, }\StringTok{"env"}\NormalTok{, }\StringTok{"abund"}\NormalTok{)))}
+
+\KeywordTok{ggplot}\NormalTok{(coverage_data, }\KeywordTok{aes}\NormalTok{(}\DataTypeTok{x =} \NormalTok{truth, }\DataTypeTok{y =} \KeywordTok{as.integer}\NormalTok{(covered))) +}\StringTok{ }
 \StringTok{  }\KeywordTok{facet_grid}\NormalTok{(~simulation_type) +}\StringTok{ }
-\StringTok{  }\KeywordTok{geom_smooth}\NormalTok{(}\DataTypeTok{method =} \NormalTok{gam, }\DataTypeTok{formula =} \NormalTok{y ~}\StringTok{ }\KeywordTok{s}\NormalTok{(x), }\DataTypeTok{method.args =} \KeywordTok{list}\NormalTok{(}\DataTypeTok{family =} \StringTok{"binomial"}\NormalTok{)) +}\StringTok{ }
+\StringTok{  }\KeywordTok{geom_smooth}\NormalTok{(}\DataTypeTok{method =} \NormalTok{gam, }\DataTypeTok{formula =} \NormalTok{y ~}\StringTok{ }\KeywordTok{s}\NormalTok{(x), }\DataTypeTok{method.args =} \KeywordTok{list}\NormalTok{(}\DataTypeTok{family =} \NormalTok{binomial)) +}\StringTok{ }
 \StringTok{  }\KeywordTok{theme_bw}\NormalTok{() +}\StringTok{ }
-\StringTok{  }\KeywordTok{coord_cartesian}\NormalTok{(}\DataTypeTok{ylim =} \KeywordTok{c}\NormalTok{(}\DecValTok{0}\NormalTok{, }\DecValTok{1}\NormalTok{)) +}\StringTok{ }
+\StringTok{  }\KeywordTok{coord_cartesian}\NormalTok{(}\DataTypeTok{ylim =} \KeywordTok{c}\NormalTok{(}\DecValTok{0}\NormalTok{, }\DecValTok{1}\NormalTok{), }\DataTypeTok{expand =} \OtherTok{FALSE}\NormalTok{) +}\StringTok{ }
 \StringTok{  }\KeywordTok{geom_vline}\NormalTok{(}\DataTypeTok{xintercept =} \DecValTok{0}\NormalTok{) +}\StringTok{ }
 \StringTok{  }\KeywordTok{geom_hline}\NormalTok{(}\DataTypeTok{yintercept =} \FloatTok{0.95}\NormalTok{, }\DataTypeTok{color =} \StringTok{"red"}\NormalTok{) +}\StringTok{ }
 \StringTok{  }\KeywordTok{ylab}\NormalTok{(}\StringTok{"Coverage"}\NormalTok{)}
 \end{Highlighting}
 \end{Shaded}
 
-\includegraphics{show-results_files/figure-latex/unnamed-chunk-12-1.pdf}
+\includegraphics{show-results_files/figure-latex/unnamed-chunk-18-1.pdf}
 
 \end{document}

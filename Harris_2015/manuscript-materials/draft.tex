@@ -92,10 +92,11 @@ Markov networks and six existing approaches. The Markov networks
 consistently outperformed other methods, correctly isolating direct
 interactions between species pairs even when indirect interactions or
 abiotic factors largely overpowered them. Two computationally efficient
-approximations, based on controlling for indirect effects with linear or
-generalized linear models, also performed well. Null models showed no
-evidence of being able to control for indirect effects, and reliably
-yielded incorrect inferences when such effects were present.
+approximations, based on controlling for indirect effects with partial
+correlations or generalized linear models, also performed well. Null
+models showed no evidence of being able to control for indirect effects,
+and reliably yielded incorrect inferences when such effects were
+present.
 
 \textbf{Key words:} Ecological interactions; Occurrence data; Species
 associations; Markov network; Markov random field; Ising model;
@@ -215,10 +216,10 @@ networks like the ones considered here have unimodal likelihood surfaces
 
 When the number of species is larger than about 30, noralizing Equation
 1 can become intractable, and researchers will either need to
-approximate it (Lee and Hastie 2012) or approximate its gradient
-({\textbf{???}}) if they want to fit a Markov network model. For the
-analyses presented here, I used the rosalia package (Harris 2015a) for
-the R programming language (R Core Team 2015) to calculate
+approximate it (Lee and Hastie 2012) or approximate its gradient (Harris
+2016) if they want to fit a Markov network model. For the analyses
+presented here, I used the rosalia package (Harris 2015a) for the R
+programming language (R Core Team 2015) to calculate
 \(p(\vec{y}; \alpha, \beta)\) and its gradients exactly (Murphy 2012);
 the package passes these functions to the ``BFGS'' method in R's
 general-purpose optimizer, which finds values for \(\alpha\) and
@@ -253,9 +254,9 @@ independent Gaussians for each site. Once the local \(\alpha\) values
 were calculated, independent Gibbs samplers determined the species
 composition for each site based on Equation 1.
 
-In the third set of landscapes, I simulated each species' abundance
-(instead of just their presence/absence), and interactions between
-species occurred on a per-capita basis. To avoid runaway mutualisms
+In the final set of landscapes, I simulated each species' abundance
+(instead of just their presence/absence); here, interactions between
+species occurred on a per-capita basis. To prevent runaway mutualisms
 leading to infinite abundance, all interaction coefficients were
 negative in these simulations. Good performance on these landscapes
 would indicate some robustness to the mechanistic details of species
@@ -330,9 +331,9 @@ to be zero).
 For the null model and the Markov network, the probability of rejecting
 the null hypothesis of zero interaction was estimated across a range of
 ``true'' interaction strengths using a generalized additive model with
-binomial responses (reject versus not; Appendix 4). The Type I error
-rate was defined as this model's estimated probability of rejecting the
-null hypothesis when the ``true'' interaction was zero.
+binomial responses (reject versus not; Appendix 4). The probability of
+rejection when the ``true'' value of \(\beta\) was zero was defined as
+the Type I error rate.
 
 \noindent
 \textbf{Results}
@@ -379,20 +380,19 @@ remaining variance is due to sampling error.
 Finally, we can evaluate the models' statistical inferences (focusing on
 the first two simulation types, where the interaction coefficients are
 easiest to interpret). The Markov network's Type I error rate depended
-on the simulation type: {[}{[}0.02{]}{]} for simulations that matched
-the model's assumptions, versus {[}{[}0.14{]}{]} for simulations that
-included environmental heterogeneity (see Appendix 4 for confidence
-interval coverage across a range of \(\beta_{ij}\) values). The null
-model's Type I error rates were {[}{[}0.30{]}{]} and {[}{[}0.50{]}{]}
-for the constant and heterogeneous landscapes, respectively---far higher
-than the nominal 0.05 rate. Figure 4C shows, across a range of true
-interaction strengths, the probability that the null model or the Markov
-network will predict the wrong sign of the interaction with 95\%
-confidence. The null model makes such errors more than {[}{[}5{]}{]}
-times as often as the Markov network, even though it only rejects the
-null hypothesis {[}{[}twice{]}{]} as often overall (Appendix 4). The
-Markov network's errors were also more concentrated around 0, so it
-never misclassified strong interactions like the null model did.
+on the simulation type: 0.02 for simulations that matched the model's
+assumptions, versus 0.14 for simulations that included environmental
+heterogeneity (see Appendix 4 for confidence interval coverage across a
+range of \(\beta_{ij}\) values). The null model's Type I error rates
+were 0.31 and 0.53 for the constant and heterogeneous landscapes,
+respectively---far higher than the nominal 0.05 rate. Figure 4C shows,
+across a range of true interaction strengths, the probability that the
+null model or the Markov network will predict the wrong sign of the
+interaction with 95\% confidence. The null model makes such errors more
+than 5 times as often as the Markov network, even though it only rejects
+the null hypothesis twice as often overall (Appendix 4). The Markov
+network's errors were also more concentrated around 0, so it never
+misclassified strong interactions like the null model did (Figure 4C).
 
 \noindent
 \textbf{Discussion}
@@ -448,9 +448,9 @@ advantage of into a vast set of existing discoveries and techniques for
 dealing with indirect effects, stability, and alternative stable states.
 Numerous extensions to the basic network are possible as well. For
 example, the states of the interaction network can be modeled as a
-function of the local abiotic environment (Lee and Hastie 2012,
-{\textbf{???}}), which would lead to a better understanding of the
-interplay between biotic and abiotic effects on community structure.
+function of the local abiotic environment (Lee and Hastie 2012, Harris
+2016), which would lead to a better understanding of the interplay
+between biotic and abiotic effects on community structure.
 Alternatively, models could allow one species to alter the relationship
 between two other species (Whittam and Siegel-Causey 1981, Tjelmeland
 and Besag 1998, cf Bruno et al. 2003).
@@ -614,6 +614,11 @@ http://dx.doi.org/10.5281/zenodo.17808.
 \hyperdef{}{ref-harrisux5fgeneratingux5f2015}{\label{ref-harrisux5fgeneratingux5f2015}}
 Harris, D. J. 2015b. Generating realistic assemblages with a joint
 species distribution model. Methods in Ecology and Evolution.
+
+\hyperdef{}{ref-harrisux5festimatingux5f2016}{\label{ref-harrisux5festimatingux5f2016}}
+Harris, D. J. 2016. Estimating species interactions in large,
+abiotically structured communities using markov networks and stochastic
+approximation. bioRxiv.
 
 \hyperdef{}{ref-harrisux5foccupancyux5f2011}{\label{ref-harrisux5foccupancyux5f2011}}
 Harris, D. J., K. G. Smith, and P. J. Hanly. 2011. Occupancy is
