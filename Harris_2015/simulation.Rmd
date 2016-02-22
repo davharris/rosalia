@@ -9,11 +9,11 @@ fontsize: 11pt
 
 ## Simulating landscapes from known coefficients
   
-The following function draws random coefficients for a Markov network of a pre-specified size.
+The following function draws random coefficients for a Markov network of a pre-specified size (20 species in these examples).
 
 The $alpha$ coefficients controlling species' intercepts were drawn from 
 Gaussian distributions with unit variance and a mean given by `mean_alpha`.
-In the R code at the end of this document, `mean_alpha` was defined as $-1$ 
+In the R code at the end of this document, `mean_alpha` is defined as $-1$ 
 for presence-absence simulations and $5$ for the abundance simulations. 
 
 The $\beta$ coefficients' magnitudes were drawn from an exponential 

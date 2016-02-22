@@ -25,7 +25,7 @@ landscapes with known interactions, I evaluated Markov networks and six existing
 approaches. The Markov networks consistently outperformed other methods, 
 correctly isolating direct interactions between species pairs even when indirect
 interactions or abiotic factors largely overpowered them. Two computationally 
-efficient approximations, based on controlling for indirect effects with partial
+efficient approximations, which controlled for indirect effects with partial
 correlations or generalized linear models, also performed well. Null models 
 showed no evidence of being able to control for indirect effects, and reliably 
 yielded incorrect inferences when such effects were present.
@@ -70,7 +70,7 @@ Following @azaele_inferring_2010, this paper shows that Markov networks
 @murphy_machine_2012] can provide a framework for understanding the
 landscape-level consequences of pairwise species interactions,
 and for estimating them from observed presence-absence matrices. Markov networks
-have been used in diverse scientific fields in similar contexts for decades, from
+have been used in diverse scientific fields for decades, from
 physics [where nearby particles interact magnetically; @cipra_introduction_1987]
 to spatial statistics [where adjacent grid cells have correlated values;
 @harris_contact_1974; @gelfand_modelling_2005]. While community ecologists
@@ -124,10 +124,7 @@ increases when positively-associated species co-occur and decreases when
 negatively-associated species co-occur. As a result, the model tends---all else
 equal---to produce assemblages where many positively-associated species pairs
 co-occur and few negatively-associated pairs do (just as an ecologist might
-expect). When all else is *not* equal (e.g. Figure 1, where the presence of one
-competitor is associated with release from another competitor), then predicting
-species' overall co-occurrence rates would require normalizing the relative 
-probabilities of possible $\vec{y}$ vectors so that they sum to one (Figure 2B). 
+expect).
 
 \noindent \textbf{Estimating $\alpha$ and $\beta$ coefficients from presence-absence data.}
 In the previous section, the values of $\alpha$ and $\beta$ were known and the
@@ -135,15 +132,17 @@ goal was to make predictions about possible species assemblages. In
 practice, however, ecologists will often need to estimate the parameters from
 an observed co-occurrence matrix (i.e. from a set of independent $\vec{y}$ vectors
 indicating which species are present at each site on the landscape). When
-Equation 1 can be normalized, one can find exact maximum likelihood estimates for
-$\alpha$ and $\beta$ using numerical optimization. Fully-observed networks like 
-the ones considered here have unimodal likelihood surfaces 
-[@murphy_machine_2012], so these estimates will represent the global optimum. 
+Equation 1 can be normalized (Figure 2B), one can find exact maximum likelihood
+estimates for $\alpha$ and $\beta$ by numerically optimizing
+$p(\vec{y}|\alpha, \beta)$. Fully-observed networks like the ones considered 
+here have unimodal likelihood surfaces [@murphy_machine_2012], so these
+estimates will represent the global optimum. 
 
 When the number of species is larger than about 30, noralizing Equation 1 
 can become intractable, and researchers will either need to approximate it [@lee_learning_2012] or approximate its gradient [@harris_estimating_2016] if
-they want to fit a Markov network model. For the analyses presented here, I used 
-the rosalia package [@harris_rosalia_2015] for the R programming language
+they want to fit a Markov network model. For the analyses presented here, where
+the number of species did not exceed 20, approximations were not necessary. Instead,
+I used the rosalia package [@harris_rosalia_2015] for the R programming language
 [@r_core_team_r_2015] to calculate $p(\vec{y}; \alpha, \beta)$ and its gradients
 exactly [@murphy_machine_2012]; the package passes these functions to the "BFGS" 
 method in R's general-purpose optimizer, which finds values for $\alpha$ and 
@@ -171,17 +170,17 @@ assigned 25% of the interactions to be positive; the remainder were negative.
 The next set of landscapes provided a way to assess each method's ability to 
 identify direct interactions in the presence of environmental heterogeneity.
 Here, the $\beta$ coefficients were calculated as above, but each species'
-$\alpha$ value depended linearly on two normally-distributed environmental 
-factors, which were drawn from independent Gaussians for each site. Once the 
-local $\alpha$ values were calculated, independent Gibbs samplers determined 
-the species composition for each site based on Equation 1.
+$\alpha$ value depended linearly on two environmental factors, which were drawn 
+from independent Gaussians for each site. Once the local $\alpha$ values were
+calculated, independent Gibbs samplers determined the species composition for 
+each site based on Equation 1.
 
 In the final set of landscapes, I simulated each species' abundance (instead of
-just their presence/absence); here, interactions between species occurred on a 
-per-capita basis. To prevent runaway mutualisms leading to infinite abundance,
-all interaction coefficients were negative in these simulations. Good 
-performance on these landscapes would indicate some robustness to the
-mechanistic details of species interactions.
+just presence/absence); furthermore, interactions between species occurred on a 
+per-capita basis in these simulations. To prevent runaway mutualisms leading to
+infinite abundance, all interaction coefficients were negative in these 
+simulations. Good performance on these landscapes would indicate some robustness 
+to the mechanistic details of species interactions.
 
 \noindent \textbf{Recovering species interactions from simulated data.}
 I compared seven techniques for determining the sign and strength of the
@@ -189,7 +188,7 @@ associations between pairs of species from simulated data (Appendix 3).
 First, I used the rosalia package [@harris_rosalia_2015] to fit Markov network
 models, as described above. For the analyses with 20 species, a 
 weakly-informative regularizer (equivalent to a logistic prior with location 0
-and scale 2) ensured that the estimates were always finite.
+and scale 2) ensured that the estimates were always finite (Appendix 2).
 
 I also evaluated six alternative methods: five from the existing literature,
 plus a novel combination of two of these methods. The first alternative 
@@ -217,7 +216,7 @@ the data, however [@schmidt_modeling_2012], so I used their average as an
 overall measure of the pairwise relationship.
 
 The next method used the Pairs software described in @gotelli_empirical_2009.
-This program simulating new landscapes from a null model that retains the row 
+This program simulates new landscapes from a null model that retains the row 
 and column sums of the original matrix [@strong_ecological_1984] and calculates
 $Z$-scores to summarize a species pair's deviation from this null.
 
@@ -304,7 +303,7 @@ strengths, the probability that the null model or the Markov network will
 predict the wrong sign of the interaction with 95% confidence.  The null model 
 makes such errors more than 5 times as often as the Markov network, even
 though it only rejects the null hypothesis twice as often overall (Appendix
-4). The Markov network's errors were also more concentrated around 0, so it 
+4). The Markov network's errors were also more concentrated around 0, and it 
 never misclassified strong interactions like the null model did (Figure 4C).
 
 \noindent
@@ -318,8 +317,8 @@ null modeling approaches to reliably fail. Partial correlations and generalized
 linear models can both provide computationally efficient approximations, but
 with somewhat lower accuracy [especially for typically-sized data sets with small
 numbers of sites; @gotelli_empirical_2009]. The difference in accuracy may be
-larger for real data sets than for the simulated landscapes in Figure 3,
-however; linear approximations to the Markov network make larger errors when
+even larger for real data sets than for the simulated landscapes in Figure 3; 
+linear approximations to the Markov network make larger errors when
 the interaction matrix is structured [e.g. due to guilds or trophic levels;
 @loh_structure_2013]. Similarly, the separate generalized linear models
 for each species can severely overfit in some cases [@lee_learning_2012]. The
