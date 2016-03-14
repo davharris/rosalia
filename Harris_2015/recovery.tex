@@ -331,7 +331,11 @@ Run the above function on all the files:
 \CommentTok{# then drop .csv}
 \NormalTok{identifiers =}\StringTok{ }\KeywordTok{dir}\NormalTok{(}\StringTok{"fakedata/matrices"}\NormalTok{, }\DataTypeTok{pattern =} \StringTok{"}\CharTok{\textbackslash{}\textbackslash{}}\StringTok{.csv$"}\NormalTok{) %>%}
 \StringTok{  }\KeywordTok{gsub}\NormalTok{(}\StringTok{"}\CharTok{\textbackslash{}\textbackslash{}}\StringTok{.csv$"}\NormalTok{, }\StringTok{""}\NormalTok{, .)}
+\end{Highlighting}
+\end{Shaded}
 
+\begin{Shaded}
+\begin{Highlighting}[]
 \KeywordTok{mclapply}\NormalTok{(identifiers, fit_all, }\DataTypeTok{mc.cores =} \NormalTok{mc.cores, }
          \DataTypeTok{mc.preschedule =} \OtherTok{FALSE}\NormalTok{, }\DataTypeTok{mc.silent =} \OtherTok{TRUE}\NormalTok{) %>%}\StringTok{ }
 \StringTok{  }\KeywordTok{bind_rows}\NormalTok{() %>%}\StringTok{ }
@@ -339,7 +343,7 @@ Run the above function on all the files:
 \end{Highlighting}
 \end{Shaded}
 
-\subsubsection{Logistic prior used for the Markov
+\subsection{Logistic prior used for the Markov
 network}\label{logistic-prior-used-for-the-markov-network}
 
 From the R help file for the logistic distribution:
@@ -374,7 +378,7 @@ parameters (mean absolute deviation from zero about 2.8 times larger).
 \end{Highlighting}
 \end{Shaded}
 
-\includegraphics{recovery_files/figure-latex/unnamed-chunk-4-1.pdf}
+\includegraphics{recovery_files/figure-latex/unnamed-chunk-5-1.pdf}
 
 The log of this density was added to the log-likelihood to calculate an
 un-normalized log-posterior, which is optimized by the \texttt{optim}
@@ -411,6 +415,63 @@ prior does.
 \end{Highlighting}
 \end{Shaded}
 
-\includegraphics{recovery_files/figure-latex/unnamed-chunk-5-1.pdf}
+\includegraphics{recovery_files/figure-latex/unnamed-chunk-6-1.pdf}
+
+\subsection{GLM coefficient
+correlations}\label{glm-coefficient-correlations}
+
+The GLM method produces two estimates for each species pair. These
+estimates tend to be very similar, so most reasonable methods for
+generating a consensus estimate should produce very similar results.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{get_glm_cor =}\StringTok{ }\NormalTok{function(identifier)\{}
+  \NormalTok{data_filename =}\StringTok{ }\KeywordTok{paste0}\NormalTok{(}\StringTok{"fakedata/matrices/"}\NormalTok{, identifier, }\StringTok{".csv"}\NormalTok{)}
+  
+  \CommentTok{# first column is row numbers; drop it}
+  \NormalTok{raw_obs =}\StringTok{ }\KeywordTok{as.matrix}\NormalTok{(}\KeywordTok{read.csv}\NormalTok{(data_filename)[ , -}\DecValTok{1}\NormalTok{])}
+  
+  \CommentTok{# Identify species that are never present (or never absent) so they }
+  \CommentTok{# can be dropped}
+  \NormalTok{species_is_variable =}\StringTok{ }\KeywordTok{diag}\NormalTok{(}\KeywordTok{var}\NormalTok{(raw_obs)) >}\StringTok{ }\DecValTok{0}
+  \NormalTok{pair_is_variable =}\StringTok{ }\KeywordTok{tcrossprod}\NormalTok{(species_is_variable) >}\StringTok{ }\DecValTok{0}
+  
+  
+  \NormalTok{x =}\StringTok{ }\NormalTok{raw_obs[ , species_is_variable]}
+  
+  \NormalTok{coef_matrix =}\StringTok{ }\KeywordTok{matrix}\NormalTok{(}\DecValTok{0}\NormalTok{, }\KeywordTok{ncol}\NormalTok{(x), }\KeywordTok{ncol}\NormalTok{(x))}
+  
+  \CommentTok{# Fill in the coefficient matrix, column-by-column}
+  \NormalTok{for(i in }\DecValTok{1}\NormalTok{:}\KeywordTok{ncol}\NormalTok{(x))\{}
+    \NormalTok{if(}\KeywordTok{var}\NormalTok{(x[,i]) >}\StringTok{ }\DecValTok{0}\NormalTok{)\{}
+      \NormalTok{coefs =}\StringTok{ }\KeywordTok{coef}\NormalTok{(}\KeywordTok{bayesglm}\NormalTok{(x[,i] ~}\StringTok{ }\NormalTok{x[ , -i], }\DataTypeTok{family =} \NormalTok{binomial))[-}\DecValTok{1}\NormalTok{]}
+      \NormalTok{coef_matrix[i, -i] =}\StringTok{ }\NormalTok{coefs}
+    \NormalTok{\}}
+  \NormalTok{\}}
+  
+  \CommentTok{# Compare the estimates from the upper triangle with the estimates from }
+  \CommentTok{# the estimates in the lower triangle (which becomes the upper triangle after }
+  \CommentTok{# transposing)}
+  \KeywordTok{cor}\NormalTok{(coef_matrix[}\KeywordTok{upper.tri}\NormalTok{(coef_matrix)], }\KeywordTok{t}\NormalTok{(coef_matrix)[}\KeywordTok{upper.tri}\NormalTok{(coef_matrix)])}
+\NormalTok{\}}
+
+\NormalTok{glm_correlations =}\StringTok{ }\KeywordTok{unlist}\NormalTok{(}\KeywordTok{mclapply}\NormalTok{(identifiers, get_glm_cor))}
+
+\KeywordTok{mean}\NormalTok{(glm_correlations)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] 0.9546387
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{hist}\NormalTok{(glm_correlations)}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{recovery_files/figure-latex/unnamed-chunk-7-1.pdf}
 
 \end{document}

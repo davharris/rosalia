@@ -2,6 +2,7 @@
 output: 
   pdf_document:
     keep_tex: true
+    toc: true
 title: "Appendix 4: Results"
 subtitle: "Inferring species interactions from co-occurrence data with Markov networks"
 author: David J. Harris
@@ -135,7 +136,7 @@ For each combination of `method` and `simulation_type`, fit a linear model.
 Then, for each combination of `method`, `simulation_type`, and `n_sites`,
 report the proportion of variance explained by the corresponding linear model.
 
-```{r, cache = TRUE}
+```{r, cache = FALSE}
 resids = function(data){
   resid(lm(truth ~ estimate + 0, data = data))
 }
@@ -173,6 +174,44 @@ result_summary$simulation_type_long = plyr::revalue(
 
 result_summary$method_r2 = reorder(result_summary$method_r2, -result_summary$r2)
 ```
+
+#### Plot the regressions used above to calculate R^2
+
+The plots below each correspond to one of the regressions performed above to
+calculate R^2 for a combination of simulation method and estimation method.
+The null model ("Pairs") was not included in these plots because its Z-scores
+were frequently too large to fit on the same scale as the other methods' estimates.
+Below, the thinner dashed lines represent the 1:1 line, where the expected estimate
+matches the "true" value, and the thicker solid lines represent a linear regression
+through the origin, as calculated above. In general, the four correlation- or
+partial correlation-based methods had slopes that were steeper than the 1:1 line,
+because their estimates were constrained between -1 and 1. The GLM and Markov network
+usually had slopes that were closer to 1.
+
+(Warnings of the form "Removed N rows containing missing values
+(geom_smooth)" can be ignored: they are simply noting that the regression lines 
+were cut off in some panels of the figure).
+
+```{r, dev="png", dpi=500, cache = TRUE}
+plot_regressions = function(type, title){
+  x[sample.int(nrow(x)) , ] %>%
+  subset(simulation_type == type & method != "null") %>% 
+  ggplot(aes(x = estimate, y = truth)) +
+    facet_wrap(~method) +
+    ylim(min(x$truth), max(x$truth)) + 
+    geom_point(aes(color = factor(n_sites)), size = 0.2) + 
+    geom_smooth(method = "lm", color = "black", formula = y ~ 0 + x, 
+                fullrange = TRUE) + 
+    geom_abline(intercept = 0, slope = 1, linetype = 2) +
+    theme_bw() + 
+    ggtitle(title)
+}
+
+plot_regressions("no_env", "'Baseline' regressions")
+plot_regressions("env", "'Environment' regressions")
+plot_regressions("abund", "'Abundance' regressions")
+```
+
 
 #### Average the R-squared values across methods and simulation types
 
@@ -228,7 +267,7 @@ Fit a linear mixed model describing R-squared as a function of method, landscape
 size, and simulation type.  Note the small standard errors associated with the
 effect of estimation method.  
 
-```{r, cache = TRUE}
+```{r, cache = FALSE}
 landscape_estimates = x %>% 
   group_by(method, simulation_type) %>%
   do(data.frame(., resids = resids(.))) %>%
@@ -246,34 +285,11 @@ summary(
 )
 ```
 
-## Plot estimates versus "true" values across methods and lanscape sizes
-
-The gray line indicates the 1:1 line, where models recover an unbiased estimate
-of the "true" $\beta$ coefficients.  The GLM and Markov network methods estimate
-the coefficients on the original scale, and approach unbiasedness as the number
-of sites increases. The four methods based on (partial) correlations are
-constrained to return values between -1 and 1, and do not return values on the
-original scale.  The covariance and partial covariance (which are not scaled in
-this way) may avoid this problem in future analyses (Loh and Wainwright 2013; 
-see main text for full citation).
-
-Note that the null model (Pairs) is not included in these graphs, as its
-test statistic depends strongly on the size of the landscape and fills a range 
-that would not fit on these graphs.
-
-```{r, dev="png", dpi=500, cache = TRUE}
-ggplot(filter(x, simulation_type == "no_env", method != "null"),
-       aes(x = truth, y = estimate, color = factor(n_sites))) + 
-  facet_wrap(~method) +
-  geom_point(alpha = 0.01) +
-  geom_abline(intercept = 0, slope = 1, size = 2, col = "darkgray") + 
-  geom_smooth(method = "lm", fullrange = FALSE) + 
-  coord_equal() + 
-  scale_color_discrete(name = "n_sites")
-```
-
-
 # C: Inferential statistics
+
+Note that, as mentioned in the main text, inferential statistics are only 
+calculated for the `env` and `no_env` simulations (and not for the `abund`
+simulations).
 
 ## Identify statistical significance for the Markov network and Pairs
 
@@ -281,10 +297,10 @@ For Pairs, compare the Z-scores with Gaussian quantiles for 95% coverage;
 for the Markov network, use the approximate confidence intervals estimated in
 Appendix 3.
 
-```{r, cache = TRUE}
+```{r, cache = FALSE}
 
-pairs_summary = x[x$method == "null" & !grepl("pop", x$rep_name), ]
-markov_summary = x[x$method == "Markov network" & !grepl("pop", x$rep_name), ]
+pairs_summary = x[x$method == "null" & x$simulation_type != "abund", ]
+markov_summary = x[x$method == "Markov network" & x$simulation_type != "abund", ]
 
 
 # Pairs's Z score is based on C-scores, which are positive when species are 
@@ -300,7 +316,7 @@ markov_summary$sig_neg = markov_summary$upper < 0
 ```
 
 
-The `error_smoother` is a function that fits a generalized additive model to 
+The `error_smoother` is a function that fits a kernel smoother model to 
 estimate the probability that a model estimate will match some criterion (e.g. 
 statistical significance) for some parameter as a function of that parameter's
 "true" value.  This function is used in Figure 4C and in calculating Type I
@@ -311,15 +327,17 @@ error rates below.
 truth_seq = seq(min(markov_summary$truth), max(markov_summary$truth), length = 1000)
 
 error_smoother = function(data, f, values = truth_seq){
-  predict(
-    gam(
-      f(data) ~ s(truth),
-      data = data,
-      family = binomial
-    ),
-    data.frame(truth = values),
-    type = "response"
+  out = ksmooth(
+    x = data$truth,
+    y = as.numeric(f(data)),
+    x.points = values,
+    kernel = "normal",
+    bandwidth = 0.25
   )
+  
+  out$y[is.na(out$y)] = 0
+  
+  out
 }
 ```
 
@@ -334,7 +352,7 @@ interaction between two species) in the opposite direction of the true value
 (see main text).
 
 
-```{r, cache = TRUE}
+```{r, cache = FALSE}
 
 pdf("manuscript-materials/figures/error_rates.pdf", height = 8.5, width = 8.5/3)
 par(mfrow = c(3, 1))
@@ -344,8 +362,8 @@ par(mfrow = c(3, 1))
 confidently_wrong = function(data){
   (data$sig_pos & data$truth < 0) | (data$sig_neg & data$truth > 0)
 }
-y_markov = error_smoother(markov_summary, confidently_wrong)
-y_pairs = error_smoother(pairs_summary, confidently_wrong)
+smoothed_markov = error_smoother(markov_summary, confidently_wrong)
+smoothed_pairs = error_smoother(pairs_summary, confidently_wrong)
 
 # Compare estimates
 spread_estimates = x %>%
@@ -398,20 +416,20 @@ abline(lm(null ~ I(correlation*sqrt(n_sites)), data = spread_estimates))
 text(10, 12, expression(R^2==0.95))
 
 plot(
-  truth_seq,
-  y_pairs,
+  smoothed_pairs$x,
+  smoothed_pairs$y,
   type = "l",
   xlab = "\"True\" interaction strength",
   ylab = "P(confidently predict wrong sign)",
   bty = "l",
   yaxs = "i",
   col = 2,
-  ylim = c(0, .4),
+  ylim = c(0, .3),
   lwd = 2
 )
 mtext("C. Error rate vs.\ninteraction strength", side = 3, adj = 0, 
       font = 2, line = 1.2, cex = .9) 
-lines(truth_seq, y_markov, lwd = 2)
+lines(smoothed_markov$x, smoothed_markov$y, lwd = 2)
 legend("topleft", lwd = 2, legend = c("Null model", "Markov network"), 
        col = c(2, 1), bty = "n")
 dev.off()
@@ -442,12 +460,8 @@ with(markov_summary,  mean(sig_neg | sig_pos))
 ## Type I error rates:
 
 Type I error rates (probability of rejecting the null hypothesis given a 
-"true" interaction strength of zero, according to the spline model defined by
-`error_smoother` above). The smoother focuses on the 
-`r markov_summary %>% summarize(mean(abs(truth) < 1)) %>% round(., 2) %>% multiply_by(100)`%
-of the data points whose "true" values fall between -1 and 1, because its 
-estimates near 0 are more accurate when they aren't affected by distant data 
-points.
+"true" interaction strength of zero, according to the kernel smoother defined by
+`error_smoother` above).
 
 #### Markov network Type I error rates
 ```{r}
@@ -456,7 +470,7 @@ markov_summary %>%
   group_by(simulation_type) %>% 
   do(data.frame(
     `Type I error rate` = 
-      error_smoother(., function(x){x$sig_pos | x$sig_neg}, values = 0)
+      error_smoother(., function(x){x$sig_pos | x$sig_neg}, values = 0)$y
   )) %>%
   kable(digits = 3)
 ```
@@ -468,7 +482,7 @@ pairs_summary %>%
   group_by(simulation_type) %>% 
   do(data.frame(
     `Type I error rate` = 
-      error_smoother(., function(x){x$sig_pos | x$sig_neg}, values = 0)
+      error_smoother(., function(x){x$sig_pos | x$sig_neg}, values = 0)$y
   )) %>%
   kable(digits = 3)
 ```
@@ -476,10 +490,11 @@ pairs_summary %>%
 ## Plot Markov network confidence interval coverage versus true $\beta$ value
 
 The top and bottom 0.5% of the distribution have been omitted to prevent bad 
-behavior by the smoother in the tails. The horizontal red line shows the nominal
-95% coverage rate and the black vertical line marks where the "true" value
-of $\beta$ was zero. The Type I error rates calculated above for the Markov 
-network closely match (one minus) the values of these curves at zero.
+behavior by the smoother (a generalized additive model) in the tails. The 
+horizontal red line shows the nominal 95% coverage rate and the black vertical 
+line marks where the "true" value of $\beta$ was zero. The Type I error rates 
+calculated above for the Markov network closely match (one minus) the values of 
+these curves at zero.
 
 ```{r}
 coverage_data = markov_summary %>%
@@ -498,3 +513,30 @@ ggplot(coverage_data, aes(x = truth, y = as.integer(covered))) +
 
 
 ```
+
+
+## Plot power versus true $\beta$ value
+
+Calculate p(confidently detect sign of $\beta$) as a function of
+the "true"" values.  Pairs has a somewhat higher rate of rejecting the null 
+hypothesis in the correct direction than the Markov network, but the benefit of 
+this increase in power is more than offset by the large increases in Type I 
+errors and sign errors demonstrated above and in Figure 4 of the main text.
+
+```{r}
+confidently_right = function(data){
+  (data$sig_pos & data$truth > 0) | (data$sig_neg & data$truth < 0)
+}
+
+plot(error_smoother(markov_summary, confidently_right), 
+     type = "l", 
+     xlim = c(-5, 5),
+     xlab = "'True' coefficient value",
+     ylab = "Power",
+     ylim = c(0, 1),
+     yaxs = "i"
+)
+lines(error_smoother(pairs_summary, confidently_right), col = 2)
+legend("topleft", legend = c("Markov network", "Pairs"), lty = 1, col = 1:2)
+```
+

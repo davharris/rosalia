@@ -11,14 +11,14 @@ fontsize: 11pt
   
 The following function draws random coefficients for a Markov network of a pre-specified size (20 species in these examples).
 
-The $alpha$ coefficients controlling species' intercepts were drawn from 
+The $\alpha$ coefficients controlling species' intercepts were drawn from 
 Gaussian distributions with unit variance and a mean given by `mean_alpha`.
 In the R code at the end of this document, `mean_alpha` is defined as $-1$ 
 for presence-absence simulations and $5$ for the abundance simulations. 
 
 The $\beta$ coefficients' magnitudes were drawn from an exponential 
 distribution with rate parameter equal to 1.  The sign of each coefficient was
-randomly sampled, based on the value of `p_neg`, defined below. as 0.75 (75%
+randomly sampled, based on the value of `p_neg`, defined below as 0.75 (75%
 negative) for the presence-absence simulations and 1.0 (100% negative) for the
 simulations that included abundance.
 
@@ -50,11 +50,11 @@ make_coefficients = function(n_spp, p_neg, mean_alpha){
 ```
 
 
-The following function calls the function above to generate "true" parameters, 
+The next function calls the function above to generate "true" parameters, 
 then uses them to simulate a landscape with Markov chain Monte Carlo, and 
 finally saves the results to a "fakedata" folder.
 I used Gibbs sampling as my Markov chain Monte Carlo transition operator.
-In each round of Gibbs sampling, I cycled through all the species, randomly
+In each round of Gibbs sampling, I cycled through all the species,
 updating each one's binary presence/absence vector with random samples from
 a Bernoulli distribution whose conditional probability was defined by 
 
@@ -82,18 +82,23 @@ and unit variance.
 
 For the abundance-based simulations, each species' conditional abundance was
 simulated with a Poisson distribution instead of a Bernoulli distribution. The
-rate parameter of this distribution was given by 
-$\mathrm{log}(1 + exp(\alpha_i + \sum_j\beta_{ij}y_j))$. (The more conventional 
-exponential inverse link was not used because preliminary experiments showed that
-it led to very large abundances that prevented the Gibbs sampler from mixing 
-effectively.)
+rate parameter of this distribution (which corresponds to the expected abundance)
+was given by  
+
+$$y_i \sim \mathrm{log}(1 + exp(\alpha_i + \sum_j\beta_{ij}y_j))$$.
+
+
+(The more conventional exponential inverse link was not used because preliminary 
+experiments showed that it led to very large $y$ values, which prevented the 
+Gibbs sampler from mixing effectively.)
 
 Each simulated landscape was saved after the Gibbs sampler had updated the 
 value of each species `n_gibbs` times; see the end of this document for the
 value used.
 
 ```{r, cache = TRUE}
-simulate_data = function(n_spp, n_sites, rep_name, n_gibbs, n_env, sd, f, rdist, p_neg, mean_alpha){
+simulate_data = function(n_spp, n_sites, rep_name, n_gibbs, n_env, sd, f, 
+                         rdist, p_neg, mean_alpha){
   # n_spp:     number of species to include in the landscape
   # n_sites:   number of sites to include in the landscape
   # rep_name:  an identifier to use for the landscape replicate
@@ -123,7 +128,7 @@ simulate_data = function(n_spp, n_sites, rep_name, n_gibbs, n_env, sd, f, rdist,
   beta[upper.tri(beta)] = truth
   beta = beta + t(beta)
   
-  # Environmental states are normally distributed
+  # Environmental states are normally distributed with mean=0 and sd=1
   env = matrix(rnorm(n_sites * n_env), ncol = n_env)
   
   alpha_env = matrix(rnorm(n_spp * n_env, sd = sd), nrow = n_env)
@@ -135,9 +140,9 @@ simulate_data = function(n_spp, n_sites, rep_name, n_gibbs, n_env, sd, f, rdist,
   # Simulate the landscape from known process with Gibbs sampling
   
   
-  # Landscape starts as if betas were all zero. Each species' occurrence probability
-  # or abundance depends on its alpha value and on the environment (assuming alpha_env 
-  # is not set to zero).
+  # Landscape starts as if betas were all zero. Each species' occurrence 
+  # probability or abundance depends on its alpha value and on the 
+  # environment (assuming alpha_env is not set to zero).
   x = matrix(
     f(rep(1, n_sites) %*% t(alpha) + env %*% alpha_env), 
     nrow = n_sites, 
@@ -205,10 +210,10 @@ rbern = function(n, prob){
 }
 ```
 
-Loop to simulate and save 50 landscapes for each combination of simulation type
-and landscape size.
+A loop to simulate and save 50 landscapes for each combination of simulation type
+and landscape size, using the functions defined above:
 
-```{r}
+```{r, eval = FALSE}
 set.seed(1)
 n_spp = 20
 
