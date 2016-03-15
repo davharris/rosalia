@@ -33,7 +33,7 @@
 \usepackage{setspace}
 \usepackage{geometry}
 \usepackage{ifthen}
-\geometry{verbose,letterpaper,tmargin=2.54cm, bmargin=2.54cm,lmargin=2.54cm,rmargin=2.54cm}
+\geometry{verbose,letterpaper,tmargin=2.5cm, bmargin=2.5cm,lmargin=2.5cm,rmargin=2.5cm}
 \ifxetex
   \usepackage[setpagesize=false, % page size defined by xetex
               unicode=false, % unicode breaks when used with xetex
@@ -498,52 +498,6 @@ GBMF4563 to E. P. White.
 \setlength{\parindent}{-1em} \setlength{\leftskip}{1em}
 \setlength{\parskip}{0pt}
 
-\textbf{Figure 1: A.} A small network of three competing species. The
-tree (top) tends not to co-occur with either of the two shrub species,
-as indicated by the strongly negative coefficient linking them. The two
-shrub species also compete with one another, but more weakly (circled
-coefficient). \textbf{B.} In spite of the competitive interactions
-between the two shrub species, their shared tendency to occur in
-locations without trees makes their occurrence vectors positively
-correlated (circled). \textbf{C.} Controlling for trees with a
-conditional (all-else-equal) approach such as a partial correlation or a
-Markov network leads to correct identification of the negative
-shrub-shrub interaction (circled). See Appendix 1 and the results for
-``three species'' for more details.
-
-\textbf{Figure 2: A.} A small Markov network, defined by its \(\alpha\)
-and \(\beta\) values. The abiotic environment favors the occurrence of
-each species (\(\alpha >0\)), particularly species 2
-(\(\alpha_2 > \alpha_1\)). The negative \(\beta_{12}\) coefficient is
-consistent with competition between the two species. \textbf{B.} The
-coefficients determine the probabilities of all four possible
-presence-absence combinations for Species 1 and Species 2. \(\alpha_1\)
-is added to the exponent whenever Species 1 is present (\(y_1 = 1\)),
-but not when it is absent (\(y_1 = 0\)). Similarly, the exponent
-includes \(\alpha_2\) only when species \(2\) is present (\(y_2 = 1\)),
-and includes \(\beta_{12}\) only when both are present (\(y_1y_2 = 1\)).
-The normalizing constant \(Z\), ensures that the four probabilities sum
-to 1. In this case, \(Z\) is about 18.5. \textbf{C.} The expected
-frequencies of all possible co-occurrence patterns between the two
-species of interest, as calculated in the previous panel. \textbf{D.}
-Without competition (i.e.~with \(\beta_{12}=0\), each species would
-occur more often.
-
-\textbf{Figure 3:} Proportion of variance in interaction coefficients
-explained by each method versus number of sampled locations across the
-three simulation types. For the null model (Pairs), two outliers with
-\(|Z|>1000\) were manually adjusted to \(|Z|=50\) to mitigate their
-detrimental influence on \(R^2\) (Appendix 5).
-
-\textbf{Figure 4: A.} The Markov network's estimated interaction
-coefficients were generally very similar to the GLM estimates.
-\textbf{B.} The null model's estimates typically matched the (negative)
-correlation coefficient, after controlling for landscape size.
-\textbf{C.} For any given interaction strength, the null model was much
-more likely to misclassify its sign with 95\% confidence than the Markov
-network was. As with the other analyses based on inferential statistics,
-this panel only shows data from the first two simulation types.
-
 \hyperdef{}{refs}{\label{refs}}
 \hyperdef{}{ref-albrechtux5fspatialux5f2001}{\label{ref-albrechtux5fspatialux5f2001}}
 Albrecht, M., and N. J. Gotelli. 2001. Spatial and temporal niche
@@ -619,8 +573,10 @@ species distribution model. Methods in Ecology and Evolution.
 
 \hyperdef{}{ref-harrisux5festimatingux5f2016}{\label{ref-harrisux5festimatingux5f2016}}
 Harris, D. J. 2016. Estimating species interactions in large,
-abiotically structured communities using markov networks and stochastic
-approximation. bioRxiv.
+abiotically structured communities with markov networks and stochastic
+approximation. \emph{in} Multi-process statistical modeling of species'
+joint distributions. Figshare.
+http://doi.org/10.6084/m9.figshare.3114226.v1.
 
 \hyperdef{}{ref-harrisux5foccupancyux5f2011}{\label{ref-harrisux5foccupancyux5f2011}}
 Harris, D. J., K. G. Smith, and P. J. Hanly. 2011. Occupancy is
@@ -699,6 +655,58 @@ community structure in alaskan seabird colonies. Ecology 62:1515--1524.
 \hyperdef{}{ref-xiaoux5fstrongux5f2015}{\label{ref-xiaoux5fstrongux5f2015}}
 Xiao, X., D. J. McGlinn, and E. P. White. 2015. A strong test of the
 maximum entropy theory of ecology. The American Naturalist 185:E70--E80.
+
+\setlength{\parindent}{0em} \setlength{\leftskip}{0em}
+
+\textbf{Figure Captions}
+
+\textbf{Figure 1: A.} A small network of three competing species. The
+tree (top) tends not to co-occur with either of the two shrub species,
+as indicated by the strongly negative coefficient linking them. The two
+shrub species also compete with one another, but more weakly (circled
+coefficient). \textbf{B.} In spite of the competitive interactions
+between the two shrub species, their shared tendency to occur in
+locations without trees makes their occurrence vectors positively
+correlated (circled). \textbf{C.} Controlling for trees with a
+conditional (all-else-equal) approach such as a partial correlation or a
+Markov network leads to correct identification of the negative
+shrub-shrub interaction (circled). See Appendix 1 and the results for
+``three species'' for more details.
+
+\textbf{Figure 2: A.} A small Markov network, defined by its \(\alpha\)
+and \(\beta\) values. The abiotic environment favors the occurrence of
+each species (\(\alpha >0\)), particularly species 2
+(\(\alpha_2 > \alpha_1\)). The negative \(\beta_{12}\) coefficient is
+consistent with competition between the two species. \textbf{B.} The
+coefficients determine the probabilities of all four possible
+presence-absence combinations for Species 1 and Species 2. \(\alpha_1\)
+is added to the exponent whenever Species 1 is present (\(y_1 = 1\)),
+but not when it is absent (\(y_1 = 0\)). Similarly, the exponent
+includes \(\alpha_2\) only when species \(2\) is present (\(y_2 = 1\)),
+and includes \(\beta_{12}\) only when both are present (\(y_1y_2 = 1\)).
+The normalizing constant \(Z\), ensures that the four probabilities sum
+to 1. In this case, \(Z\) is about 18.5. \textbf{C.} The expected
+frequencies of all possible co-occurrence patterns between the two
+species of interest, as calculated in the previous panel. \textbf{D.}
+Without competition (i.e.~with \(\beta_{12}=0\), each species would
+occur more often.
+
+\textbf{Figure 3:} Proportion of variance in interaction coefficients
+explained by each method versus number of sampled locations across the
+three simulation types. For the null model (Pairs), two outliers with
+\(|Z|>1000\) were manually adjusted to \(|Z|=50\) to mitigate their
+detrimental influence on \(R^2\) (Appendix 5).
+
+\textbf{Figure 4: A.} The Markov network's estimated interaction
+coefficients were generally very similar to the GLM estimates.
+\textbf{B.} The null model's estimates typically matched the (negative)
+correlation coefficient, after controlling for landscape size.
+\textbf{C.} For any given interaction strength, the null model was much
+more likely to misclassify its sign with 95\% confidence than the Markov
+network was. As with the other analyses based on inferential statistics,
+this panel only shows data from the first two simulation types.
+
+
 \end{flushleft}
 \end{spacing}
 
